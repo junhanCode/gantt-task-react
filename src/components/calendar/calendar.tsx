@@ -308,6 +308,152 @@ export const Calendar: React.FC<CalendarProps> = ({
     return [topValues, bottomValues];
   };
 
+  const getCalendarValuesForDayShift = () => {
+    const bgValues: ReactChild[] = [];
+    const textValues: ReactChild[] = [];
+    const dates = dateSetup.dates;
+    const topDefaultHeight = headerHeight / 3; // 三层：日期、星期、班次
+    const totalWidth = columnWidth * dates.length;
+
+    // 辅助：获取班次名
+    const shiftName = (date: Date) => {
+      const hour = date.getHours();
+      if (hour % 24 === 0) return "D1"; // 00:00
+      if (hour % 24 === 6) return "D2"; // 06:00
+      if (hour % 24 === 12) return "N1"; // 12:00
+      return "N2"; // 18:00
+    };
+
+    for (let i = 0; i < dates.length; i++) {
+      const date = dates[i];
+      const isNewDay = i === 0 || date.getDate() !== dates[i - 1].getDate();
+      const isSunday = date.getDay() === 0;
+
+      // 顶部：日期（年/月/日）
+      if (isNewDay) {
+        // 一个自然日占 4 列
+        const daySpan = 4;
+        const xStart = columnWidth * i;
+        const xCenter = xStart + columnWidth * daySpan * 0.5;
+        const topValue = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+        // 周日背景色（背景层）
+        if (isSunday) {
+          bgValues.push(
+            <rect
+              key={`sunbg-${date.getTime()}`}
+              x={xStart}
+              y={0}
+              width={daySpan * columnWidth}
+              height={headerHeight}
+              className={styles.calendarSunBg}
+            />
+          );
+        }
+        textValues.push(
+          <g key={`day-${date.toDateString()}`}>
+            <TopPartOfCalendar
+              value={topValue}
+              x1Line={xStart + daySpan * columnWidth}
+              y1Line={0}
+              y2Line={headerHeight}
+              xText={xCenter}
+              yText={topDefaultHeight * 0.75}
+            />
+          </g>
+        );
+
+        // 中部：星期（Sun/Mon...），每天只显示一次，跨 4 列居中
+        const midValue = getLocalDayOfWeek(date, locale, "short");
+        textValues.push(
+          <text
+            key={`dow-day-${date.getTime()}`}
+            y={topDefaultHeight + topDefaultHeight * 0.75}
+            x={xCenter}
+            className={styles.calendarTopText}
+          >
+            {midValue}
+          </text>
+        );
+      }
+
+      // 底部：班次 D1 D2 N1 N2
+      const sName = shiftName(date);
+      const isNight = sName === "N1" || sName === "N2";
+      if (isNight) {
+        bgValues.push(
+          <rect
+            key={`shiftbg-${date.getTime()}`}
+            x={columnWidth * i}
+            y={topDefaultHeight * 2}
+            width={columnWidth}
+            height={topDefaultHeight}
+            className={styles.calendarShiftNightBg}
+          />
+        );
+      }
+      // 竖向：只在底部班次层绘制每列分隔线，避免中部（跨4列）出现四条边框
+      bgValues.push(
+        <line
+          key={`vsep-bottom-${i}`}
+          x1={columnWidth * i}
+          y1={topDefaultHeight * 2}
+          x2={columnWidth * i}
+          y2={headerHeight}
+          className={styles.calendarTopTick}
+        />
+      );
+      // 每天开始处（每4列）绘制贯穿三层的竖线，形成中部合并单元的边界
+      if (i % 4 === 0) {
+        bgValues.push(
+          <line
+            key={`vsep-daystart-${i}`}
+            x1={columnWidth * i}
+            y1={0}
+            x2={columnWidth * i}
+            y2={headerHeight}
+            className={styles.calendarTopTick}
+          />
+        );
+      }
+      textValues.push(
+        <text
+          key={`shifttext-${date.getTime()}`}
+          y={topDefaultHeight * 2 + topDefaultHeight * 0.75}
+          x={columnWidth * i + columnWidth * 0.5}
+          className={isNight ? styles.calendarShiftNightText : styles.calendarBottomText}
+        >
+          {sName}
+        </text>
+      );
+    }
+
+    // 横向：三个表头行之间的分隔线（上/中、 中/下）
+    bgValues.push(
+      <line
+        key="hsep-1"
+        x1={0}
+        y1={topDefaultHeight}
+        x2={totalWidth}
+        y2={topDefaultHeight}
+        className={styles.calendarTopTick}
+      />
+    );
+    bgValues.push(
+      <line
+        key="hsep-2"
+        x1={0}
+        y1={topDefaultHeight * 2}
+        x2={totalWidth}
+        y2={topDefaultHeight * 2}
+        className={styles.calendarTopTick}
+      />
+    );
+
+    // 返回顺序：文字层在上、背景层在下。组件最终渲染顺序是先 bottomValues 再 topValues
+    // 因此此处将文字作为 topValues，背景作为 bottomValues 返回
+    return [textValues, bgValues];
+  };
+
   const getCalendarValuesForHour = () => {
     const topValues: ReactChild[] = [];
     const bottomValues: ReactChild[] = [];
@@ -376,6 +522,9 @@ export const Calendar: React.FC<CalendarProps> = ({
     case ViewMode.QuarterDay:
     case ViewMode.HalfDay:
       [topValues, bottomValues] = getCalendarValuesForPartOfDay();
+      break;
+    case ViewMode.DayShift:
+      [topValues, bottomValues] = getCalendarValuesForDayShift();
       break;
     case ViewMode.Hour:
       [topValues, bottomValues] = getCalendarValuesForHour();

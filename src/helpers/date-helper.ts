@@ -119,6 +119,14 @@ export const ganttDateRange = (
       newEndDate = startOfDate(newEndDate, "day");
       newEndDate = addToDate(newEndDate, 19, "day");
       break;
+    case ViewMode.DayShift:
+      // 以天为单位显示，但每天细分为 4 个班次
+      newStartDate = startOfDate(newStartDate, "day");
+      newStartDate = addToDate(newStartDate, -1 * preStepsCount, "day");
+      newEndDate = startOfDate(newEndDate, "day");
+      // 展示大约 20 天的区间，和 Day 模式保持一致
+      newEndDate = addToDate(newEndDate, 19, "day");
+      break;
     case ViewMode.QuarterDay:
       newStartDate = startOfDate(newStartDate, "day");
       newStartDate = addToDate(newStartDate, -1 * preStepsCount, "day");
@@ -164,6 +172,10 @@ export const seedDates = (
         break;
       case ViewMode.Day:
         currentDate = addToDate(currentDate, 1, "day");
+        break;
+      case ViewMode.DayShift:
+        // 每个“刻度”代表一个班次，以 6 小时为步进（D1 0:00，D2 6:00，N1 12:00，N2 18:00）
+        currentDate = addToDate(currentDate, 6, "hour");
         break;
       case ViewMode.HalfDay:
         currentDate = addToDate(currentDate, 12, "hour");
