@@ -1,24 +1,13 @@
-import React, { useMemo } from "react";
+import React from "react";
 import styles from "./task-list-table.module.css";
 import { Task } from "../../types/public-types";
 
-const localeDateStringCache = {};
-const toLocaleDateStringFactory =
-  (locale: string) =>
-  (date: Date, dateTimeOptions: Intl.DateTimeFormatOptions) => {
-    const key = date.toString();
-    let lds = localeDateStringCache[key];
-    if (!lds) {
-      lds = date.toLocaleDateString(locale, dateTimeOptions);
-      localeDateStringCache[key] = lds;
-    }
-    return lds;
-  };
-const dateTimeOptions: Intl.DateTimeFormatOptions = {
-  weekday: "short",
-  year: "numeric",
-  month: "long",
-  day: "numeric",
+// 统一显示为 YYYY/M/D，例如 2025/8/25
+const formatYmd = (date: Date) => {
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  return `${y}/${m}/${d}`;
 };
 
 export const TaskListTableDefault: React.FC<{
@@ -31,19 +20,34 @@ export const TaskListTableDefault: React.FC<{
   selectedTaskId: string;
   setSelectedTask: (taskId: string) => void;
   onExpanderClick: (task: Task) => void;
+  nameColumnWidth?: string;
+  timeColumnWidths?: {
+    plannedStart?: string;
+    plannedEnd?: string;
+    actualStart?: string;
+    actualEnd?: string;
+  };
+  timeColumnLabels?: {
+    plannedStart?: string;
+    plannedEnd?: string;
+    actualStart?: string;
+    actualEnd?: string;
+  };
 }> = ({
   rowHeight,
   rowWidth,
   tasks,
   fontFamily,
   fontSize,
-  locale,
+  // locale,
   onExpanderClick,
+  nameColumnWidth,
+  timeColumnWidths,
 }) => {
-  const toLocaleDateString = useMemo(
-    () => toLocaleDateStringFactory(locale),
-    [locale]
-  );
+  // const toLocaleDateString = useMemo(
+  //   () => toLocaleDateStringFactory(locale),
+  //   [locale]
+  // );
 
   return (
     <div
@@ -70,8 +74,8 @@ export const TaskListTableDefault: React.FC<{
             <div
               className={styles.taskListCell}
               style={{
-                minWidth: rowWidth,
-                maxWidth: rowWidth,
+                minWidth: nameColumnWidth ?? rowWidth,
+                maxWidth: nameColumnWidth ?? rowWidth,
               }}
               title={t.name}
             >
@@ -92,20 +96,38 @@ export const TaskListTableDefault: React.FC<{
             <div
               className={styles.taskListCell}
               style={{
-                minWidth: rowWidth,
-                maxWidth: rowWidth,
+                minWidth: timeColumnWidths?.plannedStart ?? rowWidth,
+                maxWidth: timeColumnWidths?.plannedStart ?? rowWidth,
               }}
             >
-              &nbsp;{toLocaleDateString(t.start, dateTimeOptions)}
+              &nbsp;{formatYmd(t.plannedStart ?? t.start)}
             </div>
             <div
               className={styles.taskListCell}
               style={{
-                minWidth: rowWidth,
-                maxWidth: rowWidth,
+                minWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
+                maxWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
               }}
             >
-              &nbsp;{toLocaleDateString(t.end, dateTimeOptions)}
+              &nbsp;{formatYmd(t.plannedEnd ?? t.end)}
+            </div>
+            <div
+              className={styles.taskListCell}
+              style={{
+                minWidth: timeColumnWidths?.actualStart ?? rowWidth,
+                maxWidth: timeColumnWidths?.actualStart ?? rowWidth,
+              }}
+            >
+              &nbsp;{formatYmd(t.actualStart ?? t.start)}
+            </div>
+            <div
+              className={styles.taskListCell}
+              style={{
+                minWidth: timeColumnWidths?.actualEnd ?? rowWidth,
+                maxWidth: timeColumnWidths?.actualEnd ?? rowWidth,
+              }}
+            >
+              &nbsp;{formatYmd(t.actualEnd ?? t.end)}
             </div>
           </div>
         );

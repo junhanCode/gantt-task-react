@@ -448,6 +448,8 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     onExpanderClick: handleExpanderClick,
     TaskListHeader,
     TaskListTable,
+    // pass-through to task list header/table
+    // Note: TaskListProps typing supports these via component prop types
   };
   return (
     <div>

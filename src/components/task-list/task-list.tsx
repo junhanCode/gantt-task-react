@@ -17,11 +17,38 @@ export type TaskListProps = {
   selectedTask: BarTask | undefined;
   setSelectedTask: (task: string) => void;
   onExpanderClick: (task: Task) => void;
+  // 新增：名称列宽、时间列标题与列宽（若未传则组件内部回退到 rowWidth）
+  nameColumnWidth?: string;
+  timeColumnLabels?: {
+    plannedStart?: string;
+    plannedEnd?: string;
+    actualStart?: string;
+    actualEnd?: string;
+  };
+  timeColumnWidths?: {
+    plannedStart?: string;
+    plannedEnd?: string;
+    actualStart?: string;
+    actualEnd?: string;
+  };
   TaskListHeader: React.FC<{
     headerHeight: number;
     rowWidth: string;
     fontFamily: string;
     fontSize: string;
+    nameColumnWidth?: string;
+    timeColumnLabels?: {
+      plannedStart?: string;
+      plannedEnd?: string;
+      actualStart?: string;
+      actualEnd?: string;
+    };
+    timeColumnWidths?: {
+      plannedStart?: string;
+      plannedEnd?: string;
+      actualStart?: string;
+      actualEnd?: string;
+    };
   }>;
   TaskListTable: React.FC<{
     rowHeight: number;
@@ -33,6 +60,19 @@ export type TaskListProps = {
     selectedTaskId: string;
     setSelectedTask: (taskId: string) => void;
     onExpanderClick: (task: Task) => void;
+    nameColumnWidth?: string;
+    timeColumnWidths?: {
+      plannedStart?: string;
+      plannedEnd?: string;
+      actualStart?: string;
+      actualEnd?: string;
+    };
+    timeColumnLabels?: {
+      plannedStart?: string;
+      plannedEnd?: string;
+      actualStart?: string;
+      actualEnd?: string;
+    };
   }>;
 };
 
@@ -51,6 +91,9 @@ export const TaskList: React.FC<TaskListProps> = ({
   ganttHeight,
   taskListRef,
   horizontalContainerClass,
+  nameColumnWidth,
+  timeColumnLabels,
+  timeColumnWidths,
   TaskListHeader,
   TaskListTable,
 }) => {
@@ -66,6 +109,9 @@ export const TaskList: React.FC<TaskListProps> = ({
     fontFamily,
     fontSize,
     rowWidth,
+    nameColumnWidth,
+    timeColumnLabels,
+    timeColumnWidths,
   };
   const selectedTaskId = selectedTask ? selectedTask.id : "";
   const tableProps = {
@@ -78,6 +124,9 @@ export const TaskList: React.FC<TaskListProps> = ({
     selectedTaskId: selectedTaskId,
     setSelectedTask,
     onExpanderClick,
+    nameColumnWidth,
+    timeColumnWidths,
+    timeColumnLabels,
   };
 
   return (

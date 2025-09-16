@@ -6,7 +6,33 @@ export const TaskListHeaderDefault: React.FC<{
   rowWidth: string;
   fontFamily: string;
   fontSize: string;
-}> = ({ headerHeight, fontFamily, fontSize, rowWidth }) => {
+  nameColumnWidth?: string;
+  timeColumnLabels?: {
+    plannedStart?: string;
+    plannedEnd?: string;
+    actualStart?: string;
+    actualEnd?: string;
+  };
+  timeColumnWidths?: {
+    plannedStart?: string;
+    plannedEnd?: string;
+    actualStart?: string;
+    actualEnd?: string;
+  };
+}> = ({ headerHeight, fontFamily, fontSize, rowWidth, nameColumnWidth, timeColumnLabels, timeColumnWidths }) => {
+  const label = {
+    plannedStart: timeColumnLabels?.plannedStart ?? "Planned Start",
+    plannedEnd: timeColumnLabels?.plannedEnd ?? "Planned End",
+    actualStart: timeColumnLabels?.actualStart ?? "Actual Start",
+    actualEnd: timeColumnLabels?.actualEnd ?? "Actual End",
+  };
+  const width = {
+    name: nameColumnWidth ?? rowWidth,
+    plannedStart: timeColumnWidths?.plannedStart ?? rowWidth,
+    plannedEnd: timeColumnWidths?.plannedEnd ?? rowWidth,
+    actualStart: timeColumnWidths?.actualStart ?? rowWidth,
+    actualEnd: timeColumnWidths?.actualEnd ?? rowWidth,
+  };
   return (
     <div
       className={styles.ganttTable}
@@ -24,7 +50,7 @@ export const TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
-            minWidth: rowWidth,
+            minWidth: width.name,
           }}
         >
           &nbsp;Name
@@ -39,10 +65,10 @@ export const TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
-            minWidth: rowWidth,
+            minWidth: width.plannedStart,
           }}
         >
-          &nbsp;From
+          &nbsp;{label.plannedStart}
         </div>
         <div
           className={styles.ganttTable_HeaderSeparator}
@@ -54,10 +80,40 @@ export const TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
-            minWidth: rowWidth,
+            minWidth: width.plannedEnd,
           }}
         >
-          &nbsp;To
+          &nbsp;{label.plannedEnd}
+        </div>
+        <div
+          className={styles.ganttTable_HeaderSeparator}
+          style={{
+            height: headerHeight * 0.5,
+            marginTop: headerHeight * 0.25,
+          }}
+        />
+        <div
+          className={styles.ganttTable_HeaderItem}
+          style={{
+            minWidth: width.actualStart,
+          }}
+        >
+          &nbsp;{label.actualStart}
+        </div>
+        <div
+          className={styles.ganttTable_HeaderSeparator}
+          style={{
+            height: headerHeight * 0.5,
+            marginTop: headerHeight * 0.25,
+          }}
+        />
+        <div
+          className={styles.ganttTable_HeaderItem}
+          style={{
+            minWidth: width.actualEnd,
+          }}
+        >
+          &nbsp;{label.actualEnd}
         </div>
       </div>
     </div>

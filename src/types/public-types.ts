@@ -17,6 +17,11 @@ export interface Task {
   name: string;
   start: Date;
   end: Date;
+  // 计划与实际时间（可选，兼容旧数据）
+  plannedStart?: Date;
+  plannedEnd?: Date;
+  actualStart?: Date;
+  actualEnd?: Date;
   /**
    * From 0 to 100
    */
@@ -90,6 +95,8 @@ export interface StylingOption {
   headerHeight?: number;
   columnWidth?: number;
   listCellWidth?: string;
+  /** 独立配置名称列宽，不传则使用 listCellWidth */
+  nameColumnWidth?: string;
   rowHeight?: number;
   ganttHeight?: number;
   barCornerRadius?: number;
@@ -114,6 +121,20 @@ export interface StylingOption {
   arrowColor?: string;
   arrowIndent?: number;
   todayColor?: string;
+  /** 左侧四个时间列标题自定义 */
+  timeColumnLabels?: {
+    plannedStart?: string;
+    plannedEnd?: string;
+    actualStart?: string;
+    actualEnd?: string;
+  };
+  /** 左侧四个时间列列宽（例如 "155px"），不传则使用 listCellWidth */
+  timeColumnWidths?: {
+    plannedStart?: string;
+    plannedEnd?: string;
+    actualStart?: string;
+    actualEnd?: string;
+  };
   TooltipContent?: React.FC<{
     task: Task;
     fontSize: string;
