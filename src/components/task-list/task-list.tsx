@@ -31,6 +31,20 @@ export type TaskListProps = {
     actualStart?: string;
     actualEnd?: string;
   };
+  onAddTask?: (parentTaskId: string) => void;
+  AddTaskModal?: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    parentTaskId: string;
+    onConfirm: (taskData: Partial<Task>) => void;
+  }>;
+  onEditTask?: (task: Task) => void;
+  EditTaskModal?: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    task: Task;
+    onConfirm: (taskData: Partial<Task>) => void;
+  }>;
   TaskListHeader: React.FC<{
     headerHeight: number;
     rowWidth: string;
@@ -73,6 +87,20 @@ export type TaskListProps = {
       actualStart?: string;
       actualEnd?: string;
     };
+    onAddTask?: (parentTaskId: string) => void;
+    AddTaskModal?: React.FC<{
+      isOpen: boolean;
+      onClose: () => void;
+      parentTaskId: string;
+      onConfirm: (taskData: Partial<Task>) => void;
+    }>;
+    onEditTask?: (task: Task) => void;
+    EditTaskModal?: React.FC<{
+      isOpen: boolean;
+      onClose: () => void;
+      task: Task;
+      onConfirm: (taskData: Partial<Task>) => void;
+    }>;
   }>;
 };
 
@@ -94,6 +122,10 @@ export const TaskList: React.FC<TaskListProps> = ({
   nameColumnWidth,
   timeColumnLabels,
   timeColumnWidths,
+  onAddTask,
+  AddTaskModal,
+  onEditTask,
+  EditTaskModal,
   TaskListHeader,
   TaskListTable,
 }) => {
@@ -127,6 +159,10 @@ export const TaskList: React.FC<TaskListProps> = ({
     nameColumnWidth,
     timeColumnWidths,
     timeColumnLabels,
+    onAddTask,
+    AddTaskModal,
+    onEditTask,
+    EditTaskModal,
   };
 
   return (

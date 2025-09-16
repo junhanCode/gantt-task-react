@@ -3,6 +3,195 @@ import { Task, ViewMode, Gantt } from "gantt-task-react";
 import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
+import { Modal, Input, Select, Button, DatePicker, InputNumber, Form } from "antd";
+import dayjs from "dayjs";
+
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+
+// 新增任务弹框组件
+const AddTaskModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  parentTaskId: string;
+  onConfirm: (taskData: Partial<Task>) => void;
+}> = ({ isOpen, onClose, parentTaskId, onConfirm }) => {
+  const [form] = Form.useForm();
+
+  const handleSubmit = () => {
+    form.validateFields().then((values) => {
+      const taskData: Partial<Task> = {
+        name: values.name,
+        type: values.type,
+        start: values.dateRange[0].toDate(),
+        end: values.dateRange[1].toDate(),
+        progress: values.progress || 0,
+        project: parentTaskId,
+      };
+      onConfirm(taskData);
+      form.resetFields();
+      onClose();
+    });
+  };
+
+  return (
+    <Modal
+      title="新增子任务"
+      open={isOpen}
+      onCancel={onClose}
+      footer={[
+        <Button key="back" onClick={onClose}>
+          取消
+        </Button>,
+        <Button key="submit" type="primary" onClick={handleSubmit}>
+          确定
+        </Button>,
+      ]}
+    >
+      <Form form={form} layout="vertical">
+        <Form.Item
+          name="name"
+          label="任务名称"
+          rules={[{ required: true, message: "请输入任务名称" }]}
+        >
+          <Input placeholder="请输入任务名称" />
+        </Form.Item>
+        
+        <Form.Item
+          name="type"
+          label="任务类型"
+          initialValue="task"
+          rules={[{ required: true, message: "请选择任务类型" }]}
+        >
+          <Select>
+            <Option value="task">任务</Option>
+            <Option value="milestone">里程碑</Option>
+          </Select>
+        </Form.Item>
+        
+        <Form.Item
+          name="dateRange"
+          label="时间范围"
+          rules={[{ required: true, message: "请选择时间范围" }]}
+        >
+          <RangePicker showTime style={{ width: "100%" }} />
+        </Form.Item>
+        
+        <Form.Item
+          name="progress"
+          label="进度 (%)"
+          initialValue={0}
+        >
+          <InputNumber min={0} max={100} style={{ width: "100%" }} />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+};
+
+// 编辑任务弹框组件
+const EditTaskModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  task: Task;
+  onConfirm: (taskData: Partial<Task>) => void;
+}> = ({ isOpen, onClose, task, onConfirm }) => {
+  const [form] = Form.useForm();
+
+  React.useEffect(() => {
+    if (isOpen && task) {
+      form.setFieldsValue({
+        name: task.name,
+        type: task.type,
+        plannedDateRange: task.plannedStart && task.plannedEnd ? [
+          dayjs(task.plannedStart),
+          dayjs(task.plannedEnd)
+        ] : undefined,
+        actualDateRange: task.actualStart && task.actualEnd ? [
+          dayjs(task.actualStart),
+          dayjs(task.actualEnd)
+        ] : undefined,
+        progress: task.progress,
+      });
+    }
+  }, [isOpen, task, form]);
+
+  const handleSubmit = () => {
+    form.validateFields().then((values) => {
+      const taskData: Partial<Task> = {
+        id: task.id,
+        name: values.name,
+        type: values.type,
+        plannedStart: values.plannedDateRange?.[0]?.toDate(),
+        plannedEnd: values.plannedDateRange?.[1]?.toDate(),
+        actualStart: values.actualDateRange?.[0]?.toDate(),
+        actualEnd: values.actualDateRange?.[1]?.toDate(),
+        progress: values.progress || 0,
+      };
+      onConfirm(taskData);
+      onClose();
+    });
+  };
+
+  return (
+    <Modal
+      title="编辑任务"
+      open={isOpen}
+      onCancel={onClose}
+      footer={[
+        <Button key="back" onClick={onClose}>
+          取消
+        </Button>,
+        <Button key="submit" type="primary" onClick={handleSubmit}>
+          确定
+        </Button>,
+      ]}
+      width={600}
+    >
+      <Form form={form} layout="vertical">
+        <Form.Item
+          name="name"
+          label="任务名称"
+          rules={[{ required: true, message: "请输入任务名称" }]}
+        >
+          <Input placeholder="请输入任务名称" />
+        </Form.Item>
+        
+        <Form.Item
+          name="type"
+          label="任务类型"
+          rules={[{ required: true, message: "请选择任务类型" }]}
+        >
+          <Select>
+            <Option value="task">任务</Option>
+            <Option value="milestone">里程碑</Option>
+          </Select>
+        </Form.Item>
+        
+        <Form.Item
+          name="plannedDateRange"
+          label="计划时间范围"
+        >
+          <RangePicker showTime style={{ width: "100%" }} />
+        </Form.Item>
+        
+        <Form.Item
+          name="actualDateRange"
+          label="实际时间范围"
+        >
+          <RangePicker showTime style={{ width: "100%" }} />
+        </Form.Item>
+        
+        <Form.Item
+          name="progress"
+          label="进度 (%)"
+        >
+          <InputNumber min={0} max={100} style={{ width: "100%" }} />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+};
 
 // Init
 const App = () => {
@@ -67,6 +256,34 @@ const App = () => {
     console.log("On expander click Id:" + task.id);
   };
 
+  const handleAddTask = (parentTaskId: string) => {
+    console.log("Adding task under parent:", parentTaskId);
+  };
+
+  const handleEditTask = (task: Task) => {
+    console.log("Editing task:", task.id);
+  };
+
+  const handleAddModalConfirm = (taskData: Partial<Task>) => {
+    const newTask: Task = {
+      id: `Task_${Date.now()}`,
+      name: taskData.name || "新任务",
+      type: taskData.type || "task",
+      start: taskData.start || new Date(),
+      end: taskData.end || new Date(),
+      progress: taskData.progress || 0,
+      project: taskData.project,
+      displayOrder: tasks.length + 1,
+    };
+    setTasks([...tasks, newTask]);
+  };
+
+  const handleEditModalConfirm = (taskData: Partial<Task>) => {
+    setTasks(tasks.map(t => 
+      t.id === taskData.id ? { ...t, ...taskData } : t
+    ));
+  };
+
   return (
     <div className="Wrapper">
       <ViewSwitcher
@@ -100,6 +317,20 @@ const App = () => {
           actualEnd: "180px",
         }}
         columnWidth={columnWidth}
+        onAddTask={handleAddTask}
+        onEditTask={handleEditTask}
+        AddTaskModal={(props) => (
+          <AddTaskModal
+            {...props}
+            onConfirm={handleAddModalConfirm}
+          />
+        )}
+        EditTaskModal={(props) => (
+          <EditTaskModal
+            {...props}
+            onConfirm={handleEditModalConfirm}
+          />
+        )}
       />
       <h3>Gantt With Limited Height</h3>
       <Gantt
@@ -128,6 +359,20 @@ const App = () => {
         }}
         ganttHeight={300}
         columnWidth={columnWidth}
+        onAddTask={handleAddTask}
+        onEditTask={handleEditTask}
+        AddTaskModal={(props) => (
+          <AddTaskModal
+            {...props}
+            onConfirm={handleAddModalConfirm}
+          />
+        )}
+        EditTaskModal={(props) => (
+          <EditTaskModal
+            {...props}
+            onConfirm={handleEditModalConfirm}
+          />
+        )}
       />
     </div>
   );

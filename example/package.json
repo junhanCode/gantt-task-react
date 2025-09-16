@@ -17,6 +17,8 @@
     "@types/node": "file:../node_modules/@types/node",
     "@types/react": "file:../node_modules/@types/react",
     "@types/react-dom": "file:../node_modules/@types/react-dom",
+    "antd": "^5.0.0",
+    "dayjs": "^1.11.0",
     "gantt-task-react": "file:..",
     "postcss-preset-env": "file:../node_modules/postcss-preset-env",
     "react": "file:../node_modules/react",
