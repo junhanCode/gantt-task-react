@@ -10,6 +10,32 @@ const formatYmd = (date: Date) => {
   return `${y}/${m}/${d}`;
 };
 
+// 加号图标组件
+const AddIcon: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+  <svg
+    className={styles.addIcon}
+    viewBox="0 0 1024 1024"
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    onClick={onClick}
+  >
+    <path
+      d="M512 909.061224c-218.906122 0-397.061224-178.155102-397.061224-397.061224s178.155102-397.061224 397.061224-397.061224 397.061224 178.155102 397.061224 397.061224-178.155102 397.061224-397.061224 397.061224z"
+      fill="#16C4AF"
+    />
+    <path
+      d="M660.897959 531.853061h-297.795918c-10.971429 0-19.853061-8.881633-19.853061-19.853061s8.881633-19.853061 19.853061-19.853061h297.795918c10.971429 0 19.853061 8.881633 19.853061 19.853061s-8.881633 19.853061-19.853061 19.853061z"
+      fill="#DCFFFA"
+    />
+    <path
+      d="M512 680.75102c-10.971429 0-19.853061-8.881633-19.853061-19.853061v-297.795918c0-10.971429 8.881633-19.853061 19.853061-19.853061s19.853061 8.881633 19.853061 19.853061v297.795918c0 10.971429-8.881633 19.853061-19.853061 19.853061z"
+      fill="#DCFFFA"
+    />
+  </svg>
+);
+
 export const TaskListTableDefault: React.FC<{
   rowHeight: number;
   rowWidth: string;
@@ -61,46 +87,18 @@ export const TaskListTableDefault: React.FC<{
   onEditTask,
   EditTaskModal,
 }) => {
-  const [contextMenu, setContextMenu] = useState<{
-    visible: boolean;
-    x: number;
-    y: number;
-    task: Task | null;
-  }>({
-    visible: false,
-    x: 0,
-    y: 0,
-    task: null,
-  });
+  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [parentTaskId, setParentTaskId] = useState<string>("");
   const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
 
-  const handleContextMenu = (e: React.MouseEvent, task: Task) => {
-    e.preventDefault();
-    console.log("Right click detected on task:", task.name);
-    setContextMenu({
-      visible: true,
-      x: e.clientX,
-      y: e.clientY,
-      task,
-    });
-  };
-
   const handleAddClick = (taskId: string) => {
     console.log("Add task clicked for:", taskId);
     setParentTaskId(taskId);
     setAddModalOpen(true);
-    setContextMenu({ visible: false, x: 0, y: 0, task: null });
   };
 
-  const handleEditClick = (task: Task) => {
-    console.log("Edit task clicked for:", task.name);
-    setCurrentEditTask(task);
-    setEditModalOpen(true);
-    setContextMenu({ visible: false, x: 0, y: 0, task: null });
-  };
 
   const handleAddModalConfirm = () => {
     if (onAddTask) {
@@ -126,15 +124,6 @@ export const TaskListTableDefault: React.FC<{
     setCurrentEditTask(null);
   };
 
-  // 点击其他地方关闭右键菜单
-  React.useEffect(() => {
-    const handleClickOutside = () => {
-      setContextMenu({ visible: false, x: 0, y: 0, task: null });
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
-
   return (
     <div>
       <div
@@ -144,7 +133,7 @@ export const TaskListTableDefault: React.FC<{
           fontSize: fontSize,
         }}
       >
-        {tasks.map(t => {
+        {tasks.map((t) => {
           let expanderSymbol = "";
           if (t.hideChildren === false) {
             expanderSymbol = "▼";
@@ -153,112 +142,87 @@ export const TaskListTableDefault: React.FC<{
           }
 
           return (
-            <div
-              className={styles.taskListTableRow}
-              style={{ height: rowHeight }}
-              key={`${t.id}row`}
-              onContextMenu={(e) => handleContextMenu(e, t)}
-            >
+            <div key={`${t.id}row`}>
               <div
-                className={styles.taskListCell}
-                style={{
-                  minWidth: nameColumnWidth ?? rowWidth,
-                  maxWidth: nameColumnWidth ?? rowWidth,
-                }}
-                title={t.name}
+                className={styles.taskListTableRow}
+                style={{ height: rowHeight }}
+                onMouseEnter={() => setHoveredTaskId(t.id)}
+                onMouseLeave={() => setHoveredTaskId(null)}
               >
-                <div className={styles.taskListNameWrapper}>
-                  <div
-                    className={
-                      expanderSymbol
-                        ? styles.taskListExpander
-                        : styles.taskListEmptyExpander
-                    }
-                    onClick={() => onExpanderClick(t)}
-                  >
-                    {expanderSymbol}
+                <div
+                  className={styles.taskListCell}
+                  style={{
+                    minWidth: nameColumnWidth ?? rowWidth,
+                    maxWidth: nameColumnWidth ?? rowWidth,
+                  }}
+                  title={t.name}
+                >
+                  <div className={styles.taskListNameWrapper}>
+                    <div
+                      className={
+                        expanderSymbol
+                          ? styles.taskListExpander
+                          : styles.taskListEmptyExpander
+                      }
+                      onClick={() => onExpanderClick(t)}
+                    >
+                      {expanderSymbol}
+                    </div>
+                    <div>{t.name}</div>
                   </div>
-                  <div>{t.name}</div>
+                </div>
+                <div
+                  className={styles.taskListCell}
+                  style={{
+                    minWidth: timeColumnWidths?.plannedStart ?? rowWidth,
+                    maxWidth: timeColumnWidths?.plannedStart ?? rowWidth,
+                  }}
+                >
+                  &nbsp;{formatYmd(t.plannedStart ?? t.start)}
+                </div>
+                <div
+                  className={styles.taskListCell}
+                  style={{
+                    minWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
+                    maxWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
+                  }}
+                >
+                  &nbsp;{formatYmd(t.plannedEnd ?? t.end)}
+                </div>
+                <div
+                  className={styles.taskListCell}
+                  style={{
+                    minWidth: timeColumnWidths?.actualStart ?? rowWidth,
+                    maxWidth: timeColumnWidths?.actualStart ?? rowWidth,
+                  }}
+                >
+                  &nbsp;{formatYmd(t.actualStart ?? t.start)}
+                </div>
+                <div
+                  className={styles.taskListCell}
+                  style={{
+                    minWidth: timeColumnWidths?.actualEnd ?? rowWidth,
+                    maxWidth: timeColumnWidths?.actualEnd ?? rowWidth,
+                  }}
+                >
+                  &nbsp;{formatYmd(t.actualEnd ?? t.end)}
                 </div>
               </div>
-              <div
-                className={styles.taskListCell}
-                style={{
-                  minWidth: timeColumnWidths?.plannedStart ?? rowWidth,
-                  maxWidth: timeColumnWidths?.plannedStart ?? rowWidth,
-                }}
-              >
-                &nbsp;{formatYmd(t.plannedStart ?? t.start)}
-              </div>
-              <div
-                className={styles.taskListCell}
-                style={{
-                  minWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
-                  maxWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
-                }}
-              >
-                &nbsp;{formatYmd(t.plannedEnd ?? t.end)}
-              </div>
-              <div
-                className={styles.taskListCell}
-                style={{
-                  minWidth: timeColumnWidths?.actualStart ?? rowWidth,
-                  maxWidth: timeColumnWidths?.actualStart ?? rowWidth,
-                }}
-              >
-                &nbsp;{formatYmd(t.actualStart ?? t.start)}
-              </div>
-              <div
-                className={styles.taskListCell}
-                style={{
-                  minWidth: timeColumnWidths?.actualEnd ?? rowWidth,
-                  maxWidth: timeColumnWidths?.actualEnd ?? rowWidth,
-                }}
-              >
-                &nbsp;{formatYmd(t.actualEnd ?? t.end)}
-              </div>
+              
+              {/* 悬浮时显示的加号图标 */}
+              {hoveredTaskId === t.id && (
+                <div 
+                  className={styles.addIconContainer}
+                  onMouseEnter={() => setHoveredTaskId(t.id)} // 鼠标进入图标时保持显示
+                  onMouseLeave={() => setHoveredTaskId(null)} // 鼠标离开图标时隐藏
+                >
+                  <AddIcon onClick={() => handleAddClick(t.id)} />
+                </div>
+              )}
             </div>
           );
         })}
       </div>
-      
-      {/* 右键菜单 */}
-      {contextMenu.visible && contextMenu.task && (
-        <div
-          style={{
-            position: "fixed",
-            top: contextMenu.y,
-            left: contextMenu.x,
-            backgroundColor: "white",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-            zIndex: 1000,
-            minWidth: "120px",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div
-            style={{
-              padding: "8px 12px",
-              cursor: "pointer",
-              borderBottom: "1px solid #eee",
-            }}
-            onClick={() => handleAddClick(contextMenu.task!.id)}
-          >
-            新增子任务
-          </div>
-          <div
-            style={{
-              padding: "8px 12px",
-              cursor: "pointer",
-            }}
-            onClick={() => handleEditClick(contextMenu.task!)}
-          >
-            编辑任务
-          </div>
-        </div>
-      )}
 
       {/* 自定义弹框 */}
       {AddTaskModal && addModalOpen && (

@@ -2,11 +2,13 @@
   display: table;
   border-bottom: #e6e4e4 1px solid;
   border-left: #e6e4e4 1px solid;
+  border-collapse: collapse; /* 添加这行 */
 }
 
 .taskListTableRow {
   display: table-row;
   text-overflow: ellipsis;
+  border-bottom: 1px solid #e6e4e4; /* 添加底部边框 */
 }
 
 .taskListTableRow:nth-of-type(even) {
@@ -35,4 +37,30 @@
   font-size: 0.6rem;
   padding-left: 1rem;
   user-select: none;
+}
+
+/* 加号图标容器样式 */
+.addIconContainer {
+  position: relative;
+  height: 0;
+  display: flex;
+  justify-content: flex-start; /* 改为左对齐 */
+  align-items: center;
+  z-index: 10;
+}
+
+/* 加号图标样式 */
+.addIcon { 
+  position: absolute;
+  top: -14px;
+  left: -2px; /* 向左偏移，放在表格左边框位置 */
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  z-index: 11;
+  width: 32px; /* 放大两倍：16px * 2 = 32px */
+  height: 32px; /* 放大两倍：16px * 2 = 32px */
+}
+
+.addIcon:hover {
+  transform: scale(1.1);
 }

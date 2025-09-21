@@ -319,12 +319,16 @@ const App = () => {
         columnWidth={columnWidth}
         onAddTask={handleAddTask}
         onEditTask={handleEditTask}
-        AddTaskModal={(props) => (
-          <AddTaskModal
-            {...props}
-            onConfirm={handleAddModalConfirm}
-          />
-        )}
+        AddTaskModal={(props) => {
+          debugger
+          
+          return (
+            <AddTaskModal
+              {...props}
+              onConfirm={handleAddModalConfirm}
+            />
+          )
+        }}
         EditTaskModal={(props) => (
           <EditTaskModal
             {...props}
