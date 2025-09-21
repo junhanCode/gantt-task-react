@@ -59,7 +59,7 @@ export const TaskListTableDefault: React.FC<{
     actualStart?: string;
     actualEnd?: string;
   };
-  onAddTask?: (parentTaskId: string) => void;
+  onAddTask?: (task: Task) => void;
   AddTaskModal?: React.FC<{
     isOpen: boolean;
     onClose: () => void;
@@ -83,46 +83,21 @@ export const TaskListTableDefault: React.FC<{
   nameColumnWidth,
   timeColumnWidths,
   onAddTask,
-  AddTaskModal,
-  onEditTask,
-  EditTaskModal,
+
 }) => {
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [parentTaskId, setParentTaskId] = useState<string>("");
-  const [currentEditTask, setCurrentEditTask] = useState<Task | null>(null);
 
-  const handleAddClick = (taskId: string) => {
-    console.log("Add task clicked for:", taskId);
-    setParentTaskId(taskId);
-    setAddModalOpen(true);
-  };
-
-
-  const handleAddModalConfirm = () => {
+  const handleAddClick = (task: Task) => {
+    console.log("Add task clicked for:", task);
+    // 直接调用父组件的 onAddTask，传递完整的任务对象
     if (onAddTask) {
-      onAddTask(parentTaskId);
+      onAddTask(task);
     }
-    setAddModalOpen(false);
   };
 
-  const handleEditModalConfirm = (taskData: Partial<Task>) => {
-    if (onEditTask && currentEditTask) {
-      onEditTask({ ...currentEditTask, ...taskData });
-    }
-    setEditModalOpen(false);
-    setCurrentEditTask(null);
-  };
 
-  const handleAddModalClose = () => {
-    setAddModalOpen(false);
-  };
 
-  const handleEditModalClose = () => {
-    setEditModalOpen(false);
-    setCurrentEditTask(null);
-  };
+
 
   return (
     <div>
@@ -216,31 +191,13 @@ export const TaskListTableDefault: React.FC<{
                   onMouseEnter={() => setHoveredTaskId(t.id)} // 鼠标进入图标时保持显示
                   onMouseLeave={() => setHoveredTaskId(null)} // 鼠标离开图标时隐藏
                 >
-                  <AddIcon onClick={() => handleAddClick(t.id)} />
+                  <AddIcon onClick={() => handleAddClick(t)} />
                 </div>
               )}
             </div>
           );
         })}
       </div>
-
-      {/* 自定义弹框 */}
-      {AddTaskModal && addModalOpen && (
-        <AddTaskModal
-          isOpen={addModalOpen}
-          onClose={handleAddModalClose}
-          parentTaskId={parentTaskId}
-          onConfirm={handleAddModalConfirm}
-        />
-      )}
-      {EditTaskModal && editModalOpen && currentEditTask && (
-        <EditTaskModal
-          isOpen={editModalOpen}
-          onClose={handleEditModalClose}
-          task={currentEditTask}
-          onConfirm={handleEditModalConfirm}
-        />
-      )}
     </div>
   );
 };

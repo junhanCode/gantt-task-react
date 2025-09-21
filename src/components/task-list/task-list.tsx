@@ -31,7 +31,7 @@ export type TaskListProps = {
     actualStart?: string;
     actualEnd?: string;
   };
-  onAddTask?: (parentTaskId: string) => void;
+  onAddTask?: (task: Task) => void; // Change from (parentTaskId: string) => void
   AddTaskModal?: React.FC<{
     isOpen: boolean;
     onClose: () => void;
@@ -87,7 +87,7 @@ export type TaskListProps = {
       actualStart?: string;
       actualEnd?: string;
     };
-    onAddTask?: (parentTaskId: string) => void;
+    onAddTask?: (task: Task) => void; // 修改为接收完整的Task对象
     AddTaskModal?: React.FC<{
       isOpen: boolean;
       onClose: () => void;

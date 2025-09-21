@@ -198,6 +198,13 @@ const App = () => {
   const [view, setView] = React.useState<ViewMode>(ViewMode.DayShift);
   const [tasks, setTasks] = React.useState<Task[]>(initTasks());
   const [isChecked, setIsChecked] = React.useState(true);
+  
+  // 添加弹框状态
+  const [showAddModal, setShowAddModal] = React.useState(false);
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [selectedParentTask, setSelectedParentTask] = React.useState<Task | null>(null);
+  const [selectedEditTask, setSelectedEditTask] = React.useState<Task | null>(null);
+
   let columnWidth = 65;
   if (view === ViewMode.Year) {
     columnWidth = 350;
@@ -256,12 +263,16 @@ const App = () => {
     console.log("On expander click Id:" + task.id);
   };
 
-  const handleAddTask = (parentTaskId: string) => {
-    console.log("Adding task under parent:", parentTaskId);
+  const handleAddTask = (parentTask: Task) => {
+    console.log("Parent task for new task:", parentTask);
+    setSelectedParentTask(parentTask);
+    setShowAddModal(true);
   };
 
   const handleEditTask = (task: Task) => {
     console.log("Editing task:", task.id);
+    setSelectedEditTask(task);
+    setShowEditModal(true);
   };
 
   const handleAddModalConfirm = (taskData: Partial<Task>) => {
@@ -272,16 +283,30 @@ const App = () => {
       start: taskData.start || new Date(),
       end: taskData.end || new Date(),
       progress: taskData.progress || 0,
-      project: taskData.project,
+      project: selectedParentTask?.id,
       displayOrder: tasks.length + 1,
     };
     setTasks([...tasks, newTask]);
+    setShowAddModal(false);
+    setSelectedParentTask(null);
   };
 
   const handleEditModalConfirm = (taskData: Partial<Task>) => {
     setTasks(tasks.map(t => 
       t.id === taskData.id ? { ...t, ...taskData } : t
     ));
+    setShowEditModal(false);
+    setSelectedEditTask(null);
+  };
+
+  const handleAddModalClose = () => {
+    setShowAddModal(false);
+    setSelectedParentTask(null);
+  };
+
+  const handleEditModalClose = () => {
+    setShowEditModal(false);
+    setSelectedEditTask(null);
   };
 
   return (
@@ -319,23 +344,27 @@ const App = () => {
         columnWidth={columnWidth}
         onAddTask={handleAddTask}
         onEditTask={handleEditTask}
-        AddTaskModal={(props) => {
-          debugger
-          
-          return (
-            <AddTaskModal
-              {...props}
-              onConfirm={handleAddModalConfirm}
-            />
-          )
-        }}
-        EditTaskModal={(props) => (
-          <EditTaskModal
-            {...props}
-            onConfirm={handleEditModalConfirm}
-          />
-        )}
       />
+      
+      {/* 新增任务弹框 */}
+      {showAddModal && selectedParentTask && (
+        <AddTaskModal
+          isOpen={showAddModal}
+          onClose={handleAddModalClose}
+          parentTaskId={selectedParentTask.id}
+          onConfirm={handleAddModalConfirm}
+        />
+      )}
+      
+      {/* 编辑任务弹框 */}
+      {showEditModal && selectedEditTask && (
+        <EditTaskModal
+          isOpen={showEditModal}
+          onClose={handleEditModalClose}
+          task={selectedEditTask}
+          onConfirm={handleEditModalConfirm}
+        />
+      )}
     </div>
   );
 };

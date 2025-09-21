@@ -164,7 +164,7 @@ export interface StylingOption {
 
 export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   tasks: Task[];
-  onAddTask?: (parentTaskId: string) => void;
+  onAddTask?: (task: Task) => void; // 修改这里：从 (parentTaskId: string) => void 改为 (task: Task) => void
   AddTaskModal?: React.FC<{
     isOpen: boolean;
     onClose: () => void;
