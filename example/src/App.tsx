@@ -291,48 +291,6 @@ const App = () => {
         onViewListChange={setIsChecked}
         isChecked={isChecked}
       />
-      <h3>Gantt With Unlimited Height</h3>
-      <Gantt
-        tasks={tasks}
-        viewMode={view}
-        onDateChange={handleTaskChange}
-        onDelete={handleTaskDelete}
-        onProgressChange={handleProgressChange}
-        onDoubleClick={handleDblClick}
-        onClick={handleClick}
-        onSelect={handleSelect}
-        onExpanderClick={handleExpanderClick}
-        listCellWidth={isChecked ? "140px" : ""}
-        nameColumnWidth="200px"
-        timeColumnLabels={{
-          plannedStart: "计划开始时间",
-          plannedEnd: "计划结束时间",
-          actualStart: "实际开始时间",
-          actualEnd: "实际结束时间",
-        }}
-        timeColumnWidths={{
-          plannedStart: "180px",
-          plannedEnd: "180px",
-          actualStart: "180px",
-          actualEnd: "180px",
-        }}
-        columnWidth={columnWidth}
-        onAddTask={handleAddTask}
-        onEditTask={handleEditTask}
-        AddTaskModal={(props) => (
-          <AddTaskModal
-            {...props}
-            onConfirm={handleAddModalConfirm}
-          />
-        )}
-        EditTaskModal={(props) => (
-          <EditTaskModal
-            {...props}
-            onConfirm={handleEditModalConfirm}
-          />
-        )}
-      />
-      <h3>Gantt With Limited Height</h3>
       <Gantt
         tasks={tasks}
         viewMode={view}
