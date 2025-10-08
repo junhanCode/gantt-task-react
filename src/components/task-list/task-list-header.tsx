@@ -19,7 +19,9 @@ export const TaskListHeaderDefault: React.FC<{
     actualStart?: string;
     actualEnd?: string;
   };
-}> = ({ headerHeight, fontFamily, fontSize, rowWidth, nameColumnWidth, timeColumnLabels, timeColumnWidths }) => {
+  operationsColumnWidth?: string;
+  operationsColumnLabel?: string;
+}> = ({ headerHeight, fontFamily, fontSize, rowWidth, nameColumnWidth, timeColumnLabels, timeColumnWidths, operationsColumnWidth, operationsColumnLabel }) => {
   const label = {
     plannedStart: timeColumnLabels?.plannedStart ?? "Planned Start",
     plannedEnd: timeColumnLabels?.plannedEnd ?? "Planned End",
@@ -32,6 +34,7 @@ export const TaskListHeaderDefault: React.FC<{
     plannedEnd: timeColumnWidths?.plannedEnd ?? rowWidth,
     actualStart: timeColumnWidths?.actualStart ?? rowWidth,
     actualEnd: timeColumnWidths?.actualEnd ?? rowWidth,
+    operations: operationsColumnWidth ?? "120px",
   };
   return (
     <div
@@ -114,6 +117,21 @@ export const TaskListHeaderDefault: React.FC<{
           }}
         >
           &nbsp;{label.actualEnd}
+        </div>
+        <div
+          className={styles.ganttTable_HeaderSeparator}
+          style={{
+            height: headerHeight * 0.5,
+            marginTop: headerHeight * 0.25,
+          }}
+        />
+        <div
+          className={styles.ganttTable_HeaderItem}
+          style={{
+            minWidth: width.operations,
+          }}
+        >
+          &nbsp;{operationsColumnLabel ?? "操作"}
         </div>
       </div>
     </div>

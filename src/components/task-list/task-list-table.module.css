@@ -39,28 +39,36 @@
   user-select: none;
 }
 
-/* 加号图标容器样式 */
-.addIconContainer {
-  position: relative;
-  height: 0;
-  display: flex;
-  justify-content: flex-start; /* 改为左对齐 */
-  align-items: center;
-  z-index: 10;
-}
-
 /* 加号图标样式 */
 .addIcon { 
-  position: absolute;
-  top: -14px;
-  left: -2px; /* 向左偏移，放在表格左边框位置 */
   cursor: pointer;
-  transition: transform 0.2s ease;
-  z-index: 11;
-  width: 32px; /* 放大两倍：16px * 2 = 32px */
-  height: 32px; /* 放大两倍：16px * 2 = 32px */
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0.7;
 }
 
 .addIcon:hover {
-  transform: scale(1.1);
+  transform: scale(1.2);
+  opacity: 1;
+}
+
+/* 操作列容器样式 */
+.operationsContainer {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 2px;
+  flex-wrap: nowrap;
+}
+
+/* 操作图标样式 */
+.actionIcon {
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  opacity: 0.7;
+}
+
+.actionIcon:hover {
+  transform: scale(1.2);
+  opacity: 1;
 }

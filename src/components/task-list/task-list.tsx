@@ -45,6 +45,9 @@ export type TaskListProps = {
     task: Task;
     onConfirm: (taskData: Partial<Task>) => void;
   }>;
+  onDeleteTask?: (task: Task) => void;
+  operationsColumnWidth?: string;
+  operationsColumnLabel?: string;
   TaskListHeader: React.FC<{
     headerHeight: number;
     rowWidth: string;
@@ -63,6 +66,8 @@ export type TaskListProps = {
       actualStart?: string;
       actualEnd?: string;
     };
+    operationsColumnWidth?: string;
+    operationsColumnLabel?: string;
   }>;
   TaskListTable: React.FC<{
     rowHeight: number;
@@ -101,6 +106,8 @@ export type TaskListProps = {
       task: Task;
       onConfirm: (taskData: Partial<Task>) => void;
     }>;
+    onDeleteTask?: (task: Task) => void;
+    operationsColumnWidth?: string;
   }>;
 };
 
@@ -123,9 +130,10 @@ export const TaskList: React.FC<TaskListProps> = ({
   timeColumnLabels,
   timeColumnWidths,
   onAddTask,
-  AddTaskModal,
   onEditTask,
-  EditTaskModal,
+  onDeleteTask,
+  operationsColumnWidth,
+  operationsColumnLabel,
   TaskListHeader,
   TaskListTable,
 }) => {
@@ -144,6 +152,8 @@ export const TaskList: React.FC<TaskListProps> = ({
     nameColumnWidth,
     timeColumnLabels,
     timeColumnWidths,
+    operationsColumnWidth,
+    operationsColumnLabel,
   };
   const selectedTaskId = selectedTask ? selectedTask.id : "";
   const tableProps = {
@@ -159,10 +169,10 @@ export const TaskList: React.FC<TaskListProps> = ({
     nameColumnWidth,
     timeColumnWidths,
     timeColumnLabels,
+    operationsColumnWidth,
     onAddTask,
-    AddTaskModal,
     onEditTask,
-    EditTaskModal,
+    onDeleteTask,
   };
 
   return (

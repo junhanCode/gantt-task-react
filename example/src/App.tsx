@@ -34,6 +34,13 @@ const AddTaskModal: React.FC<{
     });
   };
 
+  // 当弹框关闭时重置表单
+  React.useEffect(() => {
+    if (!isOpen) {
+      form.resetFields();
+    }
+  }, [isOpen, form]);
+
   return (
     <Modal
       title="新增子任务"
@@ -199,11 +206,6 @@ const App = () => {
   const [tasks, setTasks] = React.useState<Task[]>(initTasks());
   const [isChecked, setIsChecked] = React.useState(true);
   
-  // 添加弹框状态
-  const [showAddModal, setShowAddModal] = React.useState(false);
-  const [showEditModal, setShowEditModal] = React.useState(false);
-  const [selectedParentTask, setSelectedParentTask] = React.useState<Task | null>(null);
-  const [selectedEditTask, setSelectedEditTask] = React.useState<Task | null>(null);
 
   let columnWidth = 65;
   if (view === ViewMode.Year) {
@@ -263,18 +265,36 @@ const App = () => {
     console.log("On expander click Id:" + task.id);
   };
 
+  // 弹框状态管理
+  const [showAddModal, setShowAddModal] = React.useState(false);
+  const [showEditModal, setShowEditModal] = React.useState(false);
+  const [selectedParentTask, setSelectedParentTask] = React.useState<Task | null>(null);
+  const [selectedEditTask, setSelectedEditTask] = React.useState<Task | null>(null);
+
   const handleAddTask = (parentTask: Task) => {
-    console.log("Parent task for new task:", parentTask);
+    console.log("=== handleAddTask called ===");
+    console.log("Add task clicked for parent:", parentTask);
+    console.log("Current showAddModal state:", showAddModal);
     setSelectedParentTask(parentTask);
     setShowAddModal(true);
+    console.log("Set showAddModal to true");
   };
 
   const handleEditTask = (task: Task) => {
-    console.log("Editing task:", task.id);
+    console.log("Edit task clicked:", task);
     setSelectedEditTask(task);
     setShowEditModal(true);
   };
 
+  const handleDeleteTask = (task: Task) => {
+    console.log("Deleting task:", task.id);
+    const conf = window.confirm(`确定要删除任务 "${task.name}" 吗？`);
+    if (conf) {
+      setTasks(tasks.filter(t => t.id !== task.id));
+    }
+  };
+
+  // 弹框处理函数
   const handleAddModalConfirm = (taskData: Partial<Task>) => {
     const newTask: Task = {
       id: `Task_${Date.now()}`,
@@ -308,6 +328,7 @@ const App = () => {
     setShowEditModal(false);
     setSelectedEditTask(null);
   };
+
 
   return (
     <div className="Wrapper">
@@ -344,6 +365,9 @@ const App = () => {
         columnWidth={columnWidth}
         onAddTask={handleAddTask}
         onEditTask={handleEditTask}
+        onDeleteTask={handleDeleteTask}
+        operationsColumnWidth="120px"
+        operationsColumnLabel="操作"
       />
       
       {/* 新增任务弹框 */}

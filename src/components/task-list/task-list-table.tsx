@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import styles from "./task-list-table.module.css";
 import { Task } from "../../types/public-types";
 
@@ -36,6 +36,62 @@ const AddIcon: React.FC<{ onClick: () => void }> = ({ onClick }) => (
   </svg>
 );
 
+// 编辑图标组件
+const EditIcon: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+  <svg
+    className={styles.actionIcon}
+    viewBox="0 0 1024 1024"
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    onClick={onClick}
+  >
+    <path
+      d="M832 512c0-176-144-320-320-320S192 336 192 512s144 320 320 320 320-144 320-320z m-320 256c-141.4 0-256-114.6-256-256s114.6-256 256-256 256 114.6 256 256-114.6 256-256 256z"
+      fill="#1890ff"
+    />
+    <path
+      d="M512 256c-141.4 0-256 114.6-256 256s114.6 256 256 256 256-114.6 256-256-114.6-256-256-256z m0 448c-106 0-192-86-192-192s86-192 192-192 192 86 192 192-86 192-192 192z"
+      fill="#1890ff"
+    />
+    <path
+      d="M512 384c-70.7 0-128 57.3-128 128s57.3 128 128 128 128-57.3 128-128-57.3-128-128-128z m0 192c-35.3 0-64-28.7-64-64s28.7-64 64-64 64 28.7 64 64-28.7 64-64 64z"
+      fill="#1890ff"
+    />
+  </svg>
+);
+
+// 删除图标组件
+const DeleteIcon: React.FC<{ onClick: () => void }> = ({ onClick }) => (
+  <svg
+    className={styles.actionIcon}
+    viewBox="0 0 1024 1024"
+    version="1.1"
+    xmlns="http://www.w3.org/2000/svg"
+    width="16"
+    height="16"
+    onClick={onClick}
+  >
+    <path
+      d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64z m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372z"
+      fill="#ff4d4f"
+    />
+    <path
+      d="M512 140c-205.4 0-372 166.6-372 372s166.6 372 372 372 372-166.6 372-372-166.6-372-372-372z m0 680c-170.1 0-308-137.9-308-308s137.9-308 308-308 308 137.9 308 308-137.9 308-308 308z"
+      fill="#ff4d4f"
+    />
+    <path
+      d="M512 256c-141.4 0-256 114.6-256 256s114.6 256 256 256 256-114.6 256-256-114.6-256-256-256z m0 448c-106 0-192-86-192-192s86-192 192-192 192 86 192 192-86 192-192 192z"
+      fill="#ff4d4f"
+    />
+    <path
+      d="M512 320c-106 0-192 86-192 192s86 192 192 192 192-86 192-192-86-192-192-192z m0 320c-70.7 0-128-57.3-128-128s57.3-128 128-128 128 57.3 128 128-57.3 128-128 128z"
+      fill="#ff4d4f"
+    />
+  </svg>
+);
+
 export const TaskListTableDefault: React.FC<{
   rowHeight: number;
   rowWidth: string;
@@ -59,6 +115,7 @@ export const TaskListTableDefault: React.FC<{
     actualStart?: string;
     actualEnd?: string;
   };
+  operationsColumnWidth?: string;
   onAddTask?: (task: Task) => void;
   AddTaskModal?: React.FC<{
     isOpen: boolean;
@@ -73,6 +130,7 @@ export const TaskListTableDefault: React.FC<{
     task: Task;
     onConfirm: (taskData: Partial<Task>) => void;
   }>;
+  onDeleteTask?: (task: Task) => void;
 }> = ({
   rowHeight,
   rowWidth,
@@ -82,16 +140,34 @@ export const TaskListTableDefault: React.FC<{
   onExpanderClick,
   nameColumnWidth,
   timeColumnWidths,
+  operationsColumnWidth,
   onAddTask,
-
+  onEditTask,
+  onDeleteTask,
 }) => {
-  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
-
   const handleAddClick = (task: Task) => {
+    console.log("=== handleAddClick called ===");
     console.log("Add task clicked for:", task);
-    // 直接调用父组件的 onAddTask，传递完整的任务对象
+    console.log("onAddTask available:", !!onAddTask);
     if (onAddTask) {
+      console.log("Calling onAddTask...");
       onAddTask(task);
+    } else {
+      console.log("onAddTask is not available!");
+    }
+  };
+
+  const handleEditClick = (task: Task) => {
+    console.log("Edit task clicked for:", task);
+    if (onEditTask) {
+      onEditTask(task);
+    }
+  };
+
+  const handleDeleteClick = (task: Task) => {
+    console.log("Delete task clicked for:", task);
+    if (onDeleteTask) {
+      onDeleteTask(task);
     }
   };
 
@@ -121,8 +197,6 @@ export const TaskListTableDefault: React.FC<{
               <div
                 className={styles.taskListTableRow}
                 style={{ height: rowHeight }}
-                onMouseEnter={() => setHoveredTaskId(t.id)}
-                onMouseLeave={() => setHoveredTaskId(null)}
               >
                 <div
                   className={styles.taskListCell}
@@ -182,18 +256,20 @@ export const TaskListTableDefault: React.FC<{
                 >
                   &nbsp;{formatYmd(t.actualEnd ?? t.end)}
                 </div>
-              </div>
-              
-              {/* 悬浮时显示的加号图标 */}
-              {hoveredTaskId === t.id && (
-                <div 
-                  className={styles.addIconContainer}
-                  onMouseEnter={() => setHoveredTaskId(t.id)} // 鼠标进入图标时保持显示
-                  onMouseLeave={() => setHoveredTaskId(null)} // 鼠标离开图标时隐藏
+                <div
+                  className={styles.taskListCell}
+                  style={{
+                    minWidth: operationsColumnWidth ?? "120px",
+                    maxWidth: operationsColumnWidth ?? "120px",
+                  }}
                 >
-                  <AddIcon onClick={() => handleAddClick(t)} />
+                  <div className={styles.operationsContainer}>
+                    <AddIcon onClick={() => handleAddClick(t)} />
+                    <EditIcon onClick={() => handleEditClick(t)} />
+                    <DeleteIcon onClick={() => handleDeleteClick(t)} />
+                  </div>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}

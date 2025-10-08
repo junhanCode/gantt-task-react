@@ -178,4 +178,7 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     task: Task;
     onConfirm: (taskData: Partial<Task>) => void;
   }>;
+  onDeleteTask?: (task: Task) => void;
+  operationsColumnWidth?: string;
+  operationsColumnLabel?: string;
 }
