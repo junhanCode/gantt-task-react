@@ -89,10 +89,20 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
         xStep,
         timeStep,
         initEventX1Delta,
-        rtl
+        rtl,
+        dates,
+        columnWidth
       );
       if (isChanged) {
         setGanttEvent({ action: ganttEvent.action, changedTask });
+        // 实时更新任务数据，使左侧列表同步更新
+        if (onDateChange) {
+          try {
+            await onDateChange(changedTask, changedTask.barChildren);
+          } catch (error) {
+            console.error("Error updating task during drag:", error);
+          }
+        }
       }
     };
 
@@ -113,13 +123,17 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
         xStep,
         timeStep,
         initEventX1Delta,
-        rtl
+        rtl,
+        dates,
+        columnWidth
       );
 
       const isNotLikeOriginal =
         originalSelectedTask.start !== newChangedTask.start ||
         originalSelectedTask.end !== newChangedTask.end ||
-        originalSelectedTask.progress !== newChangedTask.progress;
+        originalSelectedTask.progress !== newChangedTask.progress ||
+        originalSelectedTask.actualX1 !== newChangedTask.actualX1 ||
+        originalSelectedTask.actualX2 !== newChangedTask.actualX2;
 
       // remove listeners
       svg.current.removeEventListener("mousemove", handleMouseMove);
@@ -130,7 +144,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
       // custom operation start
       let operationSuccess = true;
       if (
-        (action === "move" || action === "end" || action === "start") &&
+        (action === "move" || action === "end" || action === "start" || action === "actualStart" || action === "actualEnd") &&
         onDateChange &&
         isNotLikeOriginal
       ) {
@@ -170,6 +184,8 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
       (ganttEvent.action === "move" ||
         ganttEvent.action === "end" ||
         ganttEvent.action === "start" ||
+        ganttEvent.action === "actualStart" ||
+        ganttEvent.action === "actualEnd" ||
         ganttEvent.action === "progress") &&
       svg?.current
     ) {

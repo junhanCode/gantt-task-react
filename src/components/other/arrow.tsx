@@ -54,24 +54,48 @@ const drownPathAndTriangle = (
 ) => {
   const indexCompare = taskFrom.index > taskTo.index ? -1 : 1;
   const taskToEndPosition = taskTo.y + taskHeight / 2;
-  const taskFromEndPosition = taskFrom.x2 + arrowIndent * 2;
+  
+  // 计算四个时间点：计划开始、计划结束、实际开始、实际结束
+  const fromTimes = [
+    taskFrom.x1, // 计划开始
+    taskFrom.x2, // 计划结束
+    taskFrom.actualX1, // 实际开始
+    taskFrom.actualX2  // 实际结束
+  ].filter(x => x !== undefined);
+  
+  const toTimes = [
+    taskTo.x1, // 计划开始
+    taskTo.x2, // 计划结束
+    taskTo.actualX1, // 实际开始
+    taskTo.actualX2  // 实际结束
+  ].filter(x => x !== undefined);
+  
+  // 找到最早和最晚的时间
+  const fromEarliest = Math.min(...fromTimes);
+  const toLatest = Math.max(...toTimes);
+  
+  // 箭头从最早时间开始，到最晚时间结束
+  const taskFromStartPosition = fromEarliest;
+  const taskToEndPositionX = toLatest;
+  
+  const taskFromEndPosition = taskFromStartPosition + arrowIndent * 2;
   const taskFromHorizontalOffsetValue =
-    taskFromEndPosition < taskTo.x1 ? "" : `H ${taskTo.x1 - arrowIndent}`;
+    taskFromEndPosition < taskToEndPositionX ? "" : `H ${taskToEndPositionX - arrowIndent}`;
   const taskToHorizontalOffsetValue =
-    taskFromEndPosition > taskTo.x1
+    taskFromEndPosition > taskToEndPositionX
       ? arrowIndent
-      : taskTo.x1 - taskFrom.x2 - arrowIndent;
+      : taskToEndPositionX - taskFromStartPosition - arrowIndent;
 
-  const path = `M ${taskFrom.x2} ${taskFrom.y + taskHeight / 2} 
+  const path = `M ${taskFromStartPosition} ${taskFrom.y + taskHeight / 2} 
   h ${arrowIndent} 
   v ${(indexCompare * rowHeight) / 2} 
   ${taskFromHorizontalOffsetValue}
   V ${taskToEndPosition} 
   h ${taskToHorizontalOffsetValue}`;
 
-  const trianglePoints = `${taskTo.x1},${taskToEndPosition} 
-  ${taskTo.x1 - 5},${taskToEndPosition - 5} 
-  ${taskTo.x1 - 5},${taskToEndPosition + 5}`;
+  const trianglePoints = `${taskToEndPositionX},${taskToEndPosition} 
+  ${taskToEndPositionX - 5},${taskToEndPosition - 5} 
+  ${taskToEndPositionX - 5},${taskToEndPosition + 5}`;
   return [path, trianglePoints];
 };
 
@@ -84,23 +108,47 @@ const drownPathAndTriangleRTL = (
 ) => {
   const indexCompare = taskFrom.index > taskTo.index ? -1 : 1;
   const taskToEndPosition = taskTo.y + taskHeight / 2;
-  const taskFromEndPosition = taskFrom.x1 - arrowIndent * 2;
+  
+  // 计算四个时间点：计划开始、计划结束、实际开始、实际结束
+  const fromTimes = [
+    taskFrom.x1, // 计划开始
+    taskFrom.x2, // 计划结束
+    taskFrom.actualX1, // 实际开始
+    taskFrom.actualX2  // 实际结束
+  ].filter(x => x !== undefined);
+  
+  const toTimes = [
+    taskTo.x1, // 计划开始
+    taskTo.x2, // 计划结束
+    taskTo.actualX1, // 实际开始
+    taskTo.actualX2  // 实际结束
+  ].filter(x => x !== undefined);
+  
+  // 找到最早和最晚的时间
+  const fromEarliest = Math.min(...fromTimes);
+  const toLatest = Math.max(...toTimes);
+  
+  // 箭头从最早时间开始，到最晚时间结束
+  const taskFromStartPosition = fromEarliest;
+  const taskToEndPositionX = toLatest;
+  
+  const taskFromEndPosition = taskFromStartPosition - arrowIndent * 2;
   const taskFromHorizontalOffsetValue =
-    taskFromEndPosition > taskTo.x2 ? "" : `H ${taskTo.x2 + arrowIndent}`;
+    taskFromEndPosition > taskToEndPositionX ? "" : `H ${taskToEndPositionX + arrowIndent}`;
   const taskToHorizontalOffsetValue =
-    taskFromEndPosition < taskTo.x2
+    taskFromEndPosition < taskToEndPositionX
       ? -arrowIndent
-      : taskTo.x2 - taskFrom.x1 + arrowIndent;
+      : taskToEndPositionX - taskFromStartPosition + arrowIndent;
 
-  const path = `M ${taskFrom.x1} ${taskFrom.y + taskHeight / 2} 
+  const path = `M ${taskFromStartPosition} ${taskFrom.y + taskHeight / 2} 
   h ${-arrowIndent} 
   v ${(indexCompare * rowHeight) / 2} 
   ${taskFromHorizontalOffsetValue}
   V ${taskToEndPosition} 
   h ${taskToHorizontalOffsetValue}`;
 
-  const trianglePoints = `${taskTo.x2},${taskToEndPosition} 
-  ${taskTo.x2 + 5},${taskToEndPosition + 5} 
-  ${taskTo.x2 + 5},${taskToEndPosition - 5}`;
+  const trianglePoints = `${taskToEndPositionX},${taskToEndPosition} 
+  ${taskToEndPositionX + 5},${taskToEndPosition + 5} 
+  ${taskToEndPositionX + 5},${taskToEndPosition - 5}`;
   return [path, trianglePoints];
 };

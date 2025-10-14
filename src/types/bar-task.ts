@@ -5,6 +5,8 @@ export interface BarTask extends Task {
   typeInternal: TaskTypeInternal;
   x1: number;
   x2: number;
+  actualX1: number;
+  actualX2: number;
   y: number;
   height: number;
   progressX: number;
@@ -17,6 +19,9 @@ export interface BarTask extends Task {
     backgroundSelectedColor: string;
     progressColor: string;
     progressSelectedColor: string;
+    actualColor: string;
+    actualSelectedColor: string;
+    delayColor: string;
   };
 }
 

@@ -25,6 +25,12 @@ const AddTaskModal: React.FC<{
         type: values.type,
         start: values.dateRange[0].toDate(),
         end: values.dateRange[1].toDate(),
+        // 计划时间
+        plannedStart: values.plannedDateRange ? values.plannedDateRange[0].toDate() : values.dateRange[0].toDate(),
+        plannedEnd: values.plannedDateRange ? values.plannedDateRange[1].toDate() : values.dateRange[1].toDate(),
+        // 实际时间
+        actualStart: values.actualDateRange ? values.actualDateRange[0].toDate() : values.dateRange[0].toDate(),
+        actualEnd: values.actualDateRange ? values.actualDateRange[1].toDate() : values.dateRange[1].toDate(),
         progress: values.progress || 0,
         project: parentTaskId,
       };
@@ -78,10 +84,24 @@ const AddTaskModal: React.FC<{
         
         <Form.Item
           name="dateRange"
-          label="时间范围"
+          label="基础时间范围"
           rules={[{ required: true, message: "请选择时间范围" }]}
         >
           <RangePicker showTime style={{ width: "100%" }} />
+        </Form.Item>
+        
+        <Form.Item
+          name="plannedDateRange"
+          label="计划时间范围（可选）"
+        >
+          <RangePicker showTime style={{ width: "100%" }} placeholder={["计划开始时间", "计划结束时间"]} />
+        </Form.Item>
+        
+        <Form.Item
+          name="actualDateRange"
+          label="实际时间范围（可选）"
+        >
+          <RangePicker showTime style={{ width: "100%" }} placeholder={["实际开始时间", "实际结束时间"]} />
         </Form.Item>
         
         <Form.Item
@@ -368,6 +388,14 @@ const App = () => {
         onDeleteTask={handleDeleteTask}
         operationsColumnWidth="120px"
         operationsColumnLabel="操作"
+        // 双条形图样式配置
+        barActualColor="#4CAF50"           // 实际条颜色 - 绿色
+        barActualSelectedColor="#45a049"   // 选中状态实际条颜色
+        barDelayColor="#FF9800"            // 延误部分颜色 - 橙色
+        barBackgroundColor="#e0e0e0"       // 计划条背景颜色 - 灰色
+        barBackgroundSelectedColor="#d0d0d0" // 选中状态计划条背景颜色
+        barProgressColor="#2196F3"         // 进度条颜色 - 蓝色
+        barProgressSelectedColor="#1976D2" // 选中状态进度条颜色
       />
       
       {/* 新增任务弹框 */}

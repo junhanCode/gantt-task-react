@@ -22,6 +22,12 @@ export function initTasks() {
         12,
         28
       ),
+      // 计划时间
+      plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+      plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 2, 12, 28),
+      // 实际时间 - 准时完成
+      actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+      actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 2, 12, 28),
       name: "Idea",
       id: "Task 0",
       progress: 45,
@@ -32,6 +38,12 @@ export function initTasks() {
     {
       start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 2),
       end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4, 0, 0),
+      // 计划时间
+      plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 2),
+      plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4, 0, 0),
+      // 实际时间 - 提前完成
+      actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1, 18, 0),
+      actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 3, 16, 0),
       name: "Research",
       id: "Task 1",
       progress: 25,
@@ -43,6 +55,12 @@ export function initTasks() {
     {
       start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4),
       end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 0, 0),
+      // 计划时间
+      plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4),
+      plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 0, 0),
+      // 实际时间 - 延误开始
+      actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 5, 10, 0),
+      actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 0, 0),
       name: "Discussion with team",
       id: "Task 2",
       progress: 10,
@@ -54,6 +72,12 @@ export function initTasks() {
     {
       start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8),
       end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 9, 0, 0),
+      // 计划时间
+      plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8),
+      plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 9, 0, 0),
+      // 实际时间 - 延误结束
+      actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8),
+      actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 10, 6, 0),
       name: "Developing",
       id: "Task 3",
       progress: 2,
@@ -65,6 +89,12 @@ export function initTasks() {
     {
       start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8),
       end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 10),
+      // 计划时间
+      plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8),
+      plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 10),
+      // 实际时间 - 进行中
+      actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 14, 0),
+      actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 9, 18, 0), // 还未完成
       name: "Review",
       id: "Task 4",
       type: "task",
@@ -76,6 +106,12 @@ export function initTasks() {
     {
       start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
       end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+      // 计划时间
+      plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+      plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+      // 实际时间 - 里程碑准时
+      actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+      actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
       name: "Release",
       id: "Task 6",
       progress: currentDate.getMonth(),
@@ -87,6 +123,12 @@ export function initTasks() {
     {
       start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 18),
       end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 19),
+      // 计划时间
+      plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 18),
+      plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 19),
+      // 实际时间 - 未开始
+      actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 18),
+      actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 19),
       name: "Party Time",
       id: "Task 9",
       progress: 0,

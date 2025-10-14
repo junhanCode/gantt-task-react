@@ -112,6 +112,9 @@ export interface StylingOption {
   barProgressSelectedColor?: string;
   barBackgroundColor?: string;
   barBackgroundSelectedColor?: string;
+  barActualColor?: string;
+  barActualSelectedColor?: string;
+  barDelayColor?: string;
   projectProgressColor?: string;
   projectProgressSelectedColor?: string;
   projectBackgroundColor?: string;

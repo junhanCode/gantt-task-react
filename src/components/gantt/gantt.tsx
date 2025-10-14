@@ -40,6 +40,9 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
   barProgressSelectedColor = "#8282f5",
   barBackgroundColor = "#b8c2cc",
   barBackgroundSelectedColor = "#aeb8c2",
+  barActualColor = "#4CAF50",
+  barActualSelectedColor = "#45a049",
+  barDelayColor = "#FF9800",
   projectProgressColor = "#7db59a",
   projectProgressSelectedColor = "#59a985",
   projectBackgroundColor = "#fac465",
@@ -139,6 +142,9 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
         barProgressSelectedColor,
         barBackgroundColor,
         barBackgroundSelectedColor,
+        barActualColor,
+        barActualSelectedColor,
+        barDelayColor,
         projectProgressColor,
         projectProgressSelectedColor,
         projectBackgroundColor,
@@ -160,6 +166,9 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     barProgressSelectedColor,
     barBackgroundColor,
     barBackgroundSelectedColor,
+    barActualColor,
+    barActualSelectedColor,
+    barDelayColor,
     projectProgressColor,
     projectProgressSelectedColor,
     projectBackgroundColor,
@@ -210,6 +219,8 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
         action === "move" ||
         action === "end" ||
         action === "start" ||
+        action === "actualStart" ||
+        action === "actualEnd" ||
         action === "progress"
       ) {
         const prevStateTask = barTasks.find(t => t.id === changedTask.id);
@@ -217,7 +228,9 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
           prevStateTask &&
           (prevStateTask.start.getTime() !== changedTask.start.getTime() ||
             prevStateTask.end.getTime() !== changedTask.end.getTime() ||
-            prevStateTask.progress !== changedTask.progress)
+            prevStateTask.progress !== changedTask.progress ||
+            prevStateTask.actualX1 !== changedTask.actualX1 ||
+            prevStateTask.actualX2 !== changedTask.actualX2)
         ) {
           // actions for change
           const newTaskList = barTasks.map(t =>
