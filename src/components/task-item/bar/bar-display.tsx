@@ -7,9 +7,6 @@ type BarDisplayProps = {
   width: number;
   height: number;
   isSelected: boolean;
-  /* progress start point */
-  progressX: number;
-  progressWidth: number;
   barCornerRadius: number;
   /* actual bar properties */
   actualX?: number;
@@ -17,8 +14,6 @@ type BarDisplayProps = {
   styles: {
     backgroundColor: string;
     backgroundSelectedColor: string;
-    progressColor: string;
-    progressSelectedColor: string;
     actualColor: string;
     actualSelectedColor: string;
     delayColor: string;
@@ -31,18 +26,12 @@ export const BarDisplay: React.FC<BarDisplayProps> = ({
   width,
   height,
   isSelected,
-  progressX,
-  progressWidth,
   barCornerRadius,
   actualX,
   actualWidth,
   styles,
   onMouseDown,
 }) => {
-  const getProcessColor = () => {
-    return isSelected ? styles.progressSelectedColor : styles.progressColor;
-  };
-
   const getBarColor = () => {
     return isSelected ? styles.backgroundSelectedColor : styles.backgroundColor;
   };
@@ -101,17 +90,6 @@ export const BarDisplay: React.FC<BarDisplayProps> = ({
         rx={barCornerRadius}
         fill={getBarColor()}
         className={style.barBackground}
-      />
-      
-      {/* 进度条（在计划条上） */}
-      <rect
-        x={progressX}
-        width={progressWidth}
-        y={plannedBarY}
-        height={barHeight}
-        ry={barCornerRadius}
-        rx={barCornerRadius}
-        fill={getProcessColor()}
       />
       
       {/* 实际条 */}

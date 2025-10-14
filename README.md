@@ -1,32 +1,105 @@
-# Gantt Task React - 增强版
+# Gantt Task React - 双条形图增强版
 
-基于 [MaTeMaTuK/gantt-task-react](https://github.com/MaTeMaTuK/gantt-task-react) 的增强版本，添加了操作列功能，支持新增、编辑、删除任务。
+基于 [MaTeMaTuK/gantt-task-react](https://github.com/MaTeMaTuK/gantt-task-react) 的增强版本，实现了水平重叠双条形图设计，支持计划vs实际时间对比，延误状态可视化。
 
-## 🚀 新增功能
+## 🚀 核心功能
 
-- ✅ **操作列** - 在任务列表最后一列添加操作按钮
+### 📊 双条形图设计
+- **计划条（基线）**：灰色背景条，显示原始计划时间
+- **实际条（进度条）**：绿色条，显示实际执行时间
+- **延误标记**：橙色标记，自动标识超出计划时间的延误部分
+- **独立拖动**：计划条和实际条可以独立调整，互不影响
+
+### 🎯 视觉偏差识别
+- **准时**：实际条与计划条完全对齐
+- **延误**：实际条超出计划条的部分用橙色标记
+- **提前**：实际条在计划条之前开始或结束
+- **进行中**：实际条已开始但未完成
+
+### 🔧 操作功能
 - ✅ **新增任务** - 支持弹框形式添加子任务
 - ✅ **编辑任务** - 支持弹框形式编辑任务信息
 - ✅ **删除任务** - 支持确认删除任务
-- ✅ **自定义弹框** - 完全支持自定义 Antd 弹框组件
-- ✅ **响应式设计** - 操作按钮支持悬停效果
+- ✅ **拖动调整** - 支持拖动调整计划时间和实际时间
+- ✅ **实时同步** - 拖动过程中左侧任务列表实时更新
 
-## 📦 安装
+## 📦 本地打包和引入
+
+### 1. 打包插件
 
 ```bash
-npm install gantt-task-react
+# 克隆项目
+git clone <your-repo-url>
+cd gantt-task-react
+
+# 安装依赖
+npm install
+
+# 构建插件
+npm run build
 ```
 
-## 🎯 快速开始
+构建完成后，会在 `dist` 目录生成以下文件：
+- `index.js` - CommonJS 格式
+- `index.modern.js` - ES Module 格式
+- `index.d.ts` - TypeScript 类型定义
 
-### 基本使用
+### 2. 在 React TypeScript 项目中引入
+
+#### 方法一：直接复制文件（推荐）
+
+1. **复制构建文件到你的项目**：
+```bash
+# 在你的 React 项目中创建 libs 目录
+mkdir src/libs/gantt-task-react
+
+# 复制构建文件
+cp dist/index.js src/libs/gantt-task-react/
+cp dist/index.modern.js src/libs/gantt-task-react/
+cp dist/index.d.ts src/libs/gantt-task-react/
+cp dist/index.css src/libs/gantt-task-react/  # 如果有的话
+```
+
+2. **在你的组件中引入**：
+```tsx
+// 引入组件和类型
+import { Gantt, Task, ViewMode } from './libs/gantt-task-react/index.modern.js';
+import './libs/gantt-task-react/index.css'; // 引入样式
+
+// 或者使用 CommonJS 格式
+// const { Gantt, Task, ViewMode } = require('./libs/gantt-task-react/index.js');
+```
+
+#### 方法二：使用 file:// 协议
+
+1. **在 package.json 中添加依赖**：
+```json
+{
+  "dependencies": {
+    "gantt-task-react": "file:../path/to/gantt-task-react"
+  }
+}
+```
+
+2. **安装依赖**：
+```bash
+npm install
+```
+
+3. **在组件中引入**：
+```tsx
+import { Gantt, Task, ViewMode } from 'gantt-task-react';
+import 'gantt-task-react/dist/index.css';
+```
+
+### 3. 完整使用示例
 
 ```tsx
 import React, { useState } from 'react';
-import { Gantt, Task, ViewMode } from 'gantt-task-react';
-import { Modal, Input, Select, Button, DatePicker, Form } from 'antd';
+import { Gantt, Task, ViewMode } from './libs/gantt-task-react/index.modern.js';
+import { Modal, Input, Select, Button, DatePicker, Form, InputNumber } from 'antd';
 import dayjs from 'dayjs';
-import 'gantt-task-react/dist/index.css';
+import './libs/gantt-task-react/index.css';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -47,6 +120,12 @@ const AddTaskModal: React.FC<{
         type: values.type,
         start: values.dateRange[0].toDate(),
         end: values.dateRange[1].toDate(),
+        // 计划时间
+        plannedStart: values.plannedDateRange ? values.plannedDateRange[0].toDate() : values.dateRange[0].toDate(),
+        plannedEnd: values.plannedDateRange ? values.plannedDateRange[1].toDate() : values.dateRange[1].toDate(),
+        // 实际时间
+        actualStart: values.actualDateRange ? values.actualDateRange[0].toDate() : values.dateRange[0].toDate(),
+        actualEnd: values.actualDateRange ? values.actualDateRange[1].toDate() : values.dateRange[1].toDate(),
         progress: values.progress || 0,
         project: parentTaskId,
       };
@@ -76,89 +155,16 @@ const AddTaskModal: React.FC<{
             <Option value="milestone">里程碑</Option>
           </Select>
         </Form.Item>
-        <Form.Item name="dateRange" label="时间范围" rules={[{ required: true, message: "请选择时间范围" }]}>
+        <Form.Item name="dateRange" label="基础时间范围" rules={[{ required: true, message: "请选择时间范围" }]}>
           <RangePicker showTime style={{ width: "100%" }} />
+        </Form.Item>
+        <Form.Item name="plannedDateRange" label="计划时间范围（可选）">
+          <RangePicker showTime style={{ width: "100%" }} placeholder={["计划开始时间", "计划结束时间"]} />
+        </Form.Item>
+        <Form.Item name="actualDateRange" label="实际时间范围（可选）">
+          <RangePicker showTime style={{ width: "100%" }} placeholder={["实际开始时间", "实际结束时间"]} />
         </Form.Item>
         <Form.Item name="progress" label="进度 (%)" initialValue={0}>
-          <InputNumber min={0} max={100} style={{ width: "100%" }} />
-        </Form.Item>
-      </Form>
-    </Modal>
-  );
-};
-
-// 编辑任务弹框组件
-const EditTaskModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  task: Task;
-  onConfirm: (taskData: Partial<Task>) => void;
-}> = ({ isOpen, onClose, task, onConfirm }) => {
-  const [form] = Form.useForm();
-
-  React.useEffect(() => {
-    if (isOpen && task) {
-      form.setFieldsValue({
-        name: task.name,
-        type: task.type,
-        plannedDateRange: task.plannedStart && task.plannedEnd ? [
-          dayjs(task.plannedStart),
-          dayjs(task.plannedEnd)
-        ] : undefined,
-        actualDateRange: task.actualStart && task.actualEnd ? [
-          dayjs(task.actualStart),
-          dayjs(task.actualEnd)
-        ] : undefined,
-        progress: task.progress,
-      });
-    }
-  }, [isOpen, task, form]);
-
-  const handleSubmit = () => {
-    form.validateFields().then((values) => {
-      const taskData: Partial<Task> = {
-        id: task.id,
-        name: values.name,
-        type: values.type,
-        plannedStart: values.plannedDateRange?.[0]?.toDate(),
-        plannedEnd: values.plannedDateRange?.[1]?.toDate(),
-        actualStart: values.actualDateRange?.[0]?.toDate(),
-        actualEnd: values.actualDateRange?.[1]?.toDate(),
-        progress: values.progress || 0,
-      };
-      onConfirm(taskData);
-      onClose();
-    });
-  };
-
-  return (
-    <Modal
-      title="编辑任务"
-      open={isOpen}
-      onCancel={onClose}
-      footer={[
-        <Button key="back" onClick={onClose}>取消</Button>,
-        <Button key="submit" type="primary" onClick={handleSubmit}>确定</Button>,
-      ]}
-      width={600}
-    >
-      <Form form={form} layout="vertical">
-        <Form.Item name="name" label="任务名称" rules={[{ required: true, message: "请输入任务名称" }]}>
-          <Input placeholder="请输入任务名称" />
-        </Form.Item>
-        <Form.Item name="type" label="任务类型" rules={[{ required: true, message: "请选择任务类型" }]}>
-          <Select>
-            <Option value="task">任务</Option>
-            <Option value="milestone">里程碑</Option>
-          </Select>
-        </Form.Item>
-        <Form.Item name="plannedDateRange" label="计划时间范围">
-          <RangePicker showTime style={{ width: "100%" }} />
-        </Form.Item>
-        <Form.Item name="actualDateRange" label="实际时间范围">
-          <RangePicker showTime style={{ width: "100%" }} />
-        </Form.Item>
-        <Form.Item name="progress" label="进度 (%)">
           <InputNumber min={0} max={100} style={{ width: "100%" }} />
         </Form.Item>
       </Form>
@@ -175,6 +181,12 @@ const MyGanttComponent = () => {
       id: 'ProjectSample',
       type: 'project',
       progress: 25,
+      // 计划时间
+      plannedStart: new Date(2024, 0, 1),
+      plannedEnd: new Date(2024, 0, 15),
+      // 实际时间 - 准时完成
+      actualStart: new Date(2024, 0, 1),
+      actualEnd: new Date(2024, 0, 15),
     },
     {
       start: new Date(2024, 0, 1),
@@ -184,60 +196,28 @@ const MyGanttComponent = () => {
       type: 'task',
       progress: 50,
       project: 'ProjectSample',
+      // 计划时间
+      plannedStart: new Date(2024, 0, 1),
+      plannedEnd: new Date(2024, 0, 5),
+      // 实际时间 - 延误完成
+      actualStart: new Date(2024, 0, 2),
+      actualEnd: new Date(2024, 0, 7),
     }
   ]);
 
   // 弹框状态管理
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedParentTask, setSelectedParentTask] = useState<Task | null>(null);
-  const [selectedEditTask, setSelectedEditTask] = useState<Task | null>(null);
 
   // 处理新增任务
   const handleAddTask = (parentTask: Task) => {
-    console.log('新增子任务，父任务:', parentTask);
     setSelectedParentTask(parentTask);
     setShowAddModal(true);
   };
 
-  // 处理编辑任务
-  const handleEditTask = (task: Task) => {
-    console.log('编辑任务:', task);
-    setSelectedEditTask(task);
-    setShowEditModal(true);
-  };
-
-  // 处理删除任务
-  const handleDeleteTask = (task: Task) => {
-    const confirmed = window.confirm(`确定要删除任务 "${task.name}" 吗？`);
-    if (confirmed) {
-      setTasks(tasks.filter(t => t.id !== task.id));
-    }
-  };
-
-  // 弹框处理函数
-  const handleAddModalConfirm = (taskData: Partial<Task>) => {
-    const newTask: Task = {
-      id: `Task_${Date.now()}`,
-      name: taskData.name || "新任务",
-      type: taskData.type || "task",
-      start: taskData.start || new Date(),
-      end: taskData.end || new Date(),
-      progress: taskData.progress || 0,
-      project: selectedParentTask?.id,
-      displayOrder: tasks.length + 1,
-    };
-    setTasks([...tasks, newTask]);
-    setShowAddModal(false);
-    setSelectedParentTask(null);
-  };
-
-  const handleEditModalConfirm = (taskData: Partial<Task>) => {
-    setTasks(tasks.map(t => 
-      t.id === taskData.id ? { ...t, ...taskData } : t
-    ));
-    setShowEditModal(false);
-    setSelectedEditTask(null);
+  // 处理任务变化
+  const handleTaskChange = (task: Task) => {
+    setTasks(tasks.map(t => (t.id === task.id ? task : t)));
   };
 
   return (
@@ -245,14 +225,32 @@ const MyGanttComponent = () => {
       <Gantt
         tasks={tasks}
         viewMode={ViewMode.Day}
+        onDateChange={handleTaskChange}
         onAddTask={handleAddTask}
-        onEditTask={handleEditTask}
-        onDeleteTask={handleDeleteTask}
-        operationsColumnWidth="120px"
-        operationsColumnLabel="操作"
-        listCellWidth="200px"
+        listCellWidth="140px"
+        nameColumnWidth="200px"
+        timeColumnLabels={{
+          plannedStart: "计划开始时间",
+          plannedEnd: "计划结束时间",
+          actualStart: "实际开始时间",
+          actualEnd: "实际结束时间",
+        }}
+        timeColumnWidths={{
+          plannedStart: "180px",
+          plannedEnd: "180px",
+          actualStart: "180px",
+          actualEnd: "180px",
+        }}
         ganttHeight={400}
         columnWidth={65}
+        operationsColumnWidth="120px"
+        operationsColumnLabel="操作"
+        // 双条形图样式配置
+        barActualColor="#4CAF50"           // 实际条颜色 - 绿色
+        barActualSelectedColor="#45a049"   // 选中状态实际条颜色
+        barDelayColor="#FF9800"            // 延误部分颜色 - 橙色
+        barBackgroundColor="#e0e0e0"       // 计划条背景颜色 - 灰色
+        barBackgroundSelectedColor="#d0d0d0" // 选中状态计划条背景颜色
       />
       
       {/* 新增任务弹框 */}
@@ -264,20 +262,25 @@ const MyGanttComponent = () => {
             setSelectedParentTask(null);
           }}
           parentTaskId={selectedParentTask.id}
-          onConfirm={handleAddModalConfirm}
-        />
-      )}
-      
-      {/* 编辑任务弹框 */}
-      {showEditModal && selectedEditTask && (
-        <EditTaskModal
-          isOpen={showEditModal}
-          onClose={() => {
-            setShowEditModal(false);
-            setSelectedEditTask(null);
+          onConfirm={(taskData) => {
+            const newTask: Task = {
+              id: `Task_${Date.now()}`,
+              name: taskData.name || "新任务",
+              type: taskData.type || "task",
+              start: taskData.start || new Date(),
+              end: taskData.end || new Date(),
+              progress: taskData.progress || 0,
+              project: selectedParentTask?.id,
+              displayOrder: tasks.length + 1,
+              plannedStart: taskData.plannedStart,
+              plannedEnd: taskData.plannedEnd,
+              actualStart: taskData.actualStart,
+              actualEnd: taskData.actualEnd,
+            };
+            setTasks([...tasks, newTask]);
+            setShowAddModal(false);
+            setSelectedParentTask(null);
           }}
-          task={selectedEditTask}
-          onConfirm={handleEditModalConfirm}
         />
       )}
     </div>
@@ -287,55 +290,39 @@ const MyGanttComponent = () => {
 export default MyGanttComponent;
 ```
 
+## 🎨 颜色配置
+
+| 颜色 | 值 | 代表含义 |
+|------|-----|----------|
+| 灰色 | `#e0e0e0` | 计划条（基线） |
+| 绿色 | `#4CAF50` | 实际条 |
+| 橙色 | `#FF9800` | 延误部分 |
+
 ## 🔧 API 参考
 
-### 新增属性
+### Task 接口新增字段
 
-#### GanttProps 新增属性
+```typescript
+interface Task {
+  // ... 原有字段
+  // 计划时间（可选，兼容旧数据）
+  plannedStart?: Date;
+  plannedEnd?: Date;
+  // 实际时间（可选，兼容旧数据）
+  actualStart?: Date;
+  actualEnd?: Date;
+}
+```
+
+### GanttProps 新增属性
 
 | 属性名 | 类型 | 默认值 | 描述 |
 |--------|------|--------|------|
-| `onAddTask` | `(task: Task) => void` | - | 新增任务回调函数 |
-| `onEditTask` | `(task: Task) => void` | - | 编辑任务回调函数 |
-| `onDeleteTask` | `(task: Task) => void` | - | 删除任务回调函数 |
-| `operationsColumnWidth` | `string` | `"120px"` | 操作列宽度 |
-| `operationsColumnLabel` | `string` | `"操作"` | 操作列标题 |
-
-### 操作按钮说明
-
-| 按钮 | 图标 | 功能 | 回调 |
-|------|------|------|------|
-| 新增 | 🟢 + | 为当前任务添加子任务 | `onAddTask(task)` |
-| 编辑 | 🔵 ✏️ | 编辑当前任务 | `onEditTask(task)` |
-| 删除 | 🔴 🗑️ | 删除当前任务 | `onDeleteTask(task)` |
-
-## 🎨 自定义样式
-
-### CSS 类名
-
-```css
-/* 操作列容器 */
-.operationsContainer {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 2px;
-  flex-wrap: nowrap;
-}
-
-/* 操作按钮 */
-.actionIcon {
-  cursor: pointer;
-  transition: transform 0.2s ease, opacity 0.2s ease;
-  opacity: 0.7;
-}
-
-.actionIcon:hover {
-  transform: scale(1.2);
-  opacity: 1;
-}
-```
+| `barActualColor` | `string` | `"#4CAF50"` | 实际条颜色 |
+| `barActualSelectedColor` | `string` | `"#45a049"` | 选中状态实际条颜色 |
+| `barDelayColor` | `string` | `"#FF9800"` | 延误部分颜色 |
+| `timeColumnLabels` | `object` | - | 时间列标题自定义 |
+| `timeColumnWidths` | `object` | - | 时间列宽度自定义 |
 
 ## 🚀 运行示例
 
@@ -357,12 +344,14 @@ npm start
 
 ## 📝 更新日志
 
-### v0.3.9+ (增强版)
+### v0.3.9+ (双条形图增强版)
 
-- ✅ 添加操作列功能
-- ✅ 支持新增、编辑、删除任务
-- ✅ 支持自定义弹框组件
-- ✅ 优化用户体验和视觉效果
+- ✅ 实现水平重叠双条形图设计
+- ✅ 支持计划vs实际时间对比
+- ✅ 自动延误状态可视化
+- ✅ 独立拖动计划条和实际条
+- ✅ 实时同步左侧任务列表
+- ✅ 支持四个时间列显示
 - ✅ 完整的 TypeScript 类型支持
 
 ## 🤝 贡献

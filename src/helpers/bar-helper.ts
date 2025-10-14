@@ -425,21 +425,16 @@ export const handleTaskBySVGMouseEvent = (
       isChanged = changedTask.actualX1 !== selectedTask.actualX1 || changedTask.actualX2 !== selectedTask.actualX2;
       break;
     case "move":
+      // 只移动计划条，实际条保持独立
       const newX1 = x - initEventX1Delta;
       const newX2 = x - initEventX1Delta + (selectedTask.x2 - selectedTask.x1);
-      const newActualX1 = x - initEventX1Delta;
-      const newActualX2 = x - initEventX1Delta + (selectedTask.actualX2 - selectedTask.actualX1);
       
       changedTask = {
         ...changedTask,
         x1: newX1,
         x2: newX2,
-        actualX1: newActualX1,
-        actualX2: newActualX2,
         plannedStart: coordinateToDate(newX1, dates, columnWidth),
         plannedEnd: coordinateToDate(newX2, dates, columnWidth),
-        actualStart: coordinateToDate(newActualX1, dates, columnWidth),
-        actualEnd: coordinateToDate(newActualX2, dates, columnWidth),
       };
       isChanged = changedTask.x1 !== selectedTask.x1 || changedTask.x2 !== selectedTask.x2;
       break;
