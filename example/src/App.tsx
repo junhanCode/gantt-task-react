@@ -4,6 +4,7 @@ import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
 import { Modal, Input, Select, Button, DatePicker, InputNumber, Form } from "antd";
+import { PlusSquareOutlined, MinusSquareOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const { Option } = Select;
@@ -388,6 +389,9 @@ const App = () => {
         onDeleteTask={handleDeleteTask}
         operationsColumnWidth="120px"
         operationsColumnLabel="操作"
+        // 自定义展开/折叠图标
+        expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
+        collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
         // 双条形图样式配置
         barActualColor="#4CAF50"           // 实际条颜色 - 绿色
         barActualSelectedColor="#45a049"   // 选中状态实际条颜色

@@ -245,6 +245,9 @@ const MyGanttComponent = () => {
         columnWidth={65}
         operationsColumnWidth="120px"
         operationsColumnLabel="操作"
+        // 自定义展开/折叠图标
+        expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
+        collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
         // 双条形图样式配置
         barActualColor="#4CAF50"           // 实际条颜色 - 绿色
         barActualSelectedColor="#45a049"   // 选中状态实际条颜色
@@ -323,6 +326,63 @@ interface Task {
 | `barDelayColor` | `string` | `"#FF9800"` | 延误部分颜色 |
 | `timeColumnLabels` | `object` | - | 时间列标题自定义 |
 | `timeColumnWidths` | `object` | - | 时间列宽度自定义 |
+| `expandIcon` | `React.ReactNode` | 默认田字形图标 | 展开状态图标 |
+| `collapseIcon` | `React.ReactNode` | 默认日字形图标 | 折叠状态图标 |
+
+## 🎨 自定义图标
+
+### 使用 Antd 图标
+
+```tsx
+import { PlusSquareOutlined, MinusSquareOutlined } from "@ant-design/icons";
+
+<Gantt
+  tasks={tasks}
+  // 自定义展开/折叠图标
+  expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
+  collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
+  // ... 其他属性
+/>
+```
+
+### 使用自定义 SVG 图标
+
+```tsx
+const CustomExpandIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+    <rect x="2" y="2" width="4" height="4" rx="1" />
+    <rect x="10" y="2" width="4" height="4" rx="1" />
+    <rect x="2" y="10" width="4" height="4" rx="1" />
+    <rect x="10" y="10" width="4" height="4" rx="1" />
+  </svg>
+);
+
+const CustomCollapseIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+    <rect x="2" y="2" width="12" height="2" rx="1" />
+    <rect x="2" y="7" width="12" height="2" rx="1" />
+    <rect x="2" y="12" width="12" height="2" rx="1" />
+  </svg>
+);
+
+<Gantt
+  tasks={tasks}
+  expandIcon={<CustomExpandIcon />}
+  collapseIcon={<CustomCollapseIcon />}
+  // ... 其他属性
+/>
+```
+
+### 使用 Emoji 图标
+
+```tsx
+<Gantt
+  tasks={tasks}
+  expandIcon={<span style={{ fontSize: '14px' }}>📋</span>}
+  collapseIcon={<span style={{ fontSize: '14px' }}>📄</span>}
+  // ... 其他属性
+/>
+```
 
 ## 🚀 运行示例
 

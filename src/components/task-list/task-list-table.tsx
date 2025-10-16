@@ -131,6 +131,8 @@ export const TaskListTableDefault: React.FC<{
     onConfirm: (taskData: Partial<Task>) => void;
   }>;
   onDeleteTask?: (task: Task) => void;
+  expandIcon?: React.ReactNode;
+  collapseIcon?: React.ReactNode;
 }> = ({
   rowHeight,
   rowWidth,
@@ -144,6 +146,8 @@ export const TaskListTableDefault: React.FC<{
   onAddTask,
   onEditTask,
   onDeleteTask,
+  expandIcon,
+  collapseIcon,
 }) => {
   const handleAddClick = (task: Task) => {
     console.log("=== handleAddClick called ===");
@@ -185,12 +189,26 @@ export const TaskListTableDefault: React.FC<{
         }}
       >
         {tasks.map((t) => {
-          let expanderSymbol = "";
+          let expanderContent: React.ReactNode = null;
           if (t.hideChildren === false) {
-            expanderSymbol = "▼";
+            expanderContent = collapseIcon ?? (
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                <rect x="2" y="2" width="12" height="2" rx="1" />
+                <rect x="2" y="7" width="12" height="2" rx="1" />
+                <rect x="2" y="12" width="12" height="2" rx="1" />
+              </svg>
+            );
           } else if (t.hideChildren === true) {
-            expanderSymbol = "▶";
+            expanderContent = expandIcon ?? (
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                <rect x="2" y="2" width="4" height="4" rx="1" />
+                <rect x="10" y="2" width="4" height="4" rx="1" />
+                <rect x="2" y="10" width="4" height="4" rx="1" />
+                <rect x="10" y="10" width="4" height="4" rx="1" />
+              </svg>
+            );
           }
+          // if task has no children info, show nothing
 
           return (
             <div key={`${t.id}row`}>
@@ -209,13 +227,13 @@ export const TaskListTableDefault: React.FC<{
                   <div className={styles.taskListNameWrapper}>
                     <div
                       className={
-                        expanderSymbol
+                        expanderContent
                           ? styles.taskListExpander
                           : styles.taskListEmptyExpander
                       }
                       onClick={() => onExpanderClick(t)}
                     >
-                      {expanderSymbol}
+                      {expanderContent}
                     </div>
                     <div>{t.name}</div>
                   </div>

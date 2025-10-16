@@ -73,6 +73,8 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
   onDeleteTask,
   operationsColumnWidth,
   operationsColumnLabel,
+  expandIcon,
+  collapseIcon,
 }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -98,6 +100,7 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
 
   const [selectedTask, setSelectedTask] = useState<BarTask>();
   const [failedTask, setFailedTask] = useState<BarTask | null>(null);
+  const [isTaskListCollapsed, setIsTaskListCollapsed] = useState(false);
 
   const svgWidth = dateSetup.dates.length * columnWidth;
   const ganttFullHeight = barTasks.length * rowHeight;
@@ -250,13 +253,12 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
   }, [failedTask, barTasks]);
 
   useEffect(() => {
-    if (!listCellWidth) {
+    if (!listCellWidth || isTaskListCollapsed) {
       setTaskListWidth(0);
-    }
-    if (taskListRef.current) {
+    } else if (taskListRef.current) {
       setTaskListWidth(taskListRef.current.offsetWidth);
     }
-  }, [taskListRef, listCellWidth]);
+  }, [taskListRef, listCellWidth, isTaskListCollapsed]);
 
   useEffect(() => {
     if (wrapperRef.current) {
@@ -405,6 +407,10 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
       onExpanderClick({ ...task, hideChildren: !task.hideChildren });
     }
   };
+
+  const handleToggleTaskList = () => {
+    setIsTaskListCollapsed(!isTaskListCollapsed);
+  };
   const gridProps: GridProps = {
     columnWidth,
     svgWidth,
@@ -469,6 +475,10 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
     onDeleteTask,
     operationsColumnWidth,
     operationsColumnLabel,
+    isTaskListCollapsed,
+    onToggleTaskList: handleToggleTaskList,
+    expandIcon,
+    collapseIcon,
     TaskListHeader,
     TaskListTable,
     // pass-through to task list header/table
@@ -482,7 +492,7 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
         tabIndex={0}
         ref={wrapperRef}
       >
-        {listCellWidth && <TaskList {...tableProps} />}
+        {listCellWidth && !isTaskListCollapsed && <TaskList {...tableProps} />}
         <TaskGantt
           gridProps={gridProps}
           calendarProps={calendarProps}

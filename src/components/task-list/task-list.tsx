@@ -48,6 +48,10 @@ export type TaskListProps = {
   onDeleteTask?: (task: Task) => void;
   operationsColumnWidth?: string;
   operationsColumnLabel?: string;
+  isTaskListCollapsed?: boolean;
+  onToggleTaskList?: () => void;
+  expandIcon?: React.ReactNode;
+  collapseIcon?: React.ReactNode;
   TaskListHeader: React.FC<{
     headerHeight: number;
     rowWidth: string;
@@ -68,6 +72,10 @@ export type TaskListProps = {
     };
     operationsColumnWidth?: string;
     operationsColumnLabel?: string;
+    isTaskListCollapsed?: boolean;
+    onToggleTaskList?: () => void;
+    expandIcon?: React.ReactNode;
+    collapseIcon?: React.ReactNode;
   }>;
   TaskListTable: React.FC<{
     rowHeight: number;
@@ -108,6 +116,8 @@ export type TaskListProps = {
     }>;
     onDeleteTask?: (task: Task) => void;
     operationsColumnWidth?: string;
+    expandIcon?: React.ReactNode;
+    collapseIcon?: React.ReactNode;
   }>;
 };
 
@@ -134,6 +144,10 @@ export const TaskList: React.FC<TaskListProps> = ({
   onDeleteTask,
   operationsColumnWidth,
   operationsColumnLabel,
+  isTaskListCollapsed = false,
+  onToggleTaskList,
+  expandIcon,
+  collapseIcon,
   TaskListHeader,
   TaskListTable,
 }) => {
@@ -154,6 +168,10 @@ export const TaskList: React.FC<TaskListProps> = ({
     timeColumnWidths,
     operationsColumnWidth,
     operationsColumnLabel,
+    isTaskListCollapsed,
+    onToggleTaskList,
+    expandIcon,
+    collapseIcon,
   };
   const selectedTaskId = selectedTask ? selectedTask.id : "";
   const tableProps = {
@@ -173,6 +191,8 @@ export const TaskList: React.FC<TaskListProps> = ({
     onAddTask,
     onEditTask,
     onDeleteTask,
+    expandIcon,
+    collapseIcon,
   };
 
   return (
@@ -181,7 +201,10 @@ export const TaskList: React.FC<TaskListProps> = ({
       <div
         ref={horizontalContainerRef}
         className={horizontalContainerClass}
-        style={ganttHeight ? { height: ganttHeight } : {}}
+        style={{
+          ...(ganttHeight ? { height: ganttHeight } : {}),
+          display: isTaskListCollapsed ? 'none' : 'block'
+        }}
       >
         <TaskListTable {...tableProps} />
       </div>

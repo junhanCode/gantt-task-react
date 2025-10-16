@@ -184,4 +184,7 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   onDeleteTask?: (task: Task) => void;
   operationsColumnWidth?: string;
   operationsColumnLabel?: string;
+  // 自定义展开/折叠图标
+  expandIcon?: React.ReactNode;
+  collapseIcon?: React.ReactNode;
 }
