@@ -295,11 +295,34 @@ export default MyGanttComponent;
 
 ## 🎨 颜色配置
 
-| 颜色 | 值 | 代表含义 |
-|------|-----|----------|
-| 灰色 | `#e0e0e0` | 计划条（基线） |
-| 绿色 | `#4CAF50` | 实际条 |
-| 橙色 | `#FF9800` | 延误部分 |
+你可以通过 `Gantt` 组件的属性自定义计划条、实际条与延期部分的颜色；不传则使用默认颜色。
+
+默认值与含义：
+
+| 属性名 | 默认值 | 描述 |
+|---|---|---|
+| `barBackgroundColor` | `#b8c2cc` | 计划条（基线）颜色 |
+| `barBackgroundSelectedColor` | `#aeb8c2` | 计划条选中颜色 |
+| `barActualColor` | `#4CAF50` | 实际条颜色 |
+| `barActualSelectedColor` | `#45a049` | 实际条选中颜色 |
+| `barDelayColor` | `#FF9800` | 延误部分颜色 |
+
+使用示例：
+
+```tsx
+<Gantt
+  tasks={tasks}
+  // 计划条（基线）
+  barBackgroundColor="#e0e0e0"
+  barBackgroundSelectedColor="#d0d0d0"
+  // 实际条
+  barActualColor="#4CAF50"
+  barActualSelectedColor="#45a049"
+  // 延误部分
+  barDelayColor="#FF9800"
+  // 其他...
+/>
+```
 
 ## 🔧 API 参考
 
@@ -351,6 +374,8 @@ export default function Demo() {
 | `barActualColor` | `string` | `"#4CAF50"` | 实际条颜色 |
 | `barActualSelectedColor` | `string` | `"#45a049"` | 选中状态实际条颜色 |
 | `barDelayColor` | `string` | `"#FF9800"` | 延误部分颜色 |
+| `barBackgroundColor` | `string` | `"#b8c2cc"` | 计划条（基线）颜色 |
+| `barBackgroundSelectedColor` | `string` | `"#aeb8c2"` | 选中状态计划条颜色 |
 | `timeColumnLabels` | `object` | - | 时间列标题自定义 |
 | `timeColumnWidths` | `object` | - | 时间列宽度自定义 |
 | `expandIcon` | `React.ReactNode` | 默认田字形图标 | 展开状态图标 |

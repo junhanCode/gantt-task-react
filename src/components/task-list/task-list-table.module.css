@@ -2,7 +2,7 @@
   display: table;
   border-bottom: #e6e4e4 1px solid;
   border-left: #e6e4e4 1px solid;
-  border-collapse: collapse; /* 添加这行 */
+  border-collapse: collapse;
 }
 
 .taskListTableRow {
@@ -21,6 +21,9 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border-right: 1px solid rgb(196, 196, 196);
+  padding: 6px 4px; /* 与表头一致 */
+  box-sizing: border-box;
 }
 .taskListNameWrapper {
   display: flex;

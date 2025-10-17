@@ -1,24 +1,6 @@
 import React from "react";
 import styles from "./task-list-header.module.css";
 
-// 默认的田字形图标（展开状态）
-const DefaultExpandIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor">
-    <rect x="2" y="2" width="4" height="4" rx="1" />
-    <rect x="10" y="2" width="4" height="4" rx="1" />
-    <rect x="2" y="10" width="4" height="4" rx="1" />
-    <rect x="10" y="10" width="4" height="4" rx="1" />
-  </svg>
-);
-
-// 默认的日字形图标（折叠状态）
-const DefaultCollapseIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor">
-    <rect x="2" y="2" width="12" height="2" rx="1" />
-    <rect x="2" y="7" width="12" height="2" rx="1" />
-    <rect x="2" y="12" width="12" height="2" rx="1" />
-  </svg>
-);
 
 export const TaskListHeaderDefault: React.FC<{
   headerHeight: number;
@@ -54,10 +36,6 @@ export const TaskListHeaderDefault: React.FC<{
   timeColumnWidths, 
   operationsColumnWidth, 
   operationsColumnLabel,
-  isTaskListCollapsed = false,
-  onToggleTaskList,
-  expandIcon,
-  collapseIcon
 }) => {
   const label = {
     plannedStart: timeColumnLabels?.plannedStart ?? "Planned Start",
@@ -91,49 +69,15 @@ export const TaskListHeaderDefault: React.FC<{
           className={styles.ganttTable_HeaderItem}
           style={{
             minWidth: width.name,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
+            maxWidth: width.name,
           }}
         >
-          {onToggleTaskList && (
-            <button
-              className={styles.toggleButton}
-              onClick={onToggleTaskList}
-              title={isTaskListCollapsed ? "展开任务列表" : "折叠任务列表"}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '2px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#666',
-                borderRadius: '2px',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f0f0f0';
-                e.currentTarget.style.color = '#333';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#666';
-              }}
-            >
-              {isTaskListCollapsed 
-                ? (expandIcon || <DefaultExpandIcon />)
-                : (collapseIcon || <DefaultCollapseIcon />)
-              }
-            </button>
-          )}
-          <span>Name</span>
+          <span>Item</span>
         </div>
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.5,
+            height: headerHeight * 0.6,
             marginTop: headerHeight * 0.2,
           }}
         />
@@ -141,6 +85,8 @@ export const TaskListHeaderDefault: React.FC<{
           className={styles.ganttTable_HeaderItem}
           style={{
             minWidth: width.plannedStart,
+            maxWidth: width.plannedStart,
+            textAlign: 'center',
           }}
         >
           &nbsp;{label.plannedStart}
@@ -148,14 +94,16 @@ export const TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.5,
-            marginTop: headerHeight * 0.25,
+            height: headerHeight * 0.6,
+            marginTop: headerHeight * 0.2,
           }}
         />
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
             minWidth: width.plannedEnd,
+            maxWidth: width.plannedEnd,
+            textAlign: 'center',
           }}
         >
           &nbsp;{label.plannedEnd}
@@ -163,14 +111,16 @@ export const TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.5,
-            marginTop: headerHeight * 0.25,
+            height: headerHeight * 0.6,
+            marginTop: headerHeight * 0.2,
           }}
         />
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
             minWidth: width.actualStart,
+            maxWidth: width.actualStart,
+            textAlign: 'center',
           }}
         >
           &nbsp;{label.actualStart}
@@ -178,14 +128,16 @@ export const TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.5,
-            marginTop: headerHeight * 0.25,
+            height: headerHeight * 0.6,
+            marginTop: headerHeight * 0.2,
           }}
         />
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
             minWidth: width.actualEnd,
+            maxWidth: width.actualEnd,
+            textAlign: 'center',
           }}
         >
           &nbsp;{label.actualEnd}
@@ -193,14 +145,16 @@ export const TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.5,
-            marginTop: headerHeight * 0.25,
+            height: headerHeight * 0.6,
+            marginTop: headerHeight * 0.2,
           }}
         />
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
             minWidth: width.operations,
+            maxWidth: width.operations,
+            textAlign: 'center',
           }}
         >
           &nbsp;{operationsColumnLabel ?? "操作"}

@@ -378,18 +378,18 @@ const App = () => {
         onSelect={handleSelect}
         onExpanderClick={handleExpanderClick}
         listCellWidth={isChecked ? "140px" : ""}
-        nameColumnWidth="200px"
+        nameColumnWidth="190px"  
         timeColumnLabels={{
-          plannedStart: "计划开始时间",
-          plannedEnd: "计划结束时间",
-          actualStart: "实际开始时间",
-          actualEnd: "实际结束时间",
+          plannedStart: "Planned Start",
+          plannedEnd: "Planned End",
+          actualStart: "Actual Start",
+          actualEnd: "Actual End",
         }}
         timeColumnWidths={{
-          plannedStart: "180px",
-          plannedEnd: "180px",
-          actualStart: "180px",
-          actualEnd: "180px",
+          plannedStart: "170px",
+          plannedEnd: "170px",
+          actualStart: "170px",
+          actualEnd: "170px",
         }}
         ganttHeight={300}
         columnWidth={columnWidth}
