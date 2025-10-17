@@ -223,6 +223,7 @@ const EditTaskModal: React.FC<{
 
 // Init
 const App = () => {
+  const ganttRef = React.useRef<any>(null);
   const [view, setView] = React.useState<ViewMode>(ViewMode.DayShift);
   const [tasks, setTasks] = React.useState<Task[]>(initTasks());
   const [isChecked, setIsChecked] = React.useState(true);
@@ -353,12 +354,20 @@ const App = () => {
 
   return (
     <div className="Wrapper">
+      <div style={{ marginBottom: 12 }}>
+        <Button size="small" onClick={() => ganttRef.current?.scrollToDate(new Date(), { align: "center" })}>滚动到今天(居中)</Button>
+        <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() - 24*3600*1000), { align: "start" })}>滚到昨天(开始)</Button>
+        <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() + 24*3600*1000), { align: "end" })}>滚到明天(末尾)</Button>
+      </div>
       <ViewSwitcher
         onViewModeChange={viewMode => setView(viewMode)}
         onViewListChange={setIsChecked}
         isChecked={isChecked}
       />
       <Gantt
+        // 需要依赖库版本包含 forwardRef 才可生效
+        // @ts-ignore
+        ref={ganttRef}
         tasks={tasks}
         viewMode={view}
         onDateChange={handleTaskChange}

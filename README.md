@@ -317,6 +317,33 @@ interface Task {
 }
 ```
 
+### Imperative API：滚动到指定时间
+
+通过 `ref` 调用 `scrollToDate(date, options)` 使甘特图滚动到目标时间。`options.align` 可选，支持 `start | center | end`，默认 `start`。
+
+使用示例：
+
+```tsx
+import React, { useRef } from 'react';
+import { Gantt, ViewMode } from 'gantt-task-react';
+
+export default function Demo() {
+  const ref = useRef<any>(null);
+  return (
+    <>
+      <button onClick={() => ref.current?.scrollToDate(new Date(), { align: 'center' })}>滚到今天(居中)</button>
+      <Gantt
+        // 需要依赖库版本 >= 本仓库当前版本
+        // @ts-ignore
+        ref={ref}
+        tasks={[]}
+        viewMode={ViewMode.Day}
+      />
+    </>
+  );
+}
+```
+
 ### GanttProps 新增属性
 
 | 属性名 | 类型 | 默认值 | 描述 |

@@ -188,3 +188,15 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
 }
+
+export interface GanttRef {
+  /**
+   * 将时间轴滚动到指定日期。
+   * @param date 目标日期
+   * @param options 对齐选项，默认 start
+   */
+  scrollToDate: (
+    date: Date,
+    options?: { align?: "start" | "center" | "end" }
+  ) => void;
+}

@@ -4,8 +4,10 @@ import React, {
   useRef,
   useEffect,
   useMemo,
+  forwardRef,
+  useImperativeHandle,
 } from "react";
-import { ViewMode, GanttProps, Task } from "../../types/public-types";
+import { ViewMode, GanttProps, Task, GanttRef } from "../../types/public-types";
 import { GridProps } from "../grid/grid";
 import { ganttDateRange, seedDates } from "../../helpers/date-helper";
 import { CalendarProps } from "../calendar/calendar";
@@ -24,7 +26,7 @@ import { HorizontalScroll } from "../other/horizontal-scroll";
 import { removeHiddenTasks, sortTasks } from "../../helpers/other-helper";
 import styles from "./gantt.module.css";
 
-export const Gantt: React.FunctionComponent<GanttProps> = ({
+export const Gantt = forwardRef<GanttRef, GanttProps>(({ 
   tasks,
   headerHeight = 50,
   columnWidth = 60,
@@ -75,7 +77,7 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
   operationsColumnLabel,
   expandIcon,
   collapseIcon,
-}) => {
+}, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
   const [dateSetup, setDateSetup] = useState<DateSetup>(() => {
@@ -108,6 +110,39 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
   const [scrollY, setScrollY] = useState(0);
   const [scrollX, setScrollX] = useState(-1);
   const [ignoreScrollEvent, setIgnoreScrollEvent] = useState(false);
+
+  // 暴露方法：滚动到指定日期
+  useImperativeHandle(ref, () => ({
+    scrollToDate: (date: Date, options?: { align?: "start" | "center" | "end" }) => {
+      const dates = dateSetup.dates;
+      if (!dates || dates.length < 2) return;
+      // 找到 date 所在的刻度区间
+      const idx = dates.findIndex((d, i) => date.valueOf() >= d.valueOf() && i + 1 < dates.length && date.valueOf() < dates[i + 1].valueOf());
+      let x = 0;
+      if (idx <= 0) {
+        x = 0;
+      } else if (idx >= dates.length - 1) {
+        x = svgWidth;
+      } else {
+        const start = dates[idx].valueOf();
+        const end = dates[idx + 1].valueOf();
+        const ratio = (date.valueOf() - start) / (end - start);
+        x = (idx + ratio) * columnWidth;
+      }
+      // 根据对齐方式调整 scrollX
+      const visibleWidth = svgContainerWidth; // wrapper 可视宽度（去掉任务列表宽度）
+      const align = options?.align || "start";
+      let target = x;
+      if (align === "center") {
+        target = Math.max(0, x - visibleWidth / 2);
+      } else if (align === "end") {
+        target = Math.max(0, x - visibleWidth);
+      }
+      if (target > svgWidth) target = svgWidth;
+      setScrollX(target);
+      setIgnoreScrollEvent(true);
+    },
+  }));
 
   // task change events
   useEffect(() => {
@@ -537,4 +572,4 @@ export const Gantt: React.FunctionComponent<GanttProps> = ({
       />
     </div>
   );
-};
+});
