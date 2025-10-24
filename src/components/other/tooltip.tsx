@@ -121,25 +121,64 @@ export const StandardTooltipContent: React.FC<{
     fontSize,
     fontFamily,
   };
+
+  // 格式化日期显示
+  const formatDate = (date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+
+  // 计算时间跨度（天数）
+  const calculateDuration = (start: Date, end: Date) => {
+    return Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  };
+
+  // 获取计划时间
+  const plannedStart = task.plannedStart || task.start;
+  const plannedEnd = task.plannedEnd || task.end;
+  const plannedDuration = calculateDuration(plannedStart, plannedEnd);
+
+  // 获取实际时间
+  const actualStart = task.actualStart || task.start;
+  const actualEnd = task.actualEnd || task.end;
+  const actualDuration = calculateDuration(actualStart, actualEnd);
+
   return (
     <div className={styles.tooltipDefaultContainer} style={style}>
-      <b style={{ fontSize: fontSize + 6 }}>{`${
-        task.name
-      }: ${task.start.getDate()}-${
-        task.start.getMonth() + 1
-      }-${task.start.getFullYear()} - ${task.end.getDate()}-${
-        task.end.getMonth() + 1
-      }-${task.end.getFullYear()}`}</b>
-      {task.end.getTime() - task.start.getTime() !== 0 && (
-        <p className={styles.tooltipDefaultContainerParagraph}>{`Duration: ${~~(
-          (task.end.getTime() - task.start.getTime()) /
-          (1000 * 60 * 60 * 24)
-        )} day(s)`}</p>
+      {/* 任务名称 */}
+      <div style={{ fontSize: fontSize + 6, fontWeight: 'bold', marginBottom: '8px' }}>
+        {task.name}
+      </div>
+      
+      {/* 计划时间 */}
+      <div className={styles.tooltipDefaultContainerParagraph}>
+        <strong>计划时间：</strong>
+        {formatDate(plannedStart)} 至 {formatDate(plannedEnd)}
+        <span style={{ marginLeft: '8px', color: '#666' }}>
+          ({plannedDuration} 天)
+        </span>
+      </div>
+      
+      {/* 实际时间 */}
+      <div className={styles.tooltipDefaultContainerParagraph}>
+        <strong>实际时间：</strong>
+        {formatDate(actualStart)} 至 {formatDate(actualEnd)}
+        <span style={{ marginLeft: '8px', color: '#666' }}>
+          ({actualDuration} 天)
+        </span>
+      </div>
+      
+      {/* 时间跨度对比 */}
+      {plannedDuration !== actualDuration && (
+        <div className={styles.tooltipDefaultContainerParagraph}>
+          <strong>时间差异：</strong>
+          <span style={{ 
+            color: actualDuration > plannedDuration ? '#ff6b6b' : '#51cf66',
+            fontWeight: 'bold'
+          }}>
+            {actualDuration > plannedDuration ? '+' : ''}{actualDuration - plannedDuration} 天
+          </span>
+        </div>
       )}
-
-      <p className={styles.tooltipDefaultContainerParagraph}>
-        {!!task.progress && `Progress: ${task.progress} %`}
-      </p>
     </div>
   );
 };
