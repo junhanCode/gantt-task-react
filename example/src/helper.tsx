@@ -12,6 +12,8 @@ export function initTasks() {
       type: "project",
       hideChildren: false,
       displayOrder: 1,
+      // 不设置 plannedStart, plannedEnd, actualStart, actualEnd
+      // 这样项目会根据子项自动计算时间范围
     },
     {
       start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),

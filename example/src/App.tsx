@@ -409,6 +409,10 @@ const App = () => {
         barBackgroundSelectedColor="#d0d0d0" // 选中状态计划条背景颜色
         barProgressColor="#2196F3"         // 进度条颜色 - 蓝色
         barProgressSelectedColor="#1976D2" // 选中状态进度条颜色
+        projectBackgroundColor="#e0e0e0"   // 项目计划条背景颜色
+        projectBackgroundSelectedColor="#d0d0d0" // 项目选中状态计划条背景颜色
+        projectProgressColor="#2196F3"     // 项目进度条颜色
+        projectProgressSelectedColor="#1976D2" // 项目选中状态进度条颜色
       />
       
       {/* 新增任务弹框 */}

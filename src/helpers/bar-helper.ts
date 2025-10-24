@@ -24,7 +24,8 @@ const convertToBarTask = (
   projectBackgroundColor: string,
   projectBackgroundSelectedColor: string,
   milestoneBackgroundColor: string,
-  milestoneBackgroundSelectedColor: string
+  milestoneBackgroundSelectedColor: string,
+  allTasks?: Task[]
 ): BarTask => {
   let barTask: BarTask;
   switch (task.type) {
@@ -59,7 +60,8 @@ const convertToBarTask = (
         projectBackgroundSelectedColor,
         barActualColor,
         barActualSelectedColor,
-        barDelayColor
+        barDelayColor,
+        allTasks
       );
       break;
     default:
@@ -79,7 +81,8 @@ const convertToBarTask = (
         barBackgroundSelectedColor,
         barActualColor,
         barActualSelectedColor,
-        barDelayColor
+        barDelayColor,
+        allTasks
       );
       break;
   }
@@ -132,7 +135,8 @@ export const convertToBarTasks = (
       projectBackgroundColor,
       projectBackgroundSelectedColor,
       milestoneBackgroundColor,
-      milestoneBackgroundSelectedColor
+      milestoneBackgroundSelectedColor,
+      tasks // 传递所有任务用于计算子项
     );
   });
 
@@ -161,15 +165,39 @@ const convertToBar = (
   backgroundSelectedColor: string,
   actualColor: string,
   actualSelectedColor: string,
-  delayColor: string
+  delayColor: string,
+  allTasks?: Task[] // 添加所有任务参数用于计算子项
 ): BarTask => {
-  // 使用计划时间作为主要显示时间，如果没有则使用基础时间
-  const plannedStart = task.plannedStart || task.start;
-  const plannedEnd = task.plannedEnd || task.end;
-  
-  // 使用实际时间，如果没有则使用基础时间
-  const actualStart = task.actualStart || task.start;
-  const actualEnd = task.actualEnd || task.end;
+  let plannedStart = task.plannedStart || task.start;
+  let plannedEnd = task.plannedEnd || task.end;
+  let actualStart = task.actualStart || task.start;
+  let actualEnd = task.actualEnd || task.end;
+
+  // 如果是项目任务且有子项，自动计算时间范围
+  if (task.type === "project" && allTasks) {
+    const childTasks = allTasks.filter(t => t.project === task.id);
+    
+    if (childTasks.length > 0) {
+      // 计算计划时间范围
+      const childPlannedStarts = childTasks.map(t => t.plannedStart || t.start);
+      const childPlannedEnds = childTasks.map(t => t.plannedEnd || t.end);
+      
+      // 计算实际时间范围
+      const childActualStarts = childTasks.map(t => t.actualStart || t.start);
+      const childActualEnds = childTasks.map(t => t.actualEnd || t.end);
+      
+      // 如果没有手动设置项目时间，则使用子项的时间范围
+      if (!task.plannedStart && !task.plannedEnd) {
+        plannedStart = new Date(Math.min(...childPlannedStarts.map(d => d.getTime())));
+        plannedEnd = new Date(Math.max(...childPlannedEnds.map(d => d.getTime())));
+      }
+      
+      if (!task.actualStart && !task.actualEnd) {
+        actualStart = new Date(Math.min(...childActualStarts.map(d => d.getTime())));
+        actualEnd = new Date(Math.max(...childActualEnds.map(d => d.getTime())));
+      }
+    }
+  }
 
   let x1: number;
   let x2: number;
