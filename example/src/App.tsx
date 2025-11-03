@@ -391,13 +391,13 @@ const App = () => {
           actualStart: "170px",
           actualEnd: "170px",
         }}
-        ganttHeight={300}
+        ganttHeight={298}
         columnWidth={columnWidth}
         onAddTask={handleAddTask}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}
-        operationsColumnWidth="120px"
-        operationsColumnLabel="操作"
+        operationsColumnWidth="0px"
+        operationsColumnLabel=""
         // 自定义展开/折叠图标
         expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
         collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}

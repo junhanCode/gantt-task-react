@@ -2,7 +2,10 @@
   display: table;
   border-bottom: #e6e4e4 1px solid;
   border-left: #e6e4e4 1px solid;
+  border-right: #e6e4e4 1px solid;
   border-collapse: collapse;
+  /* 视觉上收缩表体 2px，以对齐表头边框 */
+  padding-right: 2px;
 }
 
 .taskListTableRow {
@@ -74,4 +77,28 @@
 .actionIcon:hover {
   transform: scale(1.2);
   opacity: 1;
+}
+
+/* 右键菜单样式 */
+.contextMenu {
+  position: fixed;
+  z-index: 9999;
+  background: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border-radius: 4px;
+  min-width: 140px;
+  padding: 6px 0;
+}
+
+.contextMenuItem {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #333;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.contextMenuItem:hover {
+  background: #f5f5f5;
 }

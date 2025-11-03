@@ -57,6 +57,8 @@ export type TaskListProps = {
     rowWidth: string;
     fontFamily: string;
     fontSize: string;
+    /** 头部右侧预留空白（用于对齐垂直滚动条宽度） */
+    headerGutterRight?: number;
     nameColumnWidth?: string;
     timeColumnLabels?: {
       plannedStart?: string;
@@ -163,6 +165,13 @@ export const TaskList: React.FC<TaskListProps> = ({
     fontFamily,
     fontSize,
     rowWidth,
+    headerGutterRight: (() => {
+      if (!ganttHeight) return 0;
+      const contentHeight = tasks.length * rowHeight;
+      const needScrollbar = contentHeight > ganttHeight;
+      // 近似的滚动条宽度（Windows 常见为 16px，macOS 叠加滚动条通常为 0）
+      return needScrollbar ? 16 : 0;
+    })(),
     nameColumnWidth,
     timeColumnLabels,
     timeColumnWidths,

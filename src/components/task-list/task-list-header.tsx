@@ -2,11 +2,13 @@ import React from "react";
 import styles from "./task-list-header.module.css";
 
 
-export const TaskListHeaderDefault: React.FC<{
+export const 
+TaskListHeaderDefault: React.FC<{
   headerHeight: number;
   rowWidth: string;
   fontFamily: string;
   fontSize: string;
+  headerGutterRight?: number;
   nameColumnWidth?: string;
   timeColumnLabels?: {
     plannedStart?: string;
@@ -31,6 +33,7 @@ export const TaskListHeaderDefault: React.FC<{
   fontFamily, 
   fontSize, 
   rowWidth, 
+  headerGutterRight,
   nameColumnWidth, 
   timeColumnLabels, 
   timeColumnWidths, 
@@ -57,6 +60,7 @@ export const TaskListHeaderDefault: React.FC<{
       style={{
         fontFamily: fontFamily,
         fontSize: fontSize,
+        paddingRight: headerGutterRight ?? 0,
       }}
     >
       <div
