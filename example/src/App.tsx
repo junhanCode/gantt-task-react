@@ -18,6 +18,37 @@ const AddTaskModal: React.FC<{
   onConfirm: (taskData: Partial<Task>) => void;
 }> = ({ isOpen, onClose, parentTaskId, onConfirm }) => {
   const [form] = Form.useForm();
+  const [plannedDuration, setPlannedDuration] = React.useState<number>(1);
+
+  // 计算时间跨度（天数）
+  const calculateDuration = (start: Date, end: Date): number => {
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // 当计划时间范围改变时，更新时间跨度
+  const handlePlannedDateRangeChange = (dates: any) => {
+    if (dates && dates[0] && dates[1]) {
+      const duration = calculateDuration(dates[0].toDate(), dates[1].toDate());
+      setPlannedDuration(duration);
+    }
+  };
+
+  // 当时间跨度改变时，更新计划结束时间
+  const handleDurationChange = (value: number | null) => {
+    if (value && value > 0) {
+      setPlannedDuration(value);
+      const plannedDateRange = form.getFieldValue('plannedDateRange');
+      if (plannedDateRange && plannedDateRange[0]) {
+        const plannedStart = plannedDateRange[0];
+        const newPlannedEnd = dayjs(plannedStart).add(value, 'day');
+        form.setFieldsValue({
+          plannedDateRange: [plannedStart, newPlannedEnd]
+        });
+      }
+    }
+  };
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
@@ -37,6 +68,7 @@ const AddTaskModal: React.FC<{
       };
       onConfirm(taskData);
       form.resetFields();
+      setPlannedDuration(1);
       onClose();
     });
   };
@@ -45,6 +77,7 @@ const AddTaskModal: React.FC<{
   React.useEffect(() => {
     if (!isOpen) {
       form.resetFields();
+      setPlannedDuration(1);
     }
   }, [isOpen, form]);
 
@@ -95,7 +128,25 @@ const AddTaskModal: React.FC<{
           name="plannedDateRange"
           label="计划时间范围（可选）"
         >
-          <RangePicker showTime style={{ width: "100%" }} placeholder={["计划开始时间", "计划结束时间"]} />
+          <RangePicker 
+            showTime 
+            style={{ width: "100%" }} 
+            placeholder={["计划开始时间", "计划结束时间"]} 
+            onChange={handlePlannedDateRangeChange}
+          />
+        </Form.Item>
+        
+        <Form.Item
+          name="plannedDuration"
+          label="计划时间跨度（天）"
+        >
+          <InputNumber 
+            min={1} 
+            value={plannedDuration}
+            onChange={handleDurationChange}
+            style={{ width: "100%" }} 
+            placeholder="输入天数"
+          />
         </Form.Item>
         
         <Form.Item
@@ -125,9 +176,21 @@ const EditTaskModal: React.FC<{
   onConfirm: (taskData: Partial<Task>) => void;
 }> = ({ isOpen, onClose, task, onConfirm }) => {
   const [form] = Form.useForm();
+  const [plannedDuration, setPlannedDuration] = React.useState<number>(1);
+
+  // 计算时间跨度（天数）
+  const calculateDuration = (start: Date, end: Date): number => {
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   React.useEffect(() => {
     if (isOpen && task) {
+      const plannedStart = task.plannedStart || task.start;
+      const plannedEnd = task.plannedEnd || task.end;
+      const duration = calculateDuration(plannedStart, plannedEnd);
+      
       form.setFieldsValue({
         name: task.name,
         type: task.type,
@@ -140,9 +203,35 @@ const EditTaskModal: React.FC<{
           dayjs(task.actualEnd)
         ] : undefined,
         progress: task.progress,
+        plannedDuration: duration,
       });
+      setPlannedDuration(duration);
     }
   }, [isOpen, task, form]);
+
+  // 当计划时间范围改变时，更新时间跨度
+  const handlePlannedDateRangeChange = (dates: any) => {
+    if (dates && dates[0] && dates[1]) {
+      const duration = calculateDuration(dates[0].toDate(), dates[1].toDate());
+      setPlannedDuration(duration);
+      form.setFieldsValue({ plannedDuration: duration });
+    }
+  };
+
+  // 当时间跨度改变时，更新计划结束时间
+  const handleDurationChange = (value: number | null) => {
+    if (value && value > 0) {
+      setPlannedDuration(value);
+      const plannedDateRange = form.getFieldValue('plannedDateRange');
+      if (plannedDateRange && plannedDateRange[0]) {
+        const plannedStart = plannedDateRange[0];
+        const newPlannedEnd = dayjs(plannedStart).add(value, 'day');
+        form.setFieldsValue({
+          plannedDateRange: [plannedStart, newPlannedEnd]
+        });
+      }
+    }
+  };
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
@@ -200,7 +289,23 @@ const EditTaskModal: React.FC<{
           name="plannedDateRange"
           label="计划时间范围"
         >
-          <RangePicker showTime style={{ width: "100%" }} />
+          <RangePicker 
+            showTime 
+            style={{ width: "100%" }} 
+            onChange={handlePlannedDateRangeChange}
+          />
+        </Form.Item>
+        
+        <Form.Item
+          name="plannedDuration"
+          label="计划时间跨度（天）"
+        >
+          <InputNumber 
+            min={1} 
+            value={plannedDuration}
+            onChange={handleDurationChange}
+            style={{ width: "100%" }} 
+          />
         </Form.Item>
         
         <Form.Item
