@@ -128,6 +128,7 @@ export interface StylingOption {
   timeColumnLabels?: {
     plannedStart?: string;
     plannedEnd?: string;
+    plannedDuration?: string;
     actualStart?: string;
     actualEnd?: string;
   };
@@ -135,6 +136,7 @@ export interface StylingOption {
   timeColumnWidths?: {
     plannedStart?: string;
     plannedEnd?: string;
+    plannedDuration?: string;
     actualStart?: string;
     actualEnd?: string;
   };

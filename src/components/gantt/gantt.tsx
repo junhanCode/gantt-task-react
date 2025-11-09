@@ -77,6 +77,9 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   operationsColumnLabel,
   expandIcon,
   collapseIcon,
+  nameColumnWidth,
+  timeColumnLabels,
+  timeColumnWidths,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -516,6 +519,10 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     collapseIcon,
     TaskListHeader,
     TaskListTable,
+    nameColumnWidth,
+    timeColumnLabels,
+    timeColumnWidths,
+    onDateChange,
     // pass-through to task list header/table
     // Note: TaskListProps typing supports these via component prop types
   };

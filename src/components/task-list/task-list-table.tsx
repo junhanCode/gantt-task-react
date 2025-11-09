@@ -26,12 +26,14 @@ export const TaskListTableDefault: React.FC<{
   timeColumnWidths?: {
     plannedStart?: string;
     plannedEnd?: string;
+    plannedDuration?: string;
     actualStart?: string;
     actualEnd?: string;
   };
   timeColumnLabels?: {
     plannedStart?: string;
     plannedEnd?: string;
+    plannedDuration?: string;
     actualStart?: string;
     actualEnd?: string;
   };
@@ -53,6 +55,7 @@ export const TaskListTableDefault: React.FC<{
   onDeleteTask?: (task: Task) => void;
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
+  onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
 }> = ({
   rowHeight,
   rowWidth,
@@ -67,11 +70,23 @@ export const TaskListTableDefault: React.FC<{
   onDeleteTask,
   expandIcon,
   collapseIcon,
+  onDateChange,
 }) => {
   // 右键菜单状态
   const [menuVisible, setMenuVisible] = useState(false);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [menuTask, setMenuTask] = useState<Task | null>(null);
+
+  // 编辑时间跨度状态
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingDuration, setEditingDuration] = useState<string>("");
+
+  // 计算时间跨度（天数）
+  const calculateDuration = (start: Date, end: Date): number => {
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
   const handleAddClick = (task: Task) => {
     console.log("=== handleAddClick called ===");
@@ -109,6 +124,37 @@ export const TaskListTableDefault: React.FC<{
 
   // 关闭菜单
   const closeMenu = () => setMenuVisible(false);
+
+  // 开始编辑时间跨度
+  const startEditDuration = (task: Task) => {
+    const duration = calculateDuration(task.plannedStart ?? task.start, task.plannedEnd ?? task.end);
+    setEditingTaskId(task.id);
+    setEditingDuration(duration.toString());
+  };
+
+  // 保存时间跨度修改
+  const saveDuration = (task: Task) => {
+    const newDuration = parseInt(editingDuration, 10);
+    if (!isNaN(newDuration) && newDuration > 0 && onDateChange) {
+      const plannedStart = task.plannedStart ?? task.start;
+      const newPlannedEnd = new Date(plannedStart.getTime() + (newDuration * 24 * 60 * 60 * 1000));
+      
+      const updatedTask = {
+        ...task,
+        plannedEnd: newPlannedEnd,
+      };
+      
+      onDateChange(updatedTask, []);
+    }
+    setEditingTaskId(null);
+    setEditingDuration("");
+  };
+
+  // 取消编辑
+  const cancelEditDuration = () => {
+    setEditingTaskId(null);
+    setEditingDuration("");
+  };
 
   useEffect(() => {
     const onDocClick = () => setMenuVisible(false);
@@ -201,6 +247,41 @@ export const TaskListTableDefault: React.FC<{
                   }}
                 >
                   &nbsp;{formatYmd(t.plannedEnd ?? t.end)}
+                </div>
+                <div
+                  className={styles.taskListCell}
+                  style={{
+                    minWidth: timeColumnWidths?.plannedDuration ?? "100px",
+                    maxWidth: timeColumnWidths?.plannedDuration ?? "100px",
+                    cursor: "pointer",
+                    textAlign: "center",
+                  }}
+                  onDoubleClick={() => startEditDuration(t)}
+                >
+                  {editingTaskId === t.id ? (
+                    <input
+                      type="number"
+                      min="1"
+                      value={editingDuration}
+                      onChange={(e) => setEditingDuration(e.target.value)}
+                      onBlur={() => saveDuration(t)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          saveDuration(t);
+                        } else if (e.key === "Escape") {
+                          cancelEditDuration();
+                        }
+                      }}
+                      autoFocus
+                      style={{
+                        width: "80%",
+                        padding: "2px 4px",
+                        textAlign: "center",
+                      }}
+                    />
+                  ) : (
+                    <span>{calculateDuration(t.plannedStart ?? t.start, t.plannedEnd ?? t.end)}</span>
+                  )}
                 </div>
                 <div
                   className={styles.taskListCell}

@@ -22,12 +22,14 @@ export type TaskListProps = {
   timeColumnLabels?: {
     plannedStart?: string;
     plannedEnd?: string;
+    plannedDuration?: string;
     actualStart?: string;
     actualEnd?: string;
   };
   timeColumnWidths?: {
     plannedStart?: string;
     plannedEnd?: string;
+    plannedDuration?: string;
     actualStart?: string;
     actualEnd?: string;
   };
@@ -52,6 +54,7 @@ export type TaskListProps = {
   onToggleTaskList?: () => void;
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
+  onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
   TaskListHeader: React.FC<{
     headerHeight: number;
     rowWidth: string;
@@ -63,12 +66,14 @@ export type TaskListProps = {
     timeColumnLabels?: {
       plannedStart?: string;
       plannedEnd?: string;
+      plannedDuration?: string;
       actualStart?: string;
       actualEnd?: string;
     };
     timeColumnWidths?: {
       plannedStart?: string;
       plannedEnd?: string;
+      plannedDuration?: string;
       actualStart?: string;
       actualEnd?: string;
     };
@@ -93,12 +98,14 @@ export type TaskListProps = {
     timeColumnWidths?: {
       plannedStart?: string;
       plannedEnd?: string;
+      plannedDuration?: string;
       actualStart?: string;
       actualEnd?: string;
     };
     timeColumnLabels?: {
       plannedStart?: string;
       plannedEnd?: string;
+      plannedDuration?: string;
       actualStart?: string;
       actualEnd?: string;
     };
@@ -120,6 +127,7 @@ export type TaskListProps = {
     operationsColumnWidth?: string;
     expandIcon?: React.ReactNode;
     collapseIcon?: React.ReactNode;
+    onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
   }>;
 };
 
@@ -152,6 +160,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   collapseIcon,
   TaskListHeader,
   TaskListTable,
+  onDateChange,
 }) => {
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -202,6 +211,7 @@ export const TaskList: React.FC<TaskListProps> = ({
     onDeleteTask,
     expandIcon,
     collapseIcon,
+    onDateChange,
   };
 
   return (

@@ -13,12 +13,14 @@ TaskListHeaderDefault: React.FC<{
   timeColumnLabels?: {
     plannedStart?: string;
     plannedEnd?: string;
+    plannedDuration?: string;
     actualStart?: string;
     actualEnd?: string;
   };
   timeColumnWidths?: {
     plannedStart?: string;
     plannedEnd?: string;
+    plannedDuration?: string;
     actualStart?: string;
     actualEnd?: string;
   };
@@ -43,6 +45,7 @@ TaskListHeaderDefault: React.FC<{
   const label = {
     plannedStart: timeColumnLabels?.plannedStart ?? "Planned Start",
     plannedEnd: timeColumnLabels?.plannedEnd ?? "Planned End",
+    plannedDuration: timeColumnLabels?.plannedDuration ?? "Duration (Days)",
     actualStart: timeColumnLabels?.actualStart ?? "Actual Start",
     actualEnd: timeColumnLabels?.actualEnd ?? "Actual End",
   };
@@ -50,6 +53,7 @@ TaskListHeaderDefault: React.FC<{
     name: nameColumnWidth ?? rowWidth,
     plannedStart: timeColumnWidths?.plannedStart ?? rowWidth,
     plannedEnd: timeColumnWidths?.plannedEnd ?? rowWidth,
+    plannedDuration: timeColumnWidths?.plannedDuration ?? "100px",
     actualStart: timeColumnWidths?.actualStart ?? rowWidth,
     actualEnd: timeColumnWidths?.actualEnd ?? rowWidth,
     operations: operationsColumnWidth ?? "120px",
@@ -111,6 +115,23 @@ TaskListHeaderDefault: React.FC<{
           }}
         >
           &nbsp;{label.plannedEnd}
+        </div>
+        <div
+          className={styles.ganttTable_HeaderSeparator}
+          style={{
+            height: headerHeight * 0.6,
+            marginTop: headerHeight * 0.2,
+          }}
+        />
+        <div
+          className={styles.ganttTable_HeaderItem}
+          style={{
+            minWidth: width.plannedDuration,
+            maxWidth: width.plannedDuration,
+            textAlign: 'center',
+          }}
+        >
+          &nbsp;{label.plannedDuration}
         </div>
         <div
           className={styles.ganttTable_HeaderSeparator}

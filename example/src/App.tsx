@@ -382,12 +382,14 @@ const App = () => {
         timeColumnLabels={{
           plannedStart: "Planned Start",
           plannedEnd: "Planned End",
+          plannedDuration: "Duration (Days)",
           actualStart: "Actual Start",
           actualEnd: "Actual End",
         }}
         timeColumnWidths={{
           plannedStart: "170px",
           plannedEnd: "170px",
+          plannedDuration: "120px",
           actualStart: "170px",
           actualEnd: "170px",
         }}
