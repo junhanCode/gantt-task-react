@@ -1,5 +1,5 @@
 import React from "react";
-import { Task, ViewMode, Gantt } from "gantt-task-react";
+import { Task, ViewMode, Gantt, OATaskViewMode } from "gantt-task-react";
 import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
@@ -329,18 +329,48 @@ const EditTaskModal: React.FC<{
 // Init
 const App = () => {
   const ganttRef = React.useRef<any>(null);
-  const [view, setView] = React.useState<ViewMode>(ViewMode.DayShift);
+  const [viewType] = React.useState<"default" | "oaTask">("oaTask");
+  const [oaTaskViewMode, setOATaskViewMode] = React.useState<OATaskViewMode>("日");
+  
+  // 根据oaTaskViewMode设置viewMode
+  const getViewMode = React.useCallback((): ViewMode => {
+    if (viewType === "oaTask") {
+      switch (oaTaskViewMode) {
+        case "日":
+          return ViewMode.Day; // 日模式使用Day，不是DayShift（DayShift会将一天分成4个班次）
+        case "月":
+          return ViewMode.Month;
+        case "季":
+          return ViewMode.QuarterYear;
+        default:
+          return ViewMode.Day;
+      }
+    }
+    return ViewMode.Day;
+  }, [oaTaskViewMode, viewType]);
+  
+  const [view, setView] = React.useState<ViewMode>(getViewMode());
   const [tasks, setTasks] = React.useState<Task[]>(initTasks());
   const [isChecked, setIsChecked] = React.useState(true);
   
+  // 当oaTaskViewMode改变时，更新viewMode
+  React.useEffect(() => {
+    if (viewType === "oaTask") {
+      setView(getViewMode());
+    }
+  }, [oaTaskViewMode, viewType, getViewMode]);
 
   let columnWidth = 65;
-  if (view === ViewMode.Year) {
+  if (view === ViewMode.Year || view === ViewMode.QuarterYear) {
     columnWidth = 350;
   } else if (view === ViewMode.Month) {
     columnWidth = 300;
   } else if (view === ViewMode.Week) {
     columnWidth = 250;
+  } else if (view === ViewMode.Day) {
+    columnWidth = 80; // 日模式使用80px列宽
+  } else if (view === ViewMode.DayShift) {
+    columnWidth = 20; // DayShift模式（4个班次）使用较小的列宽
   }
 
   const handleTaskChange = (task: Task) => {
@@ -463,12 +493,56 @@ const App = () => {
         <Button size="small" onClick={() => ganttRef.current?.scrollToDate(new Date(), { align: "center" })}>滚动到今天(居中)</Button>
         <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() - 24*3600*1000), { align: "start" })}>滚到昨天(开始)</Button>
         <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() + 24*3600*1000), { align: "end" })}>滚到明天(末尾)</Button>
+        {viewType === "oaTask" && (
+          <>
+            <Button 
+              size="small" 
+              style={{ marginLeft: 8 }} 
+              type={oaTaskViewMode === "日" ? "primary" : "default"}
+              onClick={() => setOATaskViewMode("日")}
+            >
+              日
+            </Button>
+            <Button 
+              size="small" 
+              style={{ marginLeft: 8 }} 
+              type={oaTaskViewMode === "月" ? "primary" : "default"}
+              onClick={() => setOATaskViewMode("月")}
+            >
+              月
+            </Button>
+            <Button 
+              size="small" 
+              style={{ marginLeft: 8 }} 
+              type={oaTaskViewMode === "季" ? "primary" : "default"}
+              onClick={() => setOATaskViewMode("季")}
+            >
+              季
+            </Button>
+            <Button 
+              size="small" 
+              style={{ marginLeft: 8 }} 
+              onClick={() => ganttRef.current?.enterFullscreen?.()}
+            >
+              全屏
+            </Button>
+            <Button 
+              size="small" 
+              style={{ marginLeft: 8 }} 
+              onClick={() => ganttRef.current?.exportImage?.("gantt-chart.jpg")}
+            >
+              导出图片
+            </Button>
+          </>
+        )}
       </div>
-      <ViewSwitcher
-        onViewModeChange={viewMode => setView(viewMode)}
-        onViewListChange={setIsChecked}
-        isChecked={isChecked}
-      />
+      {viewType === "default" && (
+        <ViewSwitcher
+          onViewModeChange={viewMode => setView(viewMode)}
+          onViewListChange={setIsChecked}
+          isChecked={isChecked}
+        />
+      )}
       <Gantt
         // 需要依赖库版本包含 forwardRef 才可生效
         // @ts-ignore
@@ -508,18 +582,11 @@ const App = () => {
         // 自定义展开/折叠图标
         expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
         collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
-        // 双条形图样式配置
-        barActualColor="#4CAF50"           // 实际条颜色 - 绿色
-        barActualSelectedColor="#45a049"   // 选中状态实际条颜色
-        barDelayColor="#FF9800"            // 延误部分颜色 - 橙色
-        barBackgroundColor="#e0e0e0"       // 计划条背景颜色 - 灰色
-        barBackgroundSelectedColor="#d0d0d0" // 选中状态计划条背景颜色
-        barProgressColor="#2196F3"         // 进度条颜色 - 蓝色
-        barProgressSelectedColor="#1976D2" // 选中状态进度条颜色
-        projectBackgroundColor="#e0e0e0"   // 项目计划条背景颜色
-        projectBackgroundSelectedColor="#d0d0d0" // 项目选中状态计划条背景颜色
-        projectProgressColor="#2196F3"     // 项目进度条颜色
-        projectProgressSelectedColor="#1976D2" // 项目选中状态进度条颜色
+        viewType={viewType}
+        oaTaskViewMode={oaTaskViewMode}
+        onOATaskViewModeChange={(mode) => {
+          setOATaskViewMode(mode);
+        }}
       />
       
       {/* 新增任务弹框 */}

@@ -11,6 +11,9 @@ export enum ViewMode {
   DayShift = "DayShift",
 }
 export type TaskType = "task" | "milestone" | "project";
+export type TaskStatus = "待验收" | "处理中" | "挂起中";
+export type ViewType = "default" | "oaTask";
+export type OATaskViewMode = "日" | "月" | "季";
 export interface Task {
   id: string;
   type: TaskType;
@@ -37,6 +40,13 @@ export interface Task {
   dependencies?: string[];
   hideChildren?: boolean;
   displayOrder?: number;
+  // 新增字段
+  /** 是否禁用拖拽 */
+  disableDrag?: boolean;
+  /** 任务状态（用于oaTask模式） */
+  status?: TaskStatus;
+  /** 负责人（用于oaTask模式） */
+  assignee?: string;
 }
 
 export interface EventOption {
@@ -167,6 +177,19 @@ export interface StylingOption {
   }>;
 }
 
+export interface ColumnConfig {
+  /** 列的唯一标识 */
+  key: string;
+  /** 列标题 */
+  label: string;
+  /** 列宽度 */
+  width?: string;
+  /** 是否显示 */
+  visible?: boolean;
+  /** 自定义标题渲染 */
+  renderHeader?: (props: { label: string; width?: string }) => React.ReactNode;
+}
+
 export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   tasks: Task[];
   onAddTask?: (task: Task) => void; // 修改这里：从 (parentTaskId: string) => void 改为 (task: Task) => void
@@ -189,6 +212,15 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   // 自定义展开/折叠图标
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
+  // 新增配置
+  /** 视图类型，支持 "default" 和 "oaTask" */
+  viewType?: ViewType;
+  /** oaTask模式下的视图模式（日、月、季） */
+  oaTaskViewMode?: OATaskViewMode;
+  /** oaTask模式切换视图模式的回调 */
+  onOATaskViewModeChange?: (mode: OATaskViewMode) => void;
+  /** 列配置（用于显示/隐藏和自定义标题） */
+  columns?: ColumnConfig[];
 }
 
 export interface GanttRef {
@@ -201,4 +233,20 @@ export interface GanttRef {
     date: Date,
     options?: { align?: "start" | "center" | "end" }
   ) => void;
+  /**
+   * 切换时间轴模式（用于oaTask模式）
+   */
+  switchViewMode?: (mode: OATaskViewMode) => void;
+  /**
+   * 全屏查看
+   */
+  enterFullscreen?: () => void;
+  /**
+   * 退出全屏
+   */
+  exitFullscreen?: () => void;
+  /**
+   * 导出图片（当前甘特图视窗，格式为.jpg）
+   */
+  exportImage?: (filename?: string) => void;
 }

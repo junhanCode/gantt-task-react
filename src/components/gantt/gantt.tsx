@@ -7,13 +7,15 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { ViewMode, GanttProps, Task, GanttRef } from "../../types/public-types";
+import { ViewMode, GanttProps, Task, GanttRef, OATaskViewMode } from "../../types/public-types";
 import { GridProps } from "../grid/grid";
 import { ganttDateRange, seedDates } from "../../helpers/date-helper";
 import { CalendarProps } from "../calendar/calendar";
 import { TaskGanttContentProps } from "./task-gantt-content";
 import { TaskListHeaderDefault } from "../task-list/task-list-header";
 import { TaskListTableDefault } from "../task-list/task-list-table";
+import { OATaskListHeader } from "../task-list/oa-task-list-header";
+import { OATaskListTable } from "../task-list/oa-task-list-table";
 import { StandardTooltipContent, Tooltip } from "../other/tooltip";
 import { VerticalScroll } from "../other/vertical-scroll";
 import { TaskListProps, TaskList } from "../task-list/task-list";
@@ -80,13 +82,29 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   nameColumnWidth,
   timeColumnLabels,
   timeColumnWidths,
+  viewType = "default",
+  oaTaskViewMode = "日",
+  onOATaskViewModeChange,
+  // @ts-expect-error - Reserved for future column configuration feature
+  columns,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
+  const ganttContainerRef = useRef<HTMLDivElement>(null);
+  const [currentOATaskViewMode, setCurrentOATaskViewMode] = useState<OATaskViewMode>(oaTaskViewMode);
+  // @ts-expect-error - Reserved for future fullscreen state tracking
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [dateSetup, setDateSetup] = useState<DateSetup>(() => {
     const [startDate, endDate] = ganttDateRange(tasks, viewMode, preStepsCount);
     return { viewMode, dates: seedDates(startDate, endDate, viewMode) };
   });
+
+  // 同步外部传入的oaTaskViewMode
+  useEffect(() => {
+    if (viewType === "oaTask" && oaTaskViewMode !== currentOATaskViewMode) {
+      setCurrentOATaskViewMode(oaTaskViewMode);
+    }
+  }, [oaTaskViewMode, viewType, currentOATaskViewMode]);
   const [currentViewDate, setCurrentViewDate] = useState<Date | undefined>(
     undefined
   );
@@ -114,7 +132,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const [scrollX, setScrollX] = useState(-1);
   const [ignoreScrollEvent, setIgnoreScrollEvent] = useState(false);
 
-  // 暴露方法：滚动到指定日期
+  // 暴露方法：滚动到指定日期、切换视图模式、全屏、导出图片
   useImperativeHandle(ref, () => ({
     scrollToDate: (date: Date, options?: { align?: "start" | "center" | "end" }) => {
       const dates = dateSetup.dates;
@@ -144,6 +162,86 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       if (target > svgWidth) target = svgWidth;
       setScrollX(target);
       setIgnoreScrollEvent(true);
+    },
+    switchViewMode: (mode: OATaskViewMode) => {
+      if (viewType === "oaTask") {
+        setCurrentOATaskViewMode(mode);
+        if (onOATaskViewModeChange) {
+          onOATaskViewModeChange(mode);
+        }
+      }
+    },
+    enterFullscreen: () => {
+      if (ganttContainerRef.current) {
+        if (ganttContainerRef.current.requestFullscreen) {
+          ganttContainerRef.current.requestFullscreen();
+        } else if ((ganttContainerRef.current as any).webkitRequestFullscreen) {
+          (ganttContainerRef.current as any).webkitRequestFullscreen();
+        } else if ((ganttContainerRef.current as any).msRequestFullscreen) {
+          (ganttContainerRef.current as any).msRequestFullscreen();
+        }
+        setIsFullscreen(true);
+      }
+    },
+    exitFullscreen: () => {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+      }
+      setIsFullscreen(false);
+    },
+    exportImage: (filename = "gantt-chart.jpg") => {
+      if (!ganttContainerRef.current) return;
+      
+      // 使用html2canvas或类似库导出图片
+      // 这里使用canvas API
+      const container = ganttContainerRef.current;
+      const svgElements = container.querySelectorAll('svg');
+      
+      // 创建一个canvas来绘制
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      // 计算总尺寸
+      let totalWidth = 0;
+      let totalHeight = 0;
+      svgElements.forEach(svg => {
+        totalWidth = Math.max(totalWidth, svg.clientWidth || svg.getBoundingClientRect().width);
+        totalHeight += svg.clientHeight || svg.getBoundingClientRect().height;
+      });
+      
+      canvas.width = totalWidth;
+      canvas.height = totalHeight;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // 使用html2canvas库（需要安装）
+      // 或者使用svg转canvas的方法
+      // 这里提供一个简单的实现思路
+      const img = new Image();
+      const svgData = new XMLSerializer().serializeToString(svgElements[0]);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+        }, 'image/jpeg', 0.95);
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
     },
   }));
 
@@ -457,6 +555,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     dates: dateSetup.dates,
     todayColor,
     rtl,
+    viewType,
   };
   const calendarProps: CalendarProps = {
     dateSetup,
@@ -467,6 +566,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     fontFamily,
     fontSize,
     rtl,
+    viewType,
+    oaTaskViewMode: currentOATaskViewMode,
   };
   const barProps: TaskGanttContentProps = {
     tasks: barTasks,
@@ -483,6 +584,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     arrowIndent,
     svgWidth,
     rtl,
+    viewType,
     setGanttEvent,
     setFailedTask,
     setSelectedTask: handleSelectedTask,
@@ -491,6 +593,20 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     onDoubleClick,
     onClick,
     onDelete,
+  };
+
+  const [expandAllLeafTasks, setExpandAllLeafTasks] = useState(true);
+  const handleToggleExpandAll = () => {
+    setExpandAllLeafTasks(!expandAllLeafTasks);
+    // 展开/折叠所有叶子任务
+    if (onExpanderClick) {
+      tasks.forEach(t => {
+        const hasChildren = tasks.some(child => child.project === t.id);
+        if (!hasChildren) {
+          onExpanderClick({ ...t, hideChildren: expandAllLeafTasks });
+        }
+      });
+    }
   };
 
   const tableProps: TaskListProps = {
@@ -517,8 +633,12 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     onToggleTaskList: handleToggleTaskList,
     expandIcon,
     collapseIcon,
-    TaskListHeader,
-    TaskListTable,
+    TaskListHeader: viewType === "oaTask" 
+      ? (props: any) => <OATaskListHeader {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} />
+      : TaskListHeader,
+    TaskListTable: viewType === "oaTask" 
+      ? (props: any) => <OATaskListTable {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} />
+      : TaskListTable,
     nameColumnWidth,
     timeColumnLabels,
     timeColumnWidths,
@@ -527,7 +647,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     // Note: TaskListProps typing supports these via component prop types
   };
   return (
-    <div>
+    <div ref={ganttContainerRef}>
       <div
         className={styles.wrapper}
         onKeyDown={handleKeyDown}

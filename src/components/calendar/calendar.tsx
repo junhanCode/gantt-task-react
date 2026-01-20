@@ -1,5 +1,5 @@
 import React, { ReactChild } from "react";
-import { ViewMode } from "../../types/public-types";
+import { ViewMode, ViewType, OATaskViewMode } from "../../types/public-types";
 import { TopPartOfCalendar } from "./top-part-of-calendar";
 import {
   getCachedDateTimeFormat,
@@ -20,6 +20,8 @@ export type CalendarProps = {
   columnWidth: number;
   fontFamily: string;
   fontSize: string;
+  viewType?: ViewType;
+  oaTaskViewMode?: OATaskViewMode;
 };
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -31,7 +33,30 @@ export const Calendar: React.FC<CalendarProps> = ({
   columnWidth,
   fontFamily,
   fontSize,
+  viewType = "default",
+  oaTaskViewMode = "日",
 }) => {
+  // 获取当前时间（用于绘制当前时间轴）
+  const getCurrentTimeX = () => {
+    const now = new Date();
+    const dates = dateSetup.dates;
+    if (!dates || dates.length < 2) return -1;
+    
+    const idx = dates.findIndex((d, i) => 
+      now.valueOf() >= d.valueOf() && 
+      i + 1 < dates.length && 
+      now.valueOf() < dates[i + 1].valueOf()
+    );
+    
+    if (idx < 0) return -1;
+    
+    const start = dates[idx].valueOf();
+    const end = dates[idx + 1].valueOf();
+    const ratio = (now.valueOf() - start) / (end - start);
+    return (idx + ratio) * columnWidth;
+  };
+
+  const currentTimeX = getCurrentTimeX();
   const getCalendarValuesForYear = () => {
     const topValues: ReactChild[] = [];
     const bottomValues: ReactChild[] = [];
@@ -501,34 +526,455 @@ export const Calendar: React.FC<CalendarProps> = ({
     return [topValues, bottomValues];
   };
 
+  // oaTask模式的时间轴渲染
+  const getOATaskCalendarValues = () => {
+    const topValues: ReactChild[] = [];
+    const bottomValues: ReactChild[] = [];
+    const bgValues: ReactChild[] = [];
+    const dates = dateSetup.dates;
+    const topDefaultHeight = headerHeight * 0.5;
+    const totalWidth = columnWidth * dates.length;
+    
+    if (oaTaskViewMode === "日") {
+      // 日模式：子母表头，母表头是第xx周，子表头是那周，周日为每周第一天，周日那条置灰色
+      const weekMap = new Map<string, { weekNum: string; dates: Date[] }>();
+      
+      dates.forEach((date) => {
+        // 获取周日（每周第一天）
+        const dayOfWeek = date.getDay();
+        const sunday = new Date(date);
+        sunday.setDate(date.getDate() - dayOfWeek);
+        
+        const weekKey = `${sunday.getFullYear()}-W${getWeekNumberISO8601(sunday)}`;
+        if (!weekMap.has(weekKey)) {
+          weekMap.set(weekKey, { weekNum: getWeekNumberISO8601(sunday), dates: [] });
+        }
+        weekMap.get(weekKey)!.dates.push(date);
+      });
+      
+      // 生成表头
+      let currentWeekKey = "";
+      dates.forEach((date, i) => {
+        const dayOfWeek = date.getDay();
+        const isSunday = dayOfWeek === 0;
+        const sunday = new Date(date);
+        sunday.setDate(date.getDate() - dayOfWeek);
+        const weekKey = `${sunday.getFullYear()}-W${getWeekNumberISO8601(sunday)}`;
+        
+        // 子表头区域的竖向分隔线（每列都有，只在下半部分）
+        bgValues.push(
+          <line
+            key={`vsep-bottom-${i}`}
+            x1={columnWidth * i}
+            y1={topDefaultHeight}
+            x2={columnWidth * i}
+            y2={headerHeight}
+            className={styles.calendarTopTick}
+          />
+        );
+        
+        // 周日背景置灰色
+        if (isSunday) {
+          bgValues.push(
+            <rect
+              key={`sunbg-${date.getTime()}`}
+              x={columnWidth * i}
+              y={topDefaultHeight}
+              width={columnWidth}
+              height={topDefaultHeight}
+              fill="#E6E6E6"
+            />
+          );
+        }
+        
+        // 子表头：日期
+        const dayLabel = `${date.getDate()}`;
+        bottomValues.push(
+          <text
+            key={`day-${date.getTime()}`}
+            y={headerHeight * 0.8}
+            x={columnWidth * i + columnWidth * 0.5}
+            className={styles.calendarBottomText}
+            fill={isSunday ? "#999" : "#000"}
+          >
+            {dayLabel}
+          </text>
+        );
+        
+        // 母表头：周数（每周第一天显示）
+        if (weekKey !== currentWeekKey && isSunday) {
+          currentWeekKey = weekKey;
+          const weekNum = getWeekNumberISO8601(sunday);
+          const weekDates = weekMap.get(weekKey)!.dates;
+          const weekStartX = columnWidth * i;
+          const weekEndX = columnWidth * (i + weekDates.length);
+          const weekCenterX = (weekStartX + weekEndX) / 2;
+          
+          // 周开始处的分隔线
+          bgValues.push(
+            <line
+              key={`vsep-top-start-${weekKey}`}
+              x1={weekStartX}
+              y1={0}
+              x2={weekStartX}
+              y2={topDefaultHeight}
+              className={styles.calendarTopTick}
+            />
+          );
+          
+          topValues.push(
+            <g key={`week-${weekKey}`}>
+              <text
+                y={topDefaultHeight * 0.5}
+                x={weekCenterX}
+                className={styles.calendarTopText}
+              >
+                第{weekNum}周
+              </text>
+            </g>
+          );
+        }
+        
+        // 周结束处的分隔线（在周的最后一天或下一个日期是不同周时绘制）
+        const isLastDate = i === dates.length - 1;
+        const isNextDateDifferentWeek = !isLastDate && dates[i + 1].getDay() === 0;
+        if (isLastDate || isNextDateDifferentWeek) {
+          const weekEndX = columnWidth * (i + 1);
+          bgValues.push(
+            <line
+              key={`vsep-top-end-${weekKey}-${i}`}
+              x1={weekEndX}
+              y1={0}
+              x2={weekEndX}
+              y2={topDefaultHeight}
+              className={styles.calendarTopTick}
+            />
+          );
+        }
+      });
+      
+      // 横向分隔线
+      bgValues.push(
+        <line
+          key="hsep-day"
+          x1={0}
+          y1={topDefaultHeight}
+          x2={totalWidth}
+          y2={topDefaultHeight}
+          className={styles.calendarTopTick}
+        />
+      );
+    } else if (oaTaskViewMode === "月") {
+      // 月模式：母表头是年份，子表头是英文的月
+      const monthMap = new Map<string, { year: number; month: number; startIdx: number; endIdx: number }>();
+      
+      // 找出每个月的开始和结束位置
+      dates.forEach((date, i) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const monthKey = `${year}-${month}`;
+        
+        if (!monthMap.has(monthKey)) {
+          monthMap.set(monthKey, { year, month, startIdx: i, endIdx: i });
+        } else {
+          const monthInfo = monthMap.get(monthKey)!;
+          monthInfo.endIdx = i;
+        }
+      });
+      
+      // 找出每年的开始和结束位置
+      const yearMap = new Map<number, { startIdx: number; endIdx: number }>();
+      dates.forEach((date, i) => {
+        const year = date.getFullYear();
+        if (!yearMap.has(year)) {
+          yearMap.set(year, { startIdx: i, endIdx: i });
+        } else {
+          const yearInfo = yearMap.get(year)!;
+          yearInfo.endIdx = i;
+        }
+      });
+      
+      // 生成表头
+      dates.forEach((date, i) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const monthKey = `${year}-${month}`;
+        const monthInfo = monthMap.get(monthKey)!;
+        const isMonthStart = i === monthInfo.startIdx;
+        const isYearStart = i === yearMap.get(year)!.startIdx;
+        
+        // 子表头区域的竖向分隔线（每列都有，只在下半部分）
+        bgValues.push(
+          <line
+            key={`vsep-bottom-${i}`}
+            x1={columnWidth * i}
+            y1={topDefaultHeight}
+            x2={columnWidth * i}
+            y2={headerHeight}
+            className={styles.calendarTopTick}
+          />
+        );
+        
+        // 母表头区域的竖向分隔线（只在年份边界处）
+        if (isYearStart) {
+          const yearInfo = yearMap.get(year)!;
+          const yearStartX = columnWidth * yearInfo.startIdx;
+          // 年份开始处的分隔线
+          bgValues.push(
+            <line
+              key={`vsep-top-start-${year}`}
+              x1={yearStartX}
+              y1={0}
+              x2={yearStartX}
+              y2={topDefaultHeight}
+              className={styles.calendarTopTick}
+            />
+          );
+        }
+        // 年份结束处的分隔线（在年份最后一个日期或下一个日期是不同年份时绘制）
+        const isYearEnd = i === dates.length - 1 || (i < dates.length - 1 && dates[i + 1].getFullYear() !== year);
+        if (isYearEnd) {
+          const yearInfo = yearMap.get(year)!;
+          const yearEndX = columnWidth * (yearInfo.endIdx + 1);
+          bgValues.push(
+            <line
+              key={`vsep-top-end-${year}-${i}`}
+              x1={yearEndX}
+              y1={0}
+              x2={yearEndX}
+              y2={topDefaultHeight}
+              className={styles.calendarTopTick}
+            />
+          );
+        }
+        
+        // 子表头：英文月份（每个月的第一天显示，居中显示）
+        if (isMonthStart) {
+          const monthLabel = getLocaleMonth(date, locale);
+          const monthSpan = monthInfo.endIdx - monthInfo.startIdx + 1;
+          const monthCenterX = columnWidth * monthInfo.startIdx + (columnWidth * monthSpan) / 2;
+          bottomValues.push(
+            <text
+              key={`month-${monthKey}`}
+              y={headerHeight * 0.8}
+              x={monthCenterX}
+              className={styles.calendarBottomText}
+            >
+              {monthLabel}
+            </text>
+          );
+        }
+        
+        // 母表头：年份（每年的第一个月显示，居中显示）
+        if (isYearStart) {
+          const yearInfo = yearMap.get(year)!;
+          const yearStartX = columnWidth * yearInfo.startIdx;
+          const yearEndX = columnWidth * (yearInfo.endIdx + 1);
+          const yearCenterX = (yearStartX + yearEndX) / 2;
+          const yearLabel = `${year}`;
+          
+          topValues.push(
+            <g key={`year-${year}`}>
+              <TopPartOfCalendar
+                value={yearLabel}
+                x1Line={yearStartX}
+                y1Line={0}
+                y2Line={topDefaultHeight}
+                xText={yearCenterX}
+                yText={topDefaultHeight * 0.5}
+              />
+            </g>
+          );
+        }
+      });
+      
+      // 横向分隔线（母表头和子表头之间的分隔线）
+      bgValues.push(
+        <line
+          key="hsep-month"
+          x1={0}
+          y1={topDefaultHeight}
+          x2={totalWidth}
+          y2={topDefaultHeight}
+          className={styles.calendarTopTick}
+        />
+      );
+    } else if (oaTaskViewMode === "季") {
+      // 季模式：母表头是年份，子表头是Q1-Q4
+      const quarterMap = new Map<string, { year: number; quarter: number; startIdx: number; endIdx: number }>();
+      
+      // 找出每个季度的开始和结束位置
+      dates.forEach((date, i) => {
+        const year = date.getFullYear();
+        const quarter = Math.floor(date.getMonth() / 3) + 1;
+        const quarterKey = `${year}-Q${quarter}`;
+        
+        if (!quarterMap.has(quarterKey)) {
+          quarterMap.set(quarterKey, { year, quarter, startIdx: i, endIdx: i });
+        } else {
+          const quarterInfo = quarterMap.get(quarterKey)!;
+          quarterInfo.endIdx = i;
+        }
+      });
+      
+      // 找出每年的开始和结束位置
+      const yearMap = new Map<number, { startIdx: number; endIdx: number }>();
+      dates.forEach((date, i) => {
+        const year = date.getFullYear();
+        if (!yearMap.has(year)) {
+          yearMap.set(year, { startIdx: i, endIdx: i });
+        } else {
+          const yearInfo = yearMap.get(year)!;
+          yearInfo.endIdx = i;
+        }
+      });
+      
+      // 生成表头
+      dates.forEach((date, i) => {
+        const year = date.getFullYear();
+        const quarter = Math.floor(date.getMonth() / 3) + 1;
+        const quarterKey = `${year}-Q${quarter}`;
+        const quarterInfo = quarterMap.get(quarterKey)!;
+        const isQuarterStart = i === quarterInfo.startIdx;
+        const isYearStart = i === yearMap.get(year)!.startIdx;
+        
+        // 子表头区域的竖向分隔线（每列都有，只在下半部分）
+        bgValues.push(
+          <line
+            key={`vsep-bottom-${i}`}
+            x1={columnWidth * i}
+            y1={topDefaultHeight}
+            x2={columnWidth * i}
+            y2={headerHeight}
+            className={styles.calendarTopTick}
+          />
+        );
+        
+        // 母表头区域的竖向分隔线（只在年份边界处）
+        if (isYearStart) {
+          const yearInfo = yearMap.get(year)!;
+          const yearStartX = columnWidth * yearInfo.startIdx;
+          // 年份开始处的分隔线
+          bgValues.push(
+            <line
+              key={`vsep-top-start-${year}`}
+              x1={yearStartX}
+              y1={0}
+              x2={yearStartX}
+              y2={topDefaultHeight}
+              className={styles.calendarTopTick}
+            />
+          );
+        }
+        // 年份结束处的分隔线（在年份最后一个日期或下一个日期是不同年份时绘制）
+        const isYearEnd = i === dates.length - 1 || (i < dates.length - 1 && dates[i + 1].getFullYear() !== year);
+        if (isYearEnd) {
+          const yearInfo = yearMap.get(year)!;
+          const yearEndX = columnWidth * (yearInfo.endIdx + 1);
+          bgValues.push(
+            <line
+              key={`vsep-top-end-${year}-${i}`}
+              x1={yearEndX}
+              y1={0}
+              x2={yearEndX}
+              y2={topDefaultHeight}
+              className={styles.calendarTopTick}
+            />
+          );
+        }
+        
+        // 子表头：季度（每个季度的第一天显示，居中显示）
+        if (isQuarterStart) {
+          const quarterLabel = `Q${quarter}`;
+          const quarterSpan = quarterInfo.endIdx - quarterInfo.startIdx + 1;
+          const quarterCenterX = columnWidth * quarterInfo.startIdx + (columnWidth * quarterSpan) / 2;
+          bottomValues.push(
+            <text
+              key={`quarter-${quarterKey}`}
+              y={headerHeight * 0.8}
+              x={quarterCenterX}
+              className={styles.calendarBottomText}
+            >
+              {quarterLabel}
+            </text>
+          );
+        }
+        
+        // 母表头：年份（每年的第一个季度显示，居中显示）
+        if (isYearStart) {
+          const yearInfo = yearMap.get(year)!;
+          const yearStartX = columnWidth * yearInfo.startIdx;
+          const yearEndX = columnWidth * (yearInfo.endIdx + 1);
+          const yearCenterX = (yearStartX + yearEndX) / 2;
+          const yearLabel = `${year}`;
+          
+          topValues.push(
+            <g key={`year-${year}`}>
+              <TopPartOfCalendar
+                value={yearLabel}
+                x1Line={yearStartX}
+                y1Line={0}
+                y2Line={topDefaultHeight}
+                xText={yearCenterX}
+                yText={topDefaultHeight * 0.5}
+              />
+            </g>
+          );
+        }
+      });
+      
+      // 横向分隔线（母表头和子表头之间的分隔线）
+      bgValues.push(
+        <line
+          key="hsep-quarter"
+          x1={0}
+          y1={topDefaultHeight}
+          x2={totalWidth}
+          y2={topDefaultHeight}
+          className={styles.calendarTopTick}
+        />
+      );
+    }
+    
+    // 返回顺序：文字层在上、背景层在下
+    // 将bgValues和bottomValues合并，因为Calendar组件期望的是[topValues, bottomValues]
+    return [topValues, [...bgValues, ...bottomValues]];
+  };
+
   let topValues: ReactChild[] = [];
   let bottomValues: ReactChild[] = [];
-  switch (dateSetup.viewMode) {
-    case ViewMode.Year:
-      [topValues, bottomValues] = getCalendarValuesForYear();
-      break;
-    case ViewMode.QuarterYear:
-      [topValues, bottomValues] = getCalendarValuesForQuarterYear();
-      break;
-    case ViewMode.Month:
-      [topValues, bottomValues] = getCalendarValuesForMonth();
-      break;
-    case ViewMode.Week:
-      [topValues, bottomValues] = getCalendarValuesForWeek();
-      break;
-    case ViewMode.Day:
-      [topValues, bottomValues] = getCalendarValuesForDay();
-      break;
-    case ViewMode.QuarterDay:
-    case ViewMode.HalfDay:
-      [topValues, bottomValues] = getCalendarValuesForPartOfDay();
-      break;
-    case ViewMode.DayShift:
-      [topValues, bottomValues] = getCalendarValuesForDayShift();
-      break;
-    case ViewMode.Hour:
-      [topValues, bottomValues] = getCalendarValuesForHour();
+  
+  if (viewType === "oaTask") {
+    [topValues, bottomValues] = getOATaskCalendarValues();
+  } else {
+    switch (dateSetup.viewMode) {
+      case ViewMode.Year:
+        [topValues, bottomValues] = getCalendarValuesForYear();
+        break;
+      case ViewMode.QuarterYear:
+        [topValues, bottomValues] = getCalendarValuesForQuarterYear();
+        break;
+      case ViewMode.Month:
+        [topValues, bottomValues] = getCalendarValuesForMonth();
+        break;
+      case ViewMode.Week:
+        [topValues, bottomValues] = getCalendarValuesForWeek();
+        break;
+      case ViewMode.Day:
+        [topValues, bottomValues] = getCalendarValuesForDay();
+        break;
+      case ViewMode.QuarterDay:
+      case ViewMode.HalfDay:
+        [topValues, bottomValues] = getCalendarValuesForPartOfDay();
+        break;
+      case ViewMode.DayShift:
+        [topValues, bottomValues] = getCalendarValuesForDayShift();
+        break;
+      case ViewMode.Hour:
+        [topValues, bottomValues] = getCalendarValuesForHour();
+    }
   }
+  
   return (
     <g className="calendar" fontSize={fontSize} fontFamily={fontFamily}>
       <rect
@@ -539,6 +985,17 @@ export const Calendar: React.FC<CalendarProps> = ({
         className={styles.calendarHeader}
       />
       {bottomValues} {topValues}
+      {/* 当前时间轴（oaTask模式） */}
+      {viewType === "oaTask" && currentTimeX >= 0 && (
+        <line
+          x1={currentTimeX}
+          y1={0}
+          x2={currentTimeX}
+          y2={headerHeight}
+          stroke="#FFB592"
+          strokeWidth={2}
+        />
+      )}
     </g>
   );
 };

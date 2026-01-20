@@ -1,5 +1,5 @@
 import React, { ReactChild } from "react";
-import { Task } from "../../types/public-types";
+import { Task, ViewType } from "../../types/public-types";
 import { addToDate } from "../../helpers/date-helper";
 import styles from "./grid.module.css";
 
@@ -11,6 +11,7 @@ export type GridBodyProps = {
   columnWidth: number;
   todayColor: string;
   rtl: boolean;
+  viewType?: ViewType;
 };
 export const GridBody: React.FC<GridBodyProps> = ({
   tasks,
@@ -20,6 +21,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
   columnWidth,
   todayColor,
   rtl,
+  viewType = "default",
 }) => {
   let y = 0;
   const gridRows: ReactChild[] = [];
@@ -61,6 +63,29 @@ export const GridBody: React.FC<GridBodyProps> = ({
   let tickX = 0;
   const ticks: ReactChild[] = [];
   let today: ReactChild = <rect />;
+  let currentTimeLine: ReactChild = <line />;
+  
+  // 计算当前时间轴位置（oaTask模式）
+  const getCurrentTimeX = () => {
+    if (viewType !== "oaTask" || !dates || dates.length < 2) return -1;
+    
+    const idx = dates.findIndex((d, i) => 
+      now.valueOf() >= d.valueOf() && 
+      i + 1 < dates.length && 
+      now.valueOf() < dates[i + 1].valueOf()
+    );
+    
+    if (idx < 0) return -1;
+    
+    const start = dates[idx].valueOf();
+    const end = dates[idx + 1].valueOf();
+    const ratio = (now.valueOf() - start) / (end - start);
+    return (idx + ratio) * columnWidth;
+  };
+  
+  const currentTimeX = getCurrentTimeX();
+  const totalHeight = tasks.length * rowHeight;
+  
   for (let i = 0; i < dates.length; i++) {
     const date = dates[i];
     ticks.push(
@@ -116,12 +141,28 @@ export const GridBody: React.FC<GridBodyProps> = ({
     }
     tickX += columnWidth;
   }
+  // oaTask模式的当前时间轴
+  if (viewType === "oaTask" && currentTimeX >= 0) {
+    currentTimeLine = (
+      <line
+        key="currentTimeLine"
+        x1={currentTimeX}
+        y1={0}
+        x2={currentTimeX}
+        y2={totalHeight}
+        stroke="#FFB592"
+        strokeWidth={2}
+      />
+    );
+  }
+  
   return (
     <g className="gridBody">
       <g className="rows">{gridRows}</g>
       <g className="rowLines">{rowLines}</g>
       <g className="ticks">{ticks}</g>
       <g className="today">{today}</g>
+      {viewType === "oaTask" && <g className="currentTimeLine">{currentTimeLine}</g>}
     </g>
   );
 };

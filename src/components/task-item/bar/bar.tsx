@@ -1,5 +1,6 @@
 import React from "react";
 import { BarDisplay } from "./bar-display";
+import { OABarDisplay } from "./oa-bar-display";
 import { BarDateHandle } from "./bar-date-handle";
 import { TaskItemProps } from "../task-item";
 import styles from "./bar.module.css";
@@ -9,7 +10,34 @@ export const Bar: React.FC<TaskItemProps> = ({
   isDateChangeable,
   onEventStart,
   isSelected,
+  viewType = "default",
 }) => {
+  // oaTask模式使用OABarDisplay（单条形图，基于plannedStart和plannedEnd）
+  if (viewType === "oaTask") {
+    const plannedStart = task.plannedStart || task.start;
+    const plannedEnd = task.plannedEnd || task.end;
+    return (
+      <g className={styles.barWrapper} tabIndex={0}>
+        <OABarDisplay
+          x={task.x1}
+          y={task.y}
+          width={task.x2 - task.x1}
+          height={task.height}
+          barCornerRadius={task.barCornerRadius}
+          status={task.status}
+          progress={task.progress}
+          plannedStart={plannedStart}
+          plannedEnd={plannedEnd}
+          isSelected={isSelected}
+          onMouseDown={e => {
+            isDateChangeable && onEventStart("move", task, e);
+          }}
+        />
+      </g>
+    );
+  }
+  
+  // 默认模式使用BarDisplay
   return (
     <g className={styles.barWrapper} tabIndex={0}>
       <BarDisplay

@@ -16,6 +16,7 @@ export type TaskItemProps = {
   isDelete: boolean;
   isSelected: boolean;
   rtl: boolean;
+  viewType?: "default" | "oaTask";
   onEventStart: (
     action: GanttContentMoveAction,
     selectedTask: BarTask,
@@ -51,7 +52,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
         setTaskItem(<BarSmall {...props} />);
         break;
       default:
-        setTaskItem(<Bar {...props} />);
+        setTaskItem(<Bar {...props} viewType={props.viewType} />);
         break;
     }
   }, [task, isSelected]);

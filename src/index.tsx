@@ -7,4 +7,8 @@ export type {
   DisplayOption,
   EventOption,
   GanttRef,
+  ViewType,
+  OATaskViewMode,
+  TaskStatus,
+  ColumnConfig,
 } from "./types/public-types";

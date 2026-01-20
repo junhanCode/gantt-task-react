@@ -17,6 +17,10 @@ export const BarSmall: React.FC<TaskItemProps> = ({
     task.y,
     task.height
   );
+  const getProgressColor = () => {
+    return isSelected ? task.styles.progressSelectedColor : task.styles.progressColor;
+  };
+
   return (
     <g className={styles.barWrapper} tabIndex={0}>
       <BarDisplay
@@ -24,8 +28,6 @@ export const BarSmall: React.FC<TaskItemProps> = ({
         y={task.y}
         width={task.x2 - task.x1}
         height={task.height}
-        progressX={task.progressX}
-        progressWidth={task.progressWidth}
         barCornerRadius={task.barCornerRadius}
         styles={task.styles}
         isSelected={isSelected}
@@ -33,6 +35,18 @@ export const BarSmall: React.FC<TaskItemProps> = ({
           isDateChangeable && onEventStart("move", task, e);
         }}
       />
+      {/* 进度条覆盖 */}
+      {task.progressWidth > 0 && (
+        <rect
+          x={task.progressX}
+          y={task.y}
+          width={task.progressWidth}
+          height={task.height}
+          ry={task.barCornerRadius}
+          rx={task.barCornerRadius}
+          fill={getProgressColor()}
+        />
+      )}
       <g className="handleGroup">
         {isProgressChangeable && (
           <BarProgressHandle

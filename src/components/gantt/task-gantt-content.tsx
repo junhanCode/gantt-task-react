@@ -27,6 +27,7 @@ export type TaskGanttContentProps = {
   fontSize: string;
   fontFamily: string;
   rtl: boolean;
+  viewType?: "default" | "oaTask";
   setGanttEvent: (value: GanttEvent) => void;
   setFailedTask: (value: BarTask | null) => void;
   setSelectedTask: (taskId: string) => void;
@@ -47,6 +48,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   fontFamily,
   fontSize,
   rtl,
+  viewType = "default",
   setGanttEvent,
   setFailedTask,
   setSelectedTask,
@@ -302,13 +304,14 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               task={task}
               arrowIndent={arrowIndent}
               taskHeight={taskHeight}
-              isProgressChangeable={!!onProgressChange && !task.isDisabled}
-              isDateChangeable={!!onDateChange && !task.isDisabled}
+              isProgressChangeable={!!onProgressChange && !task.isDisabled && !task.disableDrag}
+              isDateChangeable={!!onDateChange && !task.isDisabled && !task.disableDrag}
               isDelete={!task.isDisabled}
               onEventStart={handleBarEventStart}
               key={task.id}
               isSelected={!!selectedTask && task.id === selectedTask.id}
               rtl={rtl}
+              viewType={viewType}
             />
           );
         })}
