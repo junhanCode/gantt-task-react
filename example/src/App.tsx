@@ -579,6 +579,7 @@ const App = () => {
         onDeleteTask={handleDeleteTask}
         operationsColumnWidth="0px"
         operationsColumnLabel=""
+        showOperationsColumn={false}
         // 自定义展开/折叠图标
         expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
         collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}

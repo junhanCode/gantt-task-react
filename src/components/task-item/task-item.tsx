@@ -41,6 +41,12 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
   const [isTextInside, setIsTextInside] = useState(true);
 
   useEffect(() => {
+    // oaTask模式下，所有任务类型都使用Bar组件（单条显示）
+    if (props.viewType === "oaTask") {
+      setTaskItem(<Bar {...props} viewType={props.viewType} />);
+      return;
+    }
+    
     switch (task.typeInternal) {
       case "milestone":
         setTaskItem(<Milestone {...props} />);
@@ -55,7 +61,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
         setTaskItem(<Bar {...props} viewType={props.viewType} />);
         break;
     }
-  }, [task, isSelected]);
+  }, [task, isSelected, props.viewType]);
 
   useEffect(() => {
     if (textRef.current) {

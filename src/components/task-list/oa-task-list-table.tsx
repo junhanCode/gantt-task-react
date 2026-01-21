@@ -17,6 +17,11 @@ export const OATaskListTable: React.FC<{
   /** 是否展开所有叶子任务 */
   expandAllLeafTasks?: boolean;
   onToggleExpandAll?: () => void;
+  operationsColumnWidth?: string;
+  showOperationsColumn?: boolean;
+  onAddTask?: (task: Task) => void;
+  onEditTask?: (task: Task) => void;
+  onDeleteTask?: (task: Task) => void;
 }> = ({
   rowHeight,
   rowWidth,
@@ -30,6 +35,11 @@ export const OATaskListTable: React.FC<{
   expandAllLeafTasks = true,
   // @ts-expect-error - Reserved for future onToggleExpandAll feature
   onToggleExpandAll,
+  operationsColumnWidth,
+  showOperationsColumn = true,
+  onAddTask,
+  onEditTask,
+  onDeleteTask,
 }) => {
   // 状态颜色映射
   const statusColors: Record<string, string> = {
@@ -143,6 +153,57 @@ export const OATaskListTable: React.FC<{
               >
                 {t.assignee || "-"}
               </div>
+              
+              {/* 操作列 */}
+              {showOperationsColumn && (
+                <div
+                  className={styles.taskListCell}
+                  style={{
+                    minWidth: operationsColumnWidth ?? "120px",
+                    maxWidth: operationsColumnWidth ?? "120px",
+                    textAlign: "center",
+                  }}
+                >
+                  <div className={styles.operationsContainer}>
+                    {onAddTask && (
+                      <span
+                        className={styles.addIcon}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddTask(t);
+                        }}
+                        title="新增子任务"
+                      >
+                        +
+                      </span>
+                    )}
+                    {onEditTask && (
+                      <span
+                        className={styles.actionIcon}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditTask(t);
+                        }}
+                        title="编辑"
+                      >
+                        ✎
+                      </span>
+                    )}
+                    {onDeleteTask && (
+                      <span
+                        className={styles.actionIcon}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteTask(t);
+                        }}
+                        title="删除"
+                      >
+                        ×
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );

@@ -11,6 +11,9 @@ export const OATaskListHeader: React.FC<{
   onToggleExpandAll?: () => void;
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
+  operationsColumnWidth?: string;
+  operationsColumnLabel?: string;
+  showOperationsColumn?: boolean;
 }> = ({ 
   headerHeight, 
   fontFamily, 
@@ -21,6 +24,9 @@ export const OATaskListHeader: React.FC<{
   onToggleExpandAll,
   expandIcon,
   collapseIcon,
+  operationsColumnWidth,
+  operationsColumnLabel,
+  showOperationsColumn = true,
 }) => {
   return (
     <div
@@ -98,6 +104,28 @@ export const OATaskListHeader: React.FC<{
         >
           <span>负责人</span>
         </div>
+        {showOperationsColumn && (
+          <React.Fragment>
+            <div
+              className={styles.ganttTable_HeaderSeparator}
+              style={{
+                height: headerHeight * 0.6,
+                marginTop: headerHeight * 0.2,
+              }}
+            />
+            {/* 操作列 */}
+            <div
+              className={styles.ganttTable_HeaderItem}
+              style={{
+                minWidth: operationsColumnWidth ?? "120px",
+                maxWidth: operationsColumnWidth ?? "120px",
+                textAlign: 'center',
+              }}
+            >
+              <span>{operationsColumnLabel ?? "操作"}</span>
+            </div>
+          </React.Fragment>
+        )}
       </div>
     </div>
   );

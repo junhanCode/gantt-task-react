@@ -60,6 +60,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   fontFamily = "Arial, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue",
   fontSize = "14px",
   arrowIndent = 20,
+  showArrows = true,
   todayColor = "rgba(252, 248, 227, 0.5)",
   viewDate,
   TooltipContent = StandardTooltipContent,
@@ -77,6 +78,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   onDeleteTask,
   operationsColumnWidth,
   operationsColumnLabel,
+  showOperationsColumn = true,
   expandIcon,
   collapseIcon,
   nameColumnWidth,
@@ -582,6 +584,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     fontFamily,
     fontSize,
     arrowIndent,
+    showArrows,
     svgWidth,
     rtl,
     viewType,
@@ -597,13 +600,15 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
 
   const [expandAllLeafTasks, setExpandAllLeafTasks] = useState(true);
   const handleToggleExpandAll = () => {
-    setExpandAllLeafTasks(!expandAllLeafTasks);
-    // 展开/折叠所有叶子任务
+    const newValue = !expandAllLeafTasks;
+    setExpandAllLeafTasks(newValue);
+    // 展开/折叠所有任务（包括有子任务的任务）
     if (onExpanderClick) {
       tasks.forEach(t => {
         const hasChildren = tasks.some(child => child.project === t.id);
-        if (!hasChildren) {
-          onExpanderClick({ ...t, hideChildren: expandAllLeafTasks });
+        // 如果有子任务，则展开/折叠该任务
+        if (hasChildren) {
+          onExpanderClick({ ...t, hideChildren: newValue });
         }
       });
     }
@@ -634,10 +639,10 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     expandIcon,
     collapseIcon,
     TaskListHeader: viewType === "oaTask" 
-      ? (props: any) => <OATaskListHeader {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} />
+      ? (props: any) => <OATaskListHeader {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} operationsColumnLabel={operationsColumnLabel} showOperationsColumn={showOperationsColumn} />
       : TaskListHeader,
     TaskListTable: viewType === "oaTask" 
-      ? (props: any) => <OATaskListTable {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} />
+      ? (props: any) => <OATaskListTable {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} showOperationsColumn={showOperationsColumn} onAddTask={onAddTask} onEditTask={onEditTask} onDeleteTask={onDeleteTask} />
       : TaskListTable,
     nameColumnWidth,
     timeColumnLabels,

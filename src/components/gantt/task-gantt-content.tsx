@@ -24,6 +24,7 @@ export type TaskGanttContentProps = {
   taskHeight: number;
   arrowColor: string;
   arrowIndent: number;
+  showArrows?: boolean;
   fontSize: string;
   fontFamily: string;
   rtl: boolean;
@@ -45,6 +46,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   taskHeight,
   arrowColor,
   arrowIndent,
+  showArrows = true,
   fontFamily,
   fontSize,
   rtl,
@@ -280,23 +282,25 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
 
   return (
     <g className="content">
-      <g className="arrows" fill={arrowColor} stroke={arrowColor}>
-        {tasks.map(task => {
-          return task.barChildren.map(child => {
-            return (
-              <Arrow
-                key={`Arrow from ${task.id} to ${tasks[child.index].id}`}
-                taskFrom={task}
-                taskTo={tasks[child.index]}
-                rowHeight={rowHeight}
-                taskHeight={taskHeight}
-                arrowIndent={arrowIndent}
-                rtl={rtl}
-              />
-            );
-          });
-        })}
-      </g>
+      {showArrows === true && (
+        <g className="arrows" fill={arrowColor} stroke={arrowColor}>
+          {tasks.map(task => {
+            return task.barChildren.map(child => {
+              return (
+                <Arrow
+                  key={`Arrow from ${task.id} to ${tasks[child.index].id}`}
+                  taskFrom={task}
+                  taskTo={tasks[child.index]}
+                  rowHeight={rowHeight}
+                  taskHeight={taskHeight}
+                  arrowIndent={arrowIndent}
+                  rtl={rtl}
+                />
+              );
+            });
+          })}
+        </g>
+      )}
       <g className="bar" fontFamily={fontFamily} fontSize={fontSize}>
         {tasks.map(task => {
           return (

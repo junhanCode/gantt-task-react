@@ -133,6 +133,8 @@ export interface StylingOption {
   milestoneBackgroundSelectedColor?: string;
   arrowColor?: string;
   arrowIndent?: number;
+  /** 是否显示任务指向箭头，默认true */
+  showArrows?: boolean;
   todayColor?: string;
   /** 左侧四个时间列标题自定义 */
   timeColumnLabels?: {
@@ -209,6 +211,8 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   onDeleteTask?: (task: Task) => void;
   operationsColumnWidth?: string;
   operationsColumnLabel?: string;
+  /** 是否显示操作列，默认true */
+  showOperationsColumn?: boolean;
   // 自定义展开/折叠图标
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;

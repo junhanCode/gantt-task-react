@@ -21,3 +21,8 @@
   border-right: 1px solid rgb(196, 196, 196);
   box-sizing: border-box;
 }
+
+/* 除了任务标题列（Item列）外，其他列内容垂直居中 */
+.ganttTable_HeaderItem:not(:first-child) {
+  vertical-align: middle;
+}
