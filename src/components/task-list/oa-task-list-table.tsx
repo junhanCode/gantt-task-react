@@ -61,6 +61,12 @@ export const OATaskListTable: React.FC<{
 
   // 判断任务是否有子任务
   const hasChildren = (task: Task): boolean => {
+    // 优先使用 barChildren（来自内部计算的依赖关系），不受折叠影响
+    const anyTask = task as any;
+    if (Array.isArray(anyTask.barChildren) && anyTask.barChildren.length > 0) {
+      return true;
+    }
+    // 兜底：根据 project 字段判断
     return tasks.some(t => t.project === task.id);
   };
 
