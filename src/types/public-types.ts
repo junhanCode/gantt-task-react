@@ -213,6 +213,17 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   operationsColumnLabel?: string;
   /** 是否显示操作列，默认true */
   showOperationsColumn?: boolean;
+  /** 自定义列渲染（类似 antd columns.render） */
+  columnRenderers?: Partial<{
+    name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
+    status: (task: Task, meta: { value?: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
+    assignee: (task: Task, meta: { value?: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
+    operations: (task: Task) => React.ReactNode;
+  }>;
+  /** 每列的省略字符上限，超过则截断并省略号 */
+  columnEllipsisMaxChars?: Partial<Record<"name" | "status" | "assignee", number>>;
+  /** 文本溢出时回调，便于调用方处理 */
+  onCellOverflow?: (info: { column: "name" | "status" | "assignee"; task: Task }) => void;
   // 自定义展开/折叠图标
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;

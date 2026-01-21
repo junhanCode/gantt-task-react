@@ -89,6 +89,9 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   onOATaskViewModeChange,
   // @ts-expect-error - Reserved for future column configuration feature
   columns,
+  columnRenderers,
+  columnEllipsisMaxChars,
+  onCellOverflow,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -541,8 +544,10 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     setSelectedTask(newSelectedTask);
   };
   const handleExpanderClick = (task: Task) => {
-    if (onExpanderClick && task.hideChildren !== undefined) {
-      onExpanderClick({ ...task, hideChildren: !task.hideChildren });
+    // 默认未设置 hideChildren 时视为展开态
+    const current = task.hideChildren ?? false;
+    if (onExpanderClick) {
+      onExpanderClick({ ...task, hideChildren: !current });
     }
   };
 
@@ -642,7 +647,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       ? (props: any) => <OATaskListHeader {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} operationsColumnLabel={operationsColumnLabel} showOperationsColumn={showOperationsColumn} />
       : TaskListHeader,
     TaskListTable: viewType === "oaTask" 
-      ? (props: any) => <OATaskListTable {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} showOperationsColumn={showOperationsColumn} onAddTask={onAddTask} onEditTask={onEditTask} onDeleteTask={onDeleteTask} />
+      ? (props: any) => <OATaskListTable {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} showOperationsColumn={showOperationsColumn} onAddTask={onAddTask} onEditTask={onEditTask} onDeleteTask={onDeleteTask} columnRenderers={columnRenderers} columnEllipsisMaxChars={columnEllipsisMaxChars} onCellOverflow={onCellOverflow} />
       : TaskListTable,
     nameColumnWidth,
     timeColumnLabels,

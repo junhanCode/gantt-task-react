@@ -352,6 +352,9 @@ const App = () => {
   const [view, setView] = React.useState<ViewMode>(getViewMode());
   const [tasks, setTasks] = React.useState<Task[]>(initTasks());
   const [isChecked, setIsChecked] = React.useState(true);
+  const [showArrows, setShowArrows] = React.useState<boolean>(true);
+
+  // 为了在 demo 中方便使用最新扩展 props，这里对 Gantt 做一次 any 断言
   
   // 当oaTaskViewMode改变时，更新viewMode
   React.useEffect(() => {
@@ -543,6 +546,15 @@ const App = () => {
           isChecked={isChecked}
         />
       )}
+      {/* 箭头开关示例 */}
+      <div style={{ margin: "8px 0" }}>
+        <label style={{ marginRight: 8 }}>显示任务依赖箭头：</label>
+        <input
+          type="checkbox"
+          checked={showArrows}
+          onChange={e => setShowArrows(e.target.checked)}
+        />
+      </div>
       <Gantt
         // 需要依赖库版本包含 forwardRef 才可生效
         // @ts-ignore
@@ -577,13 +589,54 @@ const App = () => {
         onAddTask={handleAddTask}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}
-        operationsColumnWidth="0px"
-        operationsColumnLabel=""
-        showOperationsColumn={false}
-        showArrows={false}
-        // 自定义展开/折叠图标
+        // 演示操作列默认渲染，及自定义渲染能力
+        operationsColumnWidth="140px"
+        operationsColumnLabel="操作"
+        showOperationsColumn={true}
+        // 演示箭头开关
+        showArrows={showArrows}
+        // 自定义展开/折叠图标：与表头保持一致
         expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
         collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
+        // 演示自定义列渲染 + 溢出信息
+        columnEllipsisMaxChars={{
+          name: 12,
+          status: 6,
+          assignee: 8,
+        }}
+        columnRenderers={{
+          name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => (
+            <span
+              style={{ color: "#1677ff" }}
+              title={meta.isOverflow ? task.name : undefined}
+            >
+              {meta.displayValue}
+            </span>
+          ),
+          operations: (task: Task) => (
+            <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+              <a
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleEditTask(task);
+                }}
+              >
+                编辑
+              </a>
+              <a
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleAddTask(task);
+                }}
+              >
+                新增子任务
+              </a>
+            </div>
+          ),
+        }}
+        onCellOverflow={({ column, task }: { column: "name" | "status" | "assignee"; task: Task }) => {
+          console.log("列内容溢出:", column, "任务:", task.name);
+        }}
         viewType={viewType}
         oaTaskViewMode={oaTaskViewMode}
         onOATaskViewModeChange={(mode) => {

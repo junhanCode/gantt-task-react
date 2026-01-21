@@ -19,6 +19,14 @@ export const OATaskListTable: React.FC<{
   onToggleExpandAll?: () => void;
   operationsColumnWidth?: string;
   showOperationsColumn?: boolean;
+  columnRenderers?: Partial<{
+    name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
+    status: (task: Task, meta: { value?: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
+    assignee: (task: Task, meta: { value?: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
+    operations: (task: Task) => React.ReactNode;
+  }>;
+  columnEllipsisMaxChars?: Partial<Record<"name" | "status" | "assignee", number>>;
+  onCellOverflow?: (info: { column: "name" | "status" | "assignee"; task: Task }) => void;
   onAddTask?: (task: Task) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (task: Task) => void;
@@ -37,6 +45,9 @@ export const OATaskListTable: React.FC<{
   onToggleExpandAll,
   operationsColumnWidth,
   showOperationsColumn = true,
+  columnRenderers,
+  columnEllipsisMaxChars,
+  onCellOverflow,
   onAddTask,
   onEditTask,
   onDeleteTask,
@@ -53,6 +64,20 @@ export const OATaskListTable: React.FC<{
     return tasks.some(t => t.project === task.id);
   };
 
+  const getEllipsisData = (column: "name" | "status" | "assignee", rawValue?: string) => {
+    const value = rawValue ?? "";
+    const max =
+      columnEllipsisMaxChars?.[column] ??
+      (column === "name" ? 20 : column === "status" ? 8 : 12);
+    const isOverflow = value.length > max;
+    const displayValue = isOverflow
+      ? `${value.slice(0, Math.max(1, max - 1))}…`
+      : value;
+    // 溢出时通知调用方
+    // 具体任务在调用方外层循环里传入
+    return { value, displayValue, isOverflow, maxLength: max };
+  };
+
 
   return (
     <div
@@ -64,27 +89,13 @@ export const OATaskListTable: React.FC<{
     >
       {tasks.map((t) => {
         const hasChild = hasChildren(t);
+        const isCollapsed = t.hideChildren ?? false;
         let expanderContent: React.ReactNode = null;
         
         if (hasChild) {
-          if (t.hideChildren === false) {
-            expanderContent = collapseIcon ?? (
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="2" y="2" width="12" height="2" rx="1" />
-                <rect x="2" y="7" width="12" height="2" rx="1" />
-                <rect x="2" y="12" width="12" height="2" rx="1" />
-              </svg>
-            );
-          } else if (t.hideChildren === true) {
-            expanderContent = expandIcon ?? (
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="2" y="2" width="4" height="4" rx="1" />
-                <rect x="10" y="2" width="4" height="4" rx="1" />
-                <rect x="2" y="10" width="4" height="4" rx="1" />
-                <rect x="10" y="10" width="4" height="4" rx="1" />
-              </svg>
-            );
-          }
+          expanderContent = isCollapsed
+            ? (expandIcon ?? <span style={{ fontSize: 12 }}>+</span>)
+            : (collapseIcon ?? <span style={{ fontSize: 12 }}>−</span>);
         }
 
         return (
@@ -94,39 +105,54 @@ export const OATaskListTable: React.FC<{
               style={{ height: rowHeight }}
             >
               {/* 任务标题列 */}
-              <div
-                className={styles.taskListCell}
-                style={{
-                  minWidth: rowWidth,
-                  maxWidth: rowWidth,
-                }}
-                title={t.name}
-              >
-                <div className={styles.taskListNameWrapper}>
+              {(() => {
+                const meta = getEllipsisData("name", t.name);
+                if (meta.isOverflow && onCellOverflow) {
+                  onCellOverflow({ column: "name", task: t });
+                }
+                const content = columnRenderers?.name
+                  ? columnRenderers.name(t, meta)
+                  : (
+                    <span
+                      title={meta.isOverflow ? t.name : undefined}
+                      style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                    >
+                      {meta.displayValue}
+                    </span>
+                  );
+                return (
                   <div
-                    className={
-                      expanderContent
-                        ? styles.taskListExpander
-                        : styles.taskListEmptyExpander
-                    }
-                    onClick={() => onExpanderClick(t)}
+                    className={styles.taskListCell}
+                    style={{
+                      minWidth: rowWidth,
+                      maxWidth: rowWidth,
+                    }}
+                    title={meta.isOverflow ? t.name : undefined}
                   >
-                    {expanderContent}
+                    <div className={styles.taskListNameWrapper}>
+                      <div
+                        className={
+                          expanderContent
+                            ? styles.taskListExpander
+                            : styles.taskListEmptyExpander
+                        }
+                        onClick={() => onExpanderClick(t)}
+                      >
+                        {expanderContent}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>{content}</div>
+                    </div>
                   </div>
-                  <div>{t.name}</div>
-                </div>
-              </div>
+                );
+              })()}
               
               {/* 状态列 */}
-              <div
-                className={styles.taskListCell}
-                style={{
-                  minWidth: "100px",
-                  maxWidth: "100px",
-                  textAlign: "center",
-                }}
-              >
-                {t.status && (
+              {(() => {
+                const meta = getEllipsisData("status", t.status);
+                if (meta.isOverflow && onCellOverflow) {
+                  onCellOverflow({ column: "status", task: t });
+                }
+                const defaultNode = t.status && (
                   <span
                     style={{
                       display: "inline-block",
@@ -135,24 +161,62 @@ export const OATaskListTable: React.FC<{
                       backgroundColor: statusColors[t.status] || "#E6E6E6",
                       color: t.status === "挂起中" ? "#666" : "#000",
                       fontSize: "12px",
+                      maxWidth: "100%",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                    title={meta.isOverflow ? t.status : undefined}
+                  >
+                    {meta.displayValue}
+                  </span>
+                );
+                const content = columnRenderers?.status
+                  ? columnRenderers.status(t, meta)
+                  : defaultNode;
+                return (
+                  <div
+                    className={styles.taskListCell}
+                    style={{
+                      minWidth: "100px",
+                      maxWidth: "100px",
+                      textAlign: "center",
                     }}
                   >
-                    {t.status}
-                  </span>
-                )}
-              </div>
+                    {content}
+                  </div>
+                );
+              })()}
               
               {/* 负责人列 */}
-              <div
-                className={styles.taskListCell}
-                style={{
-                  minWidth: "100px",
-                  maxWidth: "100px",
-                  textAlign: "center",
-                }}
-              >
-                {t.assignee || "-"}
-              </div>
+              {(() => {
+                const meta = getEllipsisData("assignee", t.assignee || "-");
+                if (meta.isOverflow && onCellOverflow) {
+                  onCellOverflow({ column: "assignee", task: t });
+                }
+                const content = columnRenderers?.assignee
+                  ? columnRenderers.assignee(t, meta)
+                  : (
+                    <span
+                      style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                      title={meta.isOverflow ? meta.value : undefined}
+                    >
+                      {meta.displayValue || "-"}
+                    </span>
+                  );
+                return (
+                  <div
+                    className={styles.taskListCell}
+                    style={{
+                      minWidth: "100px",
+                      maxWidth: "100px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {content}
+                  </div>
+                );
+              })()}
               
               {/* 操作列 */}
               {showOperationsColumn && (
@@ -164,44 +228,48 @@ export const OATaskListTable: React.FC<{
                     textAlign: "center",
                   }}
                 >
-                  <div className={styles.operationsContainer}>
-                    {onAddTask && (
-                      <span
-                        className={styles.addIcon}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddTask(t);
-                        }}
-                        title="新增子任务"
-                      >
-                        +
-                      </span>
-                    )}
-                    {onEditTask && (
-                      <span
-                        className={styles.actionIcon}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditTask(t);
-                        }}
-                        title="编辑"
-                      >
-                        ✎
-                      </span>
-                    )}
-                    {onDeleteTask && (
-                      <span
-                        className={styles.actionIcon}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteTask(t);
-                        }}
-                        title="删除"
-                      >
-                        ×
-                      </span>
-                    )}
-                  </div>
+                  {columnRenderers?.operations ? (
+                    columnRenderers.operations(t)
+                  ) : (
+                    <div className={styles.operationsContainer}>
+                      {onAddTask && (
+                        <span
+                          className={styles.addIcon}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddTask(t);
+                          }}
+                          title="新增子任务"
+                        >
+                          +
+                        </span>
+                      )}
+                      {onEditTask && (
+                        <span
+                          className={styles.actionIcon}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onEditTask(t);
+                          }}
+                          title="编辑"
+                        >
+                          ✎
+                        </span>
+                      )}
+                      {onDeleteTask && (
+                        <span
+                          className={styles.actionIcon}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteTask(t);
+                          }}
+                          title="删除"
+                        >
+                          ×
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

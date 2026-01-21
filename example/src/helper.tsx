@@ -13,7 +13,7 @@ export function initTasks() {
       hideChildren: false,
       displayOrder: 1,
       status: "处理中",
-      assignee: "张三",
+      assignee: "张三11111111111111111111111111111",
       // 不设置 plannedStart, plannedEnd, actualStart, actualEnd
       // 这样项目会根据子项自动计算时间范围
     },
