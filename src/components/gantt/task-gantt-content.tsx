@@ -282,7 +282,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
 
   return (
     <g className="content">
-      {showArrows === true && (
+      {showArrows !== false && (
         <g className="arrows" fill={arrowColor} stroke={arrowColor}>
           {tasks.map(task => {
             return task.barChildren.map(child => {

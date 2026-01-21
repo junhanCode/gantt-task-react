@@ -580,6 +580,7 @@ const App = () => {
         operationsColumnWidth="0px"
         operationsColumnLabel=""
         showOperationsColumn={false}
+        showArrows={false}
         // 自定义展开/折叠图标
         expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
         collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
