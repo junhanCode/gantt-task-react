@@ -30,6 +30,20 @@ TaskListHeaderDefault: React.FC<{
   onToggleTaskList?: () => void;
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
+  tableStyles?: {
+    height?: number | string;
+    container?: React.CSSProperties;
+    row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
+    cell?: React.CSSProperties;
+    header?: React.CSSProperties;
+    headerCell?: React.CSSProperties;
+    borderColor?: string;
+    rowBackgroundColor?: string;
+    rowEvenBackgroundColor?: string;
+    cellPadding?: string;
+    headerBackgroundColor?: string;
+    headerTextColor?: string;
+  };
 }> = ({ 
   headerHeight, 
   fontFamily, 
@@ -41,6 +55,7 @@ TaskListHeaderDefault: React.FC<{
   timeColumnWidths, 
   operationsColumnWidth, 
   operationsColumnLabel,
+  tableStyles,
 }) => {
   const label = {
     plannedStart: timeColumnLabels?.plannedStart ?? "Planned Start",
@@ -65,12 +80,21 @@ TaskListHeaderDefault: React.FC<{
         fontFamily: fontFamily,
         fontSize: fontSize,
         paddingRight: headerGutterRight ?? 0,
+        ...(tableStyles?.borderColor ? {
+          borderColor: tableStyles.borderColor,
+          borderTopColor: tableStyles.borderColor,
+          borderBottomColor: tableStyles.borderColor,
+          borderLeftColor: tableStyles.borderColor,
+          borderRightColor: tableStyles.borderColor,
+        } : {}),
+        ...(tableStyles?.header || {}),
       }}
     >
       <div
         className={styles.ganttTable_Header}
         style={{
           height: headerHeight - 2,
+          ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
         }}
       >
         <div
@@ -78,6 +102,10 @@ TaskListHeaderDefault: React.FC<{
           style={{
             minWidth: width.name,
             maxWidth: width.name,
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           <span>Item</span>
@@ -95,6 +123,10 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.plannedStart,
             maxWidth: width.plannedStart,
             textAlign: 'center',
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           &nbsp;{label.plannedStart}
@@ -112,6 +144,10 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.plannedEnd,
             maxWidth: width.plannedEnd,
             textAlign: 'center',
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           &nbsp;{label.plannedEnd}
@@ -129,6 +165,10 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.plannedDuration,
             maxWidth: width.plannedDuration,
             textAlign: 'center',
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           &nbsp;{label.plannedDuration}
@@ -146,6 +186,10 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.actualStart,
             maxWidth: width.actualStart,
             textAlign: 'center',
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           &nbsp;{label.actualStart}
@@ -163,6 +207,10 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.actualEnd,
             maxWidth: width.actualEnd,
             textAlign: 'center',
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           &nbsp;{label.actualEnd}
@@ -180,6 +228,10 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.operations,
             maxWidth: width.operations,
             textAlign: 'center',
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           &nbsp;{operationsColumnLabel ?? "操作"}

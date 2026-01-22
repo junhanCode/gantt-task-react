@@ -55,6 +55,21 @@ export type TaskListProps = {
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
   onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
+  /** 表格样式配置 */
+  tableStyles?: {
+    height?: number | string;
+    container?: React.CSSProperties;
+    row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
+    cell?: React.CSSProperties;
+    header?: React.CSSProperties;
+    headerCell?: React.CSSProperties;
+    borderColor?: string;
+    rowBackgroundColor?: string;
+    rowEvenBackgroundColor?: string;
+    cellPadding?: string;
+    headerBackgroundColor?: string;
+    headerTextColor?: string;
+  };
   TaskListHeader: React.FC<{
     headerHeight: number;
     rowWidth: string;
@@ -83,6 +98,20 @@ export type TaskListProps = {
     onToggleTaskList?: () => void;
     expandIcon?: React.ReactNode;
     collapseIcon?: React.ReactNode;
+    tableStyles?: {
+      height?: number | string;
+      container?: React.CSSProperties;
+      row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
+      cell?: React.CSSProperties;
+      header?: React.CSSProperties;
+      headerCell?: React.CSSProperties;
+      borderColor?: string;
+      rowBackgroundColor?: string;
+      rowEvenBackgroundColor?: string;
+      cellPadding?: string;
+      headerBackgroundColor?: string;
+      headerTextColor?: string;
+    };
   }>;
   TaskListTable: React.FC<{
     rowHeight: number;
@@ -128,6 +157,20 @@ export type TaskListProps = {
     expandIcon?: React.ReactNode;
     collapseIcon?: React.ReactNode;
     onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
+    tableStyles?: {
+      height?: number | string;
+      container?: React.CSSProperties;
+      row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
+      cell?: React.CSSProperties;
+      header?: React.CSSProperties;
+      headerCell?: React.CSSProperties;
+      borderColor?: string;
+      rowBackgroundColor?: string;
+      rowEvenBackgroundColor?: string;
+      cellPadding?: string;
+      headerBackgroundColor?: string;
+      headerTextColor?: string;
+    };
   }>;
 };
 
@@ -161,6 +204,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   TaskListHeader,
   TaskListTable,
   onDateChange,
+  tableStyles,
 }) => {
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -190,6 +234,7 @@ export const TaskList: React.FC<TaskListProps> = ({
     onToggleTaskList,
     expandIcon,
     collapseIcon,
+    tableStyles,
   };
   const selectedTaskId = selectedTask ? selectedTask.id : "";
   const tableProps = {
@@ -212,6 +257,7 @@ export const TaskList: React.FC<TaskListProps> = ({
     expandIcon,
     collapseIcon,
     onDateChange,
+    tableStyles,
   };
 
   return (
@@ -221,8 +267,11 @@ export const TaskList: React.FC<TaskListProps> = ({
         ref={horizontalContainerRef}
         className={horizontalContainerClass}
         style={{
-          ...(ganttHeight ? { height: ganttHeight } : {}),
-          display: isTaskListCollapsed ? 'none' : 'block'
+          ...(tableStyles?.height !== undefined 
+            ? { height: typeof tableStyles.height === 'number' ? `${tableStyles.height}px` : tableStyles.height }
+            : ganttHeight ? { height: ganttHeight } : {}),
+          display: isTaskListCollapsed ? 'none' : 'block',
+          ...(tableStyles?.container || {})
         }}
       >
         <TaskListTable {...tableProps} />

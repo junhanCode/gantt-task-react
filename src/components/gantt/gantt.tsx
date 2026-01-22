@@ -95,6 +95,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   columnRenderers,
   columnEllipsisMaxChars,
   onCellOverflow,
+  tableStyles,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -744,6 +745,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     timeColumnLabels,
     timeColumnWidths,
     onDateChange,
+    tableStyles,
     // pass-through to task list header/table
     // Note: TaskListProps typing supports these via component prop types
   };

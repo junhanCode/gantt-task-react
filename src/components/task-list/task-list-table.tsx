@@ -56,6 +56,20 @@ export const TaskListTableDefault: React.FC<{
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
   onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
+  tableStyles?: {
+    height?: number | string;
+    container?: React.CSSProperties;
+    row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
+    cell?: React.CSSProperties;
+    header?: React.CSSProperties;
+    headerCell?: React.CSSProperties;
+    borderColor?: string;
+    rowBackgroundColor?: string;
+    rowEvenBackgroundColor?: string;
+    cellPadding?: string;
+    headerBackgroundColor?: string;
+    headerTextColor?: string;
+  };
 }> = ({
   rowHeight,
   rowWidth,
@@ -71,6 +85,7 @@ export const TaskListTableDefault: React.FC<{
   expandIcon,
   collapseIcon,
   onDateChange,
+  tableStyles,
 }) => {
   // 右键菜单状态
   const [menuVisible, setMenuVisible] = useState(false);
@@ -178,9 +193,16 @@ export const TaskListTableDefault: React.FC<{
         style={{
           fontFamily: fontFamily,
           fontSize: fontSize,
+          ...(tableStyles?.borderColor ? {
+            borderColor: tableStyles.borderColor,
+            borderBottomColor: tableStyles.borderColor,
+            borderLeftColor: tableStyles.borderColor,
+            borderRightColor: tableStyles.borderColor,
+          } : {}),
+          ...(tableStyles?.container || {}),
         }}
       >
-        {tasks.map((t) => {
+        {tasks.map((t, index) => {
           let expanderContent: React.ReactNode = null;
           if (t.hideChildren === false) {
             expanderContent = collapseIcon ?? (
@@ -206,13 +228,27 @@ export const TaskListTableDefault: React.FC<{
             <div key={`${t.id}row`} onContextMenu={(e) => openContextMenu(e, t)}>
               <div
                 className={styles.taskListTableRow}
-                style={{ height: rowHeight }}
+                style={{
+                  height: rowHeight,
+                  ...(tableStyles?.rowBackgroundColor && index % 2 === 0
+                    ? { backgroundColor: tableStyles.rowBackgroundColor }
+                    : {}),
+                  ...(tableStyles?.rowEvenBackgroundColor && index % 2 === 1
+                    ? { backgroundColor: tableStyles.rowEvenBackgroundColor }
+                    : {}),
+                  ...(typeof tableStyles?.row === 'function'
+                    ? tableStyles.row(index)
+                    : tableStyles?.row || {}),
+                }}
               >
                 <div
                   className={styles.taskListCell}
                   style={{
                     minWidth: nameColumnWidth ?? rowWidth,
                     maxWidth: nameColumnWidth ?? rowWidth,
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                    ...(tableStyles?.cell || {}),
                   }}
                   title={t.name}
                 >
@@ -235,6 +271,9 @@ export const TaskListTableDefault: React.FC<{
                   style={{
                     minWidth: timeColumnWidths?.plannedStart ?? rowWidth,
                     maxWidth: timeColumnWidths?.plannedStart ?? rowWidth,
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                    ...(tableStyles?.cell || {}),
                   }}
                 >
                   &nbsp;{formatYmd(t.plannedStart ?? t.start)}
@@ -244,6 +283,9 @@ export const TaskListTableDefault: React.FC<{
                   style={{
                     minWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
                     maxWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                    ...(tableStyles?.cell || {}),
                   }}
                 >
                   &nbsp;{formatYmd(t.plannedEnd ?? t.end)}
@@ -255,6 +297,9 @@ export const TaskListTableDefault: React.FC<{
                     maxWidth: timeColumnWidths?.plannedDuration ?? "100px",
                     cursor: "pointer",
                     textAlign: "center",
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                    ...(tableStyles?.cell || {}),
                   }}
                   onDoubleClick={() => startEditDuration(t)}
                 >
@@ -288,6 +333,9 @@ export const TaskListTableDefault: React.FC<{
                   style={{
                     minWidth: timeColumnWidths?.actualStart ?? rowWidth,
                     maxWidth: timeColumnWidths?.actualStart ?? rowWidth,
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                    ...(tableStyles?.cell || {}),
                   }}
                 >
                   &nbsp;{formatYmd(t.actualStart ?? t.start)}
@@ -297,6 +345,9 @@ export const TaskListTableDefault: React.FC<{
                   style={{
                     minWidth: timeColumnWidths?.actualEnd ?? rowWidth,
                     maxWidth: timeColumnWidths?.actualEnd ?? rowWidth,
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                    ...(tableStyles?.cell || {}),
                   }}
                 >
                   &nbsp;{formatYmd(t.actualEnd ?? t.end)}

@@ -168,6 +168,33 @@ export interface StylingOption {
     actualStart?: string;
     actualEnd?: string;
   };
+  /** 表格样式配置 */
+  tableStyles?: {
+    /** 表格容器高度（支持数字或字符串，如 500 或 "500px" 或 "100%"） */
+    height?: number | string;
+    /** 表格容器样式 */
+    container?: React.CSSProperties;
+    /** 表格行样式（支持函数，根据行索引返回样式） */
+    row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
+    /** 表格单元格样式 */
+    cell?: React.CSSProperties;
+    /** 表头样式 */
+    header?: React.CSSProperties;
+    /** 表头单元格样式 */
+    headerCell?: React.CSSProperties;
+    /** 表格边框颜色 */
+    borderColor?: string;
+    /** 表格行背景色（奇数行） */
+    rowBackgroundColor?: string;
+    /** 表格行背景色（偶数行） */
+    rowEvenBackgroundColor?: string;
+    /** 单元格内边距 */
+    cellPadding?: string;
+    /** 表头背景色 */
+    headerBackgroundColor?: string;
+    /** 表头文字颜色 */
+    headerTextColor?: string;
+  };
   TooltipContent?: React.FC<{
     task: Task;
     fontSize: string;

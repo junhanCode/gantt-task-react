@@ -14,6 +14,20 @@ export const OATaskListHeader: React.FC<{
   operationsColumnWidth?: string;
   operationsColumnLabel?: string;
   showOperationsColumn?: boolean;
+  tableStyles?: {
+    height?: number | string;
+    container?: React.CSSProperties;
+    row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
+    cell?: React.CSSProperties;
+    header?: React.CSSProperties;
+    headerCell?: React.CSSProperties;
+    borderColor?: string;
+    rowBackgroundColor?: string;
+    rowEvenBackgroundColor?: string;
+    cellPadding?: string;
+    headerBackgroundColor?: string;
+    headerTextColor?: string;
+  };
 }> = ({ 
   headerHeight, 
   fontFamily, 
@@ -27,6 +41,7 @@ export const OATaskListHeader: React.FC<{
   operationsColumnWidth,
   operationsColumnLabel,
   showOperationsColumn = true,
+  tableStyles,
 }) => {
   return (
     <div
@@ -35,12 +50,21 @@ export const OATaskListHeader: React.FC<{
         fontFamily: fontFamily,
         fontSize: fontSize,
         paddingRight: headerGutterRight ?? 0,
+        ...(tableStyles?.borderColor ? {
+          borderColor: tableStyles.borderColor,
+          borderTopColor: tableStyles.borderColor,
+          borderBottomColor: tableStyles.borderColor,
+          borderLeftColor: tableStyles.borderColor,
+          borderRightColor: tableStyles.borderColor,
+        } : {}),
+        ...(tableStyles?.header || {}),
       }}
     >
       <div
         className={styles.ganttTable_Header}
         style={{
           height: headerHeight - 2,
+          ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
         }}
       >
         {/* 任务标题列 */}
@@ -49,6 +73,10 @@ export const OATaskListHeader: React.FC<{
           style={{
             minWidth: rowWidth,
             maxWidth: rowWidth,
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
@@ -81,6 +109,10 @@ export const OATaskListHeader: React.FC<{
             minWidth: "100px",
             maxWidth: "100px",
             textAlign: 'center',
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           <span>状态</span>
@@ -100,6 +132,10 @@ export const OATaskListHeader: React.FC<{
             minWidth: "100px",
             maxWidth: "100px",
             textAlign: 'center',
+            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+            ...(tableStyles?.headerCell || {}),
           }}
         >
           <span>负责人</span>
@@ -120,6 +156,10 @@ export const OATaskListHeader: React.FC<{
                 minWidth: operationsColumnWidth ?? "120px",
                 maxWidth: operationsColumnWidth ?? "120px",
                 textAlign: 'center',
+                ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+                ...(tableStyles?.headerCell || {}),
               }}
             >
               <span>{operationsColumnLabel ?? "操作"}</span>

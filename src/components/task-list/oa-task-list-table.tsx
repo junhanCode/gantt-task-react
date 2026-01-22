@@ -31,6 +31,20 @@ export const OATaskListTable: React.FC<{
   onAddTask?: (task: Task) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (task: Task) => void;
+  tableStyles?: {
+    height?: number | string;
+    container?: React.CSSProperties;
+    row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
+    cell?: React.CSSProperties;
+    header?: React.CSSProperties;
+    headerCell?: React.CSSProperties;
+    borderColor?: string;
+    rowBackgroundColor?: string;
+    rowEvenBackgroundColor?: string;
+    cellPadding?: string;
+    headerBackgroundColor?: string;
+    headerTextColor?: string;
+  };
 }> = ({
   rowHeight,
   rowWidth,
@@ -53,6 +67,7 @@ export const OATaskListTable: React.FC<{
   onAddTask,
   onEditTask,
   onDeleteTask,
+  tableStyles,
 }) => {
   // 状态颜色映射
   const statusColors: Record<string, string> = {
@@ -94,9 +109,16 @@ export const OATaskListTable: React.FC<{
       style={{
         fontFamily: fontFamily,
         fontSize: fontSize,
+        ...(tableStyles?.borderColor ? {
+          borderColor: tableStyles.borderColor,
+          borderBottomColor: tableStyles.borderColor,
+          borderLeftColor: tableStyles.borderColor,
+          borderRightColor: tableStyles.borderColor,
+        } : {}),
+        ...(tableStyles?.container || {}),
       }}
     >
-      {tasks.map((t) => {
+      {tasks.map((t, index) => {
         const hasChild = hasChildren(t);
         const isCollapsed = t.hideChildren ?? false;
         let expanderContent: React.ReactNode = null;
@@ -111,7 +133,18 @@ export const OATaskListTable: React.FC<{
           <div key={`${t.id}row`}>
             <div
               className={styles.taskListTableRow}
-              style={{ height: rowHeight }}
+              style={{
+                height: rowHeight,
+                ...(tableStyles?.rowBackgroundColor && index % 2 === 0
+                  ? { backgroundColor: tableStyles.rowBackgroundColor }
+                  : {}),
+                ...(tableStyles?.rowEvenBackgroundColor && index % 2 === 1
+                  ? { backgroundColor: tableStyles.rowEvenBackgroundColor }
+                  : {}),
+                ...(typeof tableStyles?.row === 'function'
+                  ? tableStyles.row(index)
+                  : tableStyles?.row || {}),
+              }}
             >
               {/* 任务标题列 */}
               {(() => {
@@ -135,6 +168,9 @@ export const OATaskListTable: React.FC<{
                     style={{
                       minWidth: rowWidth,
                       maxWidth: rowWidth,
+                      ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                      ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                      ...(tableStyles?.cell || {}),
                     }}
                     title={meta.isOverflow ? t.name : undefined}
                   >
@@ -190,6 +226,9 @@ export const OATaskListTable: React.FC<{
                       minWidth: "100px",
                       maxWidth: "100px",
                       textAlign: "center",
+                      ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                      ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                      ...(tableStyles?.cell || {}),
                     }}
                   >
                     {content}
@@ -220,6 +259,9 @@ export const OATaskListTable: React.FC<{
                       minWidth: "100px",
                       maxWidth: "100px",
                       textAlign: "center",
+                      ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                      ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                      ...(tableStyles?.cell || {}),
                     }}
                   >
                     {content}
@@ -235,6 +277,9 @@ export const OATaskListTable: React.FC<{
                     minWidth: operationsColumnWidth ?? "120px",
                     maxWidth: operationsColumnWidth ?? "120px",
                     textAlign: "center",
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                    ...(tableStyles?.cell || {}),
                   }}
                 >
                   {columnRenderers?.operations ? (
