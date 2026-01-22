@@ -88,6 +88,14 @@ export interface EventOption {
    * Invokes on expander on task list
    */
   onExpanderClick?: (task: Task) => void;
+  /**
+   * Invokes when task drag/resize ends. Use this for async API calls to update task.
+   * Return false or throw error to cancel the change.
+   */
+  onTaskDragEnd?: (
+    task: Task,
+    children: Task[]
+  ) => void | boolean | Promise<void> | Promise<boolean>;
 }
 
 export interface DisplayOption {
@@ -99,6 +107,14 @@ export interface DisplayOption {
    */
   locale?: string;
   rtl?: boolean;
+  /**
+   * Enable task drag (move entire task). Default: false
+   */
+  enableTaskDrag?: boolean;
+  /**
+   * Enable task resize (change start/end time by dragging edges). Default: true
+   */
+  enableTaskResize?: boolean;
 }
 
 export interface StylingOption {

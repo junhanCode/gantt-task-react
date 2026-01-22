@@ -17,6 +17,8 @@ export type TaskItemProps = {
   isSelected: boolean;
   rtl: boolean;
   viewType?: "default" | "oaTask";
+  enableTaskDrag?: boolean;
+  enableTaskResize?: boolean;
   onEventStart: (
     action: GanttContentMoveAction,
     selectedTask: BarTask,

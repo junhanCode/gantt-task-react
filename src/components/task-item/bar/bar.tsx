@@ -11,6 +11,8 @@ export const Bar: React.FC<TaskItemProps> = ({
   onEventStart,
   isSelected,
   viewType = "default",
+  enableTaskDrag = false,
+  enableTaskResize = true,
 }) => {
   // oaTask模式使用OABarDisplay（单条形图，基于plannedStart和plannedEnd）
   if (viewType === "oaTask") {
@@ -30,9 +32,39 @@ export const Bar: React.FC<TaskItemProps> = ({
           plannedEnd={plannedEnd}
           isSelected={isSelected}
           onMouseDown={e => {
-            isDateChangeable && onEventStart("move", task, e);
+            isDateChangeable && enableTaskDrag && onEventStart("move", task, e);
           }}
         />
+        <g className="handleGroup">
+          {isDateChangeable && enableTaskResize && (
+            <g>
+              {/* 左侧手柄 - 调整计划开始时间 */}
+              <BarDateHandle
+                x={task.x1 - task.handleWidth / 2}
+                y={task.y}
+                width={task.handleWidth}
+                height={task.height}
+                barCornerRadius={task.barCornerRadius}
+                onMouseDown={e => {
+                  e.stopPropagation();
+                  onEventStart("start", task, e);
+                }}
+              />
+              {/* 右侧手柄 - 调整计划结束时间 */}
+              <BarDateHandle
+                x={task.x2 - task.handleWidth / 2}
+                y={task.y}
+                width={task.handleWidth}
+                height={task.height}
+                barCornerRadius={task.barCornerRadius}
+                onMouseDown={e => {
+                  e.stopPropagation();
+                  onEventStart("end", task, e);
+                }}
+              />
+            </g>
+          )}
+        </g>
       </g>
     );
   }
@@ -51,11 +83,11 @@ export const Bar: React.FC<TaskItemProps> = ({
         styles={task.styles}
         isSelected={isSelected}
         onMouseDown={e => {
-          isDateChangeable && onEventStart("move", task, e);
+          isDateChangeable && enableTaskDrag && onEventStart("move", task, e);
         }}
       />
       <g className="handleGroup">
-        {isDateChangeable && (
+        {isDateChangeable && enableTaskResize && (
           <g>
             {/* 实际条左侧手柄 - 调整实际开始时间 */}
             <BarDateHandle

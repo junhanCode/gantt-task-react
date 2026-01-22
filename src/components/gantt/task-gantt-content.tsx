@@ -29,6 +29,8 @@ export type TaskGanttContentProps = {
   fontFamily: string;
   rtl: boolean;
   viewType?: "default" | "oaTask";
+  enableTaskDrag?: boolean;
+  enableTaskResize?: boolean;
   setGanttEvent: (value: GanttEvent) => void;
   setFailedTask: (value: BarTask | null) => void;
   setSelectedTask: (taskId: string) => void;
@@ -51,6 +53,8 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   fontSize,
   rtl,
   viewType = "default",
+  enableTaskDrag = false,
+  enableTaskResize = true,
   setGanttEvent,
   setFailedTask,
   setSelectedTask,
@@ -59,6 +63,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   onDoubleClick,
   onClick,
   onDelete,
+  onTaskDragEnd,
 }) => {
   const point = svg?.current?.createSVGPoint();
   const [xStep, setXStep] = useState(0);
@@ -149,19 +154,36 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
       let operationSuccess = true;
       if (
         (action === "move" || action === "end" || action === "start" || action === "actualStart" || action === "actualEnd") &&
-        onDateChange &&
         isNotLikeOriginal
       ) {
-        try {
-          const result = await onDateChange(
-            newChangedTask,
-            newChangedTask.barChildren
-          );
-          if (result !== undefined) {
-            operationSuccess = result;
+        // First call onDateChange for immediate update
+        if (onDateChange) {
+          try {
+            const result = await onDateChange(
+              newChangedTask,
+              newChangedTask.barChildren
+            );
+            if (result !== undefined) {
+              operationSuccess = result;
+            }
+          } catch (error) {
+            operationSuccess = false;
           }
-        } catch (error) {
-          operationSuccess = false;
+        }
+        
+        // Then call onTaskDragEnd for async API calls
+        if (operationSuccess && onTaskDragEnd) {
+          try {
+            const result = await onTaskDragEnd(
+              newChangedTask,
+              newChangedTask.barChildren
+            );
+            if (result !== undefined) {
+              operationSuccess = result;
+            }
+          } catch (error) {
+            operationSuccess = false;
+          }
         }
       } else if (onProgressChange && isNotLikeOriginal) {
         try {
@@ -204,6 +226,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
     onProgressChange,
     timeStep,
     onDateChange,
+    onTaskDragEnd,
     svg,
     isMoving,
     point,
@@ -309,8 +332,10 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               arrowIndent={arrowIndent}
               taskHeight={taskHeight}
               isProgressChangeable={!!onProgressChange && !task.isDisabled && !task.disableDrag}
-              isDateChangeable={!!onDateChange && !task.isDisabled && !task.disableDrag}
+              isDateChangeable={(!!onDateChange || !!onTaskDragEnd) && !task.isDisabled && !task.disableDrag}
               isDelete={!task.isDisabled}
+              enableTaskDrag={enableTaskDrag}
+              enableTaskResize={enableTaskResize}
               onEventStart={handleBarEventStart}
               key={task.id}
               isSelected={!!selectedTask && task.id === selectedTask.id}

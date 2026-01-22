@@ -87,6 +87,9 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   viewType = "default",
   oaTaskViewMode = "日",
   onOATaskViewModeChange,
+  enableTaskDrag = false,
+  enableTaskResize = true,
+  onTaskDragEnd,
   // @ts-expect-error - Reserved for future column configuration feature
   columns,
   columnRenderers,
@@ -678,6 +681,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     svgWidth,
     rtl,
     viewType,
+    enableTaskDrag,
+    enableTaskResize,
     setGanttEvent,
     setFailedTask,
     setSelectedTask: handleSelectedTask,
@@ -686,6 +691,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     onDoubleClick,
     onClick,
     onDelete,
+    onTaskDragEnd,
   };
 
   const [expandAllLeafTasks, setExpandAllLeafTasks] = useState(true);

@@ -353,6 +353,8 @@ const App = () => {
   const [tasks, setTasks] = React.useState<Task[]>(initTasks());
   const [isChecked, setIsChecked] = React.useState(true);
   const [showArrows, setShowArrows] = React.useState<boolean>(true);
+  const [enableTaskDrag, setEnableTaskDrag] = React.useState<boolean>(false);
+  const [enableTaskResize, setEnableTaskResize] = React.useState<boolean>(true);
 
   // 为了在 demo 中方便使用最新扩展 props，这里对 Gantt 做一次 any 断言
   
@@ -489,6 +491,36 @@ const App = () => {
     setSelectedEditTask(null);
   };
 
+  // 拖动结束事件处理器 - 模拟异步API调用
+  const handleTaskDragEnd = async (task: Task) => {
+    console.log("Task drag ended:", task);
+    
+    // 模拟异步API调用
+    return new Promise<boolean>((resolve) => {
+      setTimeout(() => {
+        // 模拟API调用
+        console.log("Simulating API call to update task:", task.id);
+        console.log("  Planned Start:", task.plannedStart);
+        console.log("  Planned End:", task.plannedEnd);
+        
+        // 模拟90%成功率
+        const success = Math.random() > 0.1;
+        
+        if (success) {
+          console.log("✅ API call successful - task updated");
+          // 成功后更新本地状态
+          setTasks(prevTasks => 
+            prevTasks.map(t => t.id === task.id ? task : t)
+          );
+          resolve(true);
+        } else {
+          console.log("❌ API call failed - reverting changes");
+          alert("保存失败，已恢复原始状态");
+          resolve(false);
+        }
+      }, 1000); // 模拟1秒的网络延迟
+    });
+  };
 
   return (
     <div className="Wrapper">
@@ -555,6 +587,21 @@ const App = () => {
           onChange={e => setShowArrows(e.target.checked)}
         />
       </div>
+      {/* 拖动和拉伸控制 */}
+      <div style={{ margin: "8px 0" }}>
+        <label style={{ marginRight: 8 }}>允许整体拖动：</label>
+        <input
+          type="checkbox"
+          checked={enableTaskDrag}
+          onChange={e => setEnableTaskDrag(e.target.checked)}
+        />
+        <label style={{ marginLeft: 16, marginRight: 8 }}>允许拉伸调整时间：</label>
+        <input
+          type="checkbox"
+          checked={enableTaskResize}
+          onChange={e => setEnableTaskResize(e.target.checked)}
+        />
+      </div>
       <Gantt
         // 需要依赖库版本包含 forwardRef 才可生效
         // @ts-ignore
@@ -595,6 +642,10 @@ const App = () => {
         showOperationsColumn={true}
         // 演示箭头开关
         showArrows={showArrows}
+        // 拖动和拉伸控制
+        enableTaskDrag={enableTaskDrag}
+        enableTaskResize={enableTaskResize}
+        onTaskDragEnd={handleTaskDragEnd}
         // 自定义展开/折叠图标：与表头保持一致
         expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
         collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
