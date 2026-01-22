@@ -23,6 +23,15 @@
 - ✅ **拖动调整** - 支持拖动调整计划时间和实际时间
 - ✅ **实时同步** - 拖动过程中左侧任务列表实时更新
 
+### 🎨 表格样式自定义
+- ✅ **表格高度** - 支持数字、像素值或百分比设置表格高度
+- ✅ **边框颜色** - 自定义表格边框颜色
+- ✅ **行背景色** - 支持奇数行和偶数行分别设置背景色（斑马纹效果）
+- ✅ **单元格样式** - 自定义单元格内边距、字体、颜色等样式
+- ✅ **表头样式** - 自定义表头背景色、文字颜色等
+- ✅ **动态行样式** - 支持函数根据行索引返回不同样式
+- ✅ **容器样式** - 支持设置表格容器的圆角、阴影等样式
+
 ## 📦 本地打包和引入
 
 ### 1. 打包插件
@@ -254,6 +263,16 @@ const MyGanttComponent = () => {
         barDelayColor="#FF9800"            // 延误部分颜色 - 橙色
         barBackgroundColor="#e0e0e0"       // 计划条背景颜色 - 灰色
         barBackgroundSelectedColor="#d0d0d0" // 选中状态计划条背景颜色
+        // 表格样式配置
+        tableStyles={{
+          height: 400,                    // 表格高度
+          borderColor: '#d9d9d9',        // 边框颜色
+          rowBackgroundColor: '#ffffff',  // 奇数行背景色
+          rowEvenBackgroundColor: '#f5f5f5', // 偶数行背景色
+          cellPadding: '8px 12px',       // 单元格内边距
+          headerBackgroundColor: '#fafafa', // 表头背景色
+          headerTextColor: '#333333',    // 表头文字颜色
+        }}
       />
       
       {/* 新增任务弹框 */}
@@ -380,6 +399,228 @@ export default function Demo() {
 | `timeColumnWidths` | `object` | - | 时间列宽度自定义 |
 | `expandIcon` | `React.ReactNode` | 默认田字形图标 | 展开状态图标 |
 | `collapseIcon` | `React.ReactNode` | 默认日字形图标 | 折叠状态图标 |
+| `tableStyles` | `TableStylesConfig` | - | 表格样式配置对象（详见下方说明） |
+
+### tableStyles 表格样式配置
+
+`tableStyles` 是一个配置对象，用于自定义左侧任务列表表格的高度和样式。所有属性都是可选的，不传则使用默认样式。
+
+#### 快速参考
+
+| 配置项 | 类型 | 用途 | 示例值 |
+|--------|------|------|--------|
+| `height` | `number \| string` | 设置表格高度 | `600` 或 `"600px"` 或 `"100%"` |
+| `borderColor` | `string` | 设置边框颜色 | `"#d9d9d9"` |
+| `rowBackgroundColor` | `string` | 奇数行背景色 | `"#ffffff"` |
+| `rowEvenBackgroundColor` | `string` | 偶数行背景色 | `"#f5f5f5"` |
+| `cellPadding` | `string` | 单元格内边距 | `"8px 12px"` |
+| `headerBackgroundColor` | `string` | 表头背景色 | `"#fafafa"` |
+| `headerTextColor` | `string` | 表头文字颜色 | `"#333333"` |
+| `container` | `CSSProperties` | 容器样式 | `{ borderRadius: '8px' }` |
+| `cell` | `CSSProperties` | 单元格样式 | `{ fontSize: '14px' }` |
+| `header` | `CSSProperties` | 表头样式 | `{ backgroundColor: '#f0f0f0' }` |
+| `headerCell` | `CSSProperties` | 表头单元格样式 | `{ fontWeight: 'bold' }` |
+| `row` | `CSSProperties \| Function` | 行样式（支持函数） | `(index) => ({ ... })` |
+
+#### 完整属性列表
+
+| 属性名 | 类型 | 默认值 | 描述 |
+|--------|------|--------|------|
+| `height` | `number \| string` | - | 表格容器高度。支持数字（如 `600`，自动转换为 `600px`）、字符串像素值（如 `"600px"`）或百分比（如 `"100%"`）。如果未设置，则使用 `ganttHeight` 的值 |
+| `container` | `React.CSSProperties` | - | 表格容器的 CSS 样式对象。可以设置任何 CSS 属性，如 `borderRadius`、`boxShadow`、`overflow` 等 |
+| `row` | `React.CSSProperties \| ((rowIndex: number) => React.CSSProperties)` | - | 表格行的样式。可以是静态样式对象，也可以是函数（根据行索引返回不同的样式）。函数接收行索引（从 0 开始）作为参数 |
+| `cell` | `React.CSSProperties` | - | 表格单元格的 CSS 样式对象。会应用到所有单元格（包括表头单元格，除非被 `headerCell` 覆盖） |
+| `header` | `React.CSSProperties` | - | 表头容器的 CSS 样式对象 |
+| `headerCell` | `React.CSSProperties` | - | 表头单元格的 CSS 样式对象。优先级高于 `cell` |
+| `borderColor` | `string` | `"#e6e4e4"` | 表格边框颜色。会应用到表格的所有边框（外边框、单元格边框等） |
+| `rowBackgroundColor` | `string` | `"#ffffff"` | 奇数行（索引为偶数，从 0 开始）的背景色 |
+| `rowEvenBackgroundColor` | `string` | `"#f5f5f5"` | 偶数行（索引为奇数）的背景色 |
+| `cellPadding` | `string` | `"6px 4px"` | 单元格的内边距。格式同 CSS `padding` 属性，如 `"8px 12px"`、`"10px"` 等 |
+| `headerBackgroundColor` | `string` | - | 表头背景色 |
+| `headerTextColor` | `string` | - | 表头文字颜色 |
+
+#### 使用示例
+
+##### 基础示例：设置表格高度和边框颜色
+
+```tsx
+<Gantt
+  tasks={tasks}
+  tableStyles={{
+    height: 600,              // 设置表格高度为 600px
+    borderColor: '#d9d9d9',   // 设置边框颜色
+  }}
+/>
+```
+
+##### 完整配置示例
+
+```tsx
+<Gantt
+  tasks={tasks}
+  tableStyles={{
+    // 设置表格高度（支持多种格式）
+    height: 600,                    // 数字，自动转换为 "600px"
+    // height: "600px",             // 字符串像素值
+    // height: "100%",              // 百分比
+    
+    // 设置表格容器样式
+    container: {
+      borderRadius: '8px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      overflow: 'hidden',
+    },
+    
+    // 设置边框颜色
+    borderColor: '#d9d9d9',
+    
+    // 设置行背景色（斑马纹效果）
+    rowBackgroundColor: '#ffffff',        // 奇数行背景色
+    rowEvenBackgroundColor: '#f5f5f5',   // 偶数行背景色
+    
+    // 设置单元格内边距
+    cellPadding: '8px 12px',
+    
+    // 设置表头样式
+    headerBackgroundColor: '#fafafa',
+    headerTextColor: '#333333',
+    
+    // 设置表头单元格样式
+    headerCell: {
+      fontWeight: 'bold',
+      textTransform: 'uppercase',
+      fontSize: '12px',
+    },
+    
+    // 设置单元格样式
+    cell: {
+      fontSize: '14px',
+      lineHeight: '1.5',
+      color: '#333',
+    },
+    
+    // 动态行样式（使用函数）
+    row: (rowIndex) => ({
+      // 每 5 行添加一个分隔线
+      borderBottom: rowIndex % 5 === 0 
+        ? '2px solid #1890ff' 
+        : '1px solid #e8e8e8',
+      // 根据行索引设置不同的背景色
+      backgroundColor: rowIndex % 2 === 0 
+        ? '#ffffff' 
+        : '#f9f9f9',
+    }),
+  }}
+/>
+```
+
+##### 静态行样式示例
+
+```tsx
+<Gantt
+  tasks={tasks}
+  tableStyles={{
+    // 静态行样式（所有行使用相同样式）
+    row: {
+      borderBottom: '1px solid #e8e8e8',
+      transition: 'background-color 0.2s',
+    },
+  }}
+/>
+```
+
+##### 仅设置高度示例
+
+```tsx
+<Gantt
+  tasks={tasks}
+  tableStyles={{
+    height: "80vh",  // 使用视口高度
+  }}
+/>
+```
+
+##### 自定义表头样式示例
+
+```tsx
+<Gantt
+  tasks={tasks}
+  tableStyles={{
+    header: {
+      backgroundColor: '#001529',
+      color: '#fff',
+    },
+    headerCell: {
+      padding: '12px 16px',
+      fontWeight: 600,
+      fontSize: '13px',
+    },
+    headerTextColor: '#ffffff',
+  }}
+/>
+```
+
+##### 响应式高度示例
+
+```tsx
+const [tableHeight, setTableHeight] = useState(600);
+
+useEffect(() => {
+  const handleResize = () => {
+    setTableHeight(window.innerHeight - 200);
+  };
+  window.addEventListener('resize', handleResize);
+  handleResize();
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+
+<Gantt
+  tasks={tasks}
+  tableStyles={{
+    height: tableHeight,
+  }}
+/>
+```
+
+#### TypeScript 类型定义
+
+```typescript
+interface TableStylesConfig {
+  /** 表格容器高度（支持数字或字符串，如 500 或 "500px" 或 "100%"） */
+  height?: number | string;
+  /** 表格容器样式 */
+  container?: React.CSSProperties;
+  /** 表格行样式（支持函数，根据行索引返回样式） */
+  row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
+  /** 表格单元格样式 */
+  cell?: React.CSSProperties;
+  /** 表头样式 */
+  header?: React.CSSProperties;
+  /** 表头单元格样式 */
+  headerCell?: React.CSSProperties;
+  /** 表格边框颜色 */
+  borderColor?: string;
+  /** 表格行背景色（奇数行） */
+  rowBackgroundColor?: string;
+  /** 表格行背景色（偶数行） */
+  rowEvenBackgroundColor?: string;
+  /** 单元格内边距 */
+  cellPadding?: string;
+  /** 表头背景色 */
+  headerBackgroundColor?: string;
+  /** 表头文字颜色 */
+  headerTextColor?: string;
+}
+```
+
+#### 注意事项
+
+1. **优先级**：`headerCell` 的样式会覆盖 `cell` 的样式
+2. **行样式函数**：如果同时设置了 `rowBackgroundColor`/`rowEvenBackgroundColor` 和 `row` 函数，函数返回的样式会覆盖颜色设置
+3. **高度设置**：如果设置了 `tableStyles.height`，会优先使用该值，否则使用 `ganttHeight` 的值
+4. **兼容性**：所有属性都是可选的，不传则使用默认样式，完全向后兼容
+5. **CSS 属性**：`container`、`cell`、`header`、`headerCell`、`row` 支持所有标准的 CSS 属性
+6. **类型安全**：完整的 TypeScript 类型支持，提供智能提示和类型检查
 
 ## 🎨 自定义图标
 
@@ -465,6 +706,7 @@ npm start
 - ✅ 实时同步左侧任务列表
 - ✅ 支持四个时间列显示
 - ✅ 完整的 TypeScript 类型支持
+- ✅ **表格样式配置化** - 新增 `tableStyles` 配置，支持自定义表格高度、边框、背景色、单元格样式等所有样式属性
 
 ## 🤝 贡献
 
