@@ -532,9 +532,9 @@ const App = () => {
             <Button 
               size="small" 
               style={{ marginLeft: 8 }} 
-              onClick={() => ganttRef.current?.exportImage?.("gantt-chart.jpg")}
+              onClick={() => ganttRef.current?.exportImage?.("gantt-chart.png")}
             >
-              导出图片
+              导出PNG
             </Button>
           </>
         )}

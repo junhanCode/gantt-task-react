@@ -198,55 +198,117 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       }
       setIsFullscreen(false);
     },
-    exportImage: (filename = "gantt-chart.jpg") => {
-      if (!ganttContainerRef.current) return;
+    exportImage: async (filename = "gantt-chart.png") => {
+      if (!ganttContainerRef.current || !wrapperRef.current) {
+        console.warn('Gantt container or wrapper ref not found');
+        return;
+      }
       
-      // 使用html2canvas或类似库导出图片
-      // 这里使用canvas API
-      const container = ganttContainerRef.current;
-      const svgElements = container.querySelectorAll('svg');
-      
-      // 创建一个canvas来绘制
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      
-      // 计算总尺寸
-      let totalWidth = 0;
-      let totalHeight = 0;
-      svgElements.forEach(svg => {
-        totalWidth = Math.max(totalWidth, svg.clientWidth || svg.getBoundingClientRect().width);
-        totalHeight += svg.clientHeight || svg.getBoundingClientRect().height;
-      });
-      
-      canvas.width = totalWidth;
-      canvas.height = totalHeight;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // 使用html2canvas库（需要安装）
-      // 或者使用svg转canvas的方法
-      // 这里提供一个简单的实现思路
-      const img = new Image();
-      const svgData = new XMLSerializer().serializeToString(svgElements[0]);
-      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
-      
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0);
+      try {
+        // 动态导入html2canvas
+        const html2canvas = (await import('html2canvas')).default;
+        
+        const container = ganttContainerRef.current;
+        const wrapper = wrapperRef.current;
+        
+        // 保存当前状态
+        const originalOverflow = wrapper.style.overflow;
+        const originalHeight = wrapper.style.height;
+        const originalMaxHeight = wrapper.style.maxHeight;
+        
+        // 查找所有具有滚动的元素
+        const scrollableElements: Array<{
+          element: HTMLElement;
+          overflow: string;
+          overflowX: string;
+          overflowY: string;
+          height: string;
+          maxHeight: string;
+        }> = [];
+        
+        // 临时移除滚动限制，展开所有内容
+        const allElements = container.querySelectorAll('*');
+        allElements.forEach((el) => {
+          const element = el as HTMLElement;
+          const computedStyle = window.getComputedStyle(element);
+          
+          if (
+            computedStyle.overflow === 'auto' ||
+            computedStyle.overflow === 'scroll' ||
+            computedStyle.overflowX === 'auto' ||
+            computedStyle.overflowX === 'scroll' ||
+            computedStyle.overflowY === 'auto' ||
+            computedStyle.overflowY === 'scroll'
+          ) {
+            scrollableElements.push({
+              element,
+              overflow: element.style.overflow,
+              overflowX: element.style.overflowX,
+              overflowY: element.style.overflowY,
+              height: element.style.height,
+              maxHeight: element.style.maxHeight,
+            });
+            
+            element.style.overflow = 'visible';
+            element.style.overflowX = 'visible';
+            element.style.overflowY = 'visible';
+            element.style.height = 'auto';
+            element.style.maxHeight = 'none';
+          }
+        });
+        
+        // 展开wrapper
+        wrapper.style.overflow = 'visible';
+        wrapper.style.height = 'auto';
+        wrapper.style.maxHeight = 'none';
+        
+        // 等待DOM更新
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // 使用html2canvas捕获整个容器
+        const canvas = await html2canvas(container, {
+          backgroundColor: '#ffffff',
+          scale: 2, // 提高分辨率
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: container.scrollWidth,
+          windowHeight: container.scrollHeight,
+        });
+        
+        // 恢复原始状态
+        wrapper.style.overflow = originalOverflow;
+        wrapper.style.height = originalHeight;
+        wrapper.style.maxHeight = originalMaxHeight;
+        
+        scrollableElements.forEach(({ element, overflow, overflowX, overflowY, height, maxHeight }) => {
+          element.style.overflow = overflow;
+          element.style.overflowX = overflowX;
+          element.style.overflowY = overflowY;
+          element.style.height = height;
+          element.style.maxHeight = maxHeight;
+        });
+        
+        // 转换为PNG并下载
         canvas.toBlob((blob) => {
           if (blob) {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = filename;
+            a.download = filename.endsWith('.png') ? filename : `${filename}.png`;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
           }
-        }, 'image/jpeg', 0.95);
-        URL.revokeObjectURL(url);
-      };
-      img.src = url;
+        }, 'image/png');
+        
+      } catch (error) {
+        console.error('导出图片失败:', error);
+        alert('导出图片失败，请确保已安装 html2canvas 依赖');
+      }
     },
   }));
 
