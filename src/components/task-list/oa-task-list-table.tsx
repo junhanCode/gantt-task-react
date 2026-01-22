@@ -9,6 +9,7 @@ export const OATaskListTable: React.FC<{
   fontSize: string;
   locale: string;
   tasks: Task[];
+  allTasks?: Task[];
   selectedTaskId: string;
   setSelectedTask: (taskId: string) => void;
   onExpanderClick: (task: Task) => void;
@@ -34,6 +35,7 @@ export const OATaskListTable: React.FC<{
   rowHeight,
   rowWidth,
   tasks,
+  allTasks,
   fontFamily,
   fontSize,
   onExpanderClick,
@@ -66,8 +68,9 @@ export const OATaskListTable: React.FC<{
     if (Array.isArray(anyTask.barChildren) && anyTask.barChildren.length > 0) {
       return true;
     }
-    // 兜底：根据 project 字段判断
-    return tasks.some(t => t.project === task.id);
+    // 兜底：根据 project 字段判断，使用原始的 allTasks 列表（包含被隐藏的任务）
+    const taskList = allTasks || tasks;
+    return taskList.some(t => t.project === task.id);
   };
 
   const getEllipsisData = (column: "name" | "status" | "assignee", rawValue?: string) => {

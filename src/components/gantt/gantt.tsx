@@ -212,58 +212,77 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
         const wrapper = wrapperRef.current;
         
         // 保存当前状态
-        const originalOverflow = wrapper.style.overflow;
-        const originalHeight = wrapper.style.height;
-        const originalMaxHeight = wrapper.style.maxHeight;
-        
-        // 查找所有具有滚动的元素
-        const scrollableElements: Array<{
+        const originalStyles: Array<{
           element: HTMLElement;
           overflow: string;
           overflowX: string;
           overflowY: string;
           height: string;
           maxHeight: string;
+          minHeight: string;
         }> = [];
         
-        // 临时移除滚动限制，展开所有内容
+        // 临时移除所有滚动和高度限制，展开所有内容
         const allElements = container.querySelectorAll('*');
         allElements.forEach((el) => {
           const element = el as HTMLElement;
           const computedStyle = window.getComputedStyle(element);
           
-          if (
+          // 检查是否有滚动、固定高度或高度限制
+          const hasScrollOrHeightLimit = 
             computedStyle.overflow === 'auto' ||
             computedStyle.overflow === 'scroll' ||
+            computedStyle.overflow === 'hidden' ||
             computedStyle.overflowX === 'auto' ||
             computedStyle.overflowX === 'scroll' ||
+            computedStyle.overflowX === 'hidden' ||
             computedStyle.overflowY === 'auto' ||
-            computedStyle.overflowY === 'scroll'
-          ) {
-            scrollableElements.push({
+            computedStyle.overflowY === 'scroll' ||
+            computedStyle.overflowY === 'hidden' ||
+            (computedStyle.height && computedStyle.height !== 'auto' && !computedStyle.height.includes('%')) ||
+            (computedStyle.maxHeight && computedStyle.maxHeight !== 'none');
+          
+          if (hasScrollOrHeightLimit) {
+            // 保存原始样式
+            originalStyles.push({
               element,
               overflow: element.style.overflow,
               overflowX: element.style.overflowX,
               overflowY: element.style.overflowY,
               height: element.style.height,
               maxHeight: element.style.maxHeight,
+              minHeight: element.style.minHeight,
             });
             
+            // 临时设置为可见和自动高度
             element.style.overflow = 'visible';
             element.style.overflowX = 'visible';
             element.style.overflowY = 'visible';
             element.style.height = 'auto';
             element.style.maxHeight = 'none';
+            element.style.minHeight = '0';
           }
         });
         
         // 展开wrapper
+        const wrapperOriginalStyles = {
+          overflow: wrapper.style.overflow,
+          overflowX: wrapper.style.overflowX,
+          overflowY: wrapper.style.overflowY,
+          height: wrapper.style.height,
+          maxHeight: wrapper.style.maxHeight,
+          minHeight: wrapper.style.minHeight,
+        };
+        
         wrapper.style.overflow = 'visible';
+        wrapper.style.overflowX = 'visible';
+        wrapper.style.overflowY = 'visible';
         wrapper.style.height = 'auto';
         wrapper.style.maxHeight = 'none';
+        wrapper.style.minHeight = '0';
         
-        // 等待DOM更新
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // 等待DOM更新和重新渲染
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         // 使用html2canvas捕获整个容器
         const canvas = await html2canvas(container, {
@@ -279,16 +298,20 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
         });
         
         // 恢复原始状态
-        wrapper.style.overflow = originalOverflow;
-        wrapper.style.height = originalHeight;
-        wrapper.style.maxHeight = originalMaxHeight;
+        wrapper.style.overflow = wrapperOriginalStyles.overflow;
+        wrapper.style.overflowX = wrapperOriginalStyles.overflowX;
+        wrapper.style.overflowY = wrapperOriginalStyles.overflowY;
+        wrapper.style.height = wrapperOriginalStyles.height;
+        wrapper.style.maxHeight = wrapperOriginalStyles.maxHeight;
+        wrapper.style.minHeight = wrapperOriginalStyles.minHeight;
         
-        scrollableElements.forEach(({ element, overflow, overflowX, overflowY, height, maxHeight }) => {
+        originalStyles.forEach(({ element, overflow, overflowX, overflowY, height, maxHeight, minHeight }) => {
           element.style.overflow = overflow;
           element.style.overflowX = overflowX;
           element.style.overflowY = overflowY;
           element.style.height = height;
           element.style.maxHeight = maxHeight;
+          element.style.minHeight = minHeight;
         });
         
         // 转换为PNG并下载
@@ -709,7 +732,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       ? (props: any) => <OATaskListHeader {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} operationsColumnLabel={operationsColumnLabel} showOperationsColumn={showOperationsColumn} />
       : TaskListHeader,
     TaskListTable: viewType === "oaTask" 
-      ? (props: any) => <OATaskListTable {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} showOperationsColumn={showOperationsColumn} onAddTask={onAddTask} onEditTask={onEditTask} onDeleteTask={onDeleteTask} columnRenderers={columnRenderers} columnEllipsisMaxChars={columnEllipsisMaxChars} onCellOverflow={onCellOverflow} />
+      ? (props: any) => <OATaskListTable {...props} allTasks={tasks} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} showOperationsColumn={showOperationsColumn} onAddTask={onAddTask} onEditTask={onEditTask} onDeleteTask={onDeleteTask} columnRenderers={columnRenderers} columnEllipsisMaxChars={columnEllipsisMaxChars} onCellOverflow={onCellOverflow} />
       : TaskListTable,
     nameColumnWidth,
     timeColumnLabels,
