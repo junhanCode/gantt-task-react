@@ -13,6 +13,7 @@ type OABarDisplayProps = {
   progress: number;
   plannedStart: Date;
   plannedEnd: Date;
+  actualEnd?: Date;
   onMouseDown: (event: React.MouseEvent<SVGPolygonElement, MouseEvent>) => void;
 };
 
@@ -28,6 +29,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   progress,
   plannedStart,
   plannedEnd,
+  actualEnd,
   onMouseDown,
 }) => {
   // 状态颜色映射
@@ -49,10 +51,12 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
     },
   };
 
+  // 计算延期：优先使用 actualEnd（如果任务已完成），否则使用当前时间（任务进行中）
   const now = new Date();
-  const isDelayed = now > plannedEnd;
+  const endTimeForDelay = actualEnd || now;
+  const isDelayed = endTimeForDelay > plannedEnd;
   const delayDays = isDelayed 
-    ? Math.ceil((now.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24))
+    ? Math.ceil((endTimeForDelay.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
   const colors = status ? statusColors[status] : { bg: "#E6E6E6", progress: "#E6E6E6", delay: "#E6E6E6" };
