@@ -1,6 +1,6 @@
 import React from "react";
 import style from "./bar.module.css";
-import { TaskStatus } from "../../../types/public-types";
+import { TaskStatus, StatusInfo } from "../../../types/public-types";
 
 type OABarDisplayProps = {
   x: number;
@@ -9,7 +9,7 @@ type OABarDisplayProps = {
   height: number;
   isSelected: boolean;
   barCornerRadius: number;
-  status?: TaskStatus;
+  status?: TaskStatus | StatusInfo;
   progress: number;
   plannedStart: Date;
   plannedEnd: Date;
@@ -32,6 +32,15 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   actualEnd,
   onMouseDown,
 }) => {
+  // 提取状态描述文本
+  const getStatusDescription = (status?: TaskStatus | StatusInfo): TaskStatus | undefined => {
+    if (!status) return undefined;
+    if (typeof status === 'string') return status;
+    return status.description as TaskStatus;
+  };
+
+  const statusDescription = getStatusDescription(status);
+
   // 状态颜色映射
   const statusColors: Record<TaskStatus, { bg: string; progress: string; delay: string }> = {
     "待验收": {
@@ -49,6 +58,36 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
       progress: "#E6E6E6",
       delay: "#E6E6E6",
     },
+    "待確認": {
+      bg: "#FFD700",
+      progress: "#FFD700",
+      delay: "#FFD700",
+    },
+    "已完成": {
+      bg: "#A2EF4D",
+      progress: "#A2EF4D",
+      delay: "#A2EF4D",
+    },
+    "掛起中": {
+      bg: "#E6E6E6",
+      progress: "#E6E6E6",
+      delay: "#E6E6E6",
+    },
+    "待驗收": {
+      bg: "#A2EF4D",
+      progress: "#A2EF4D",
+      delay: "#A2EF4D",
+    },
+    "處理中": {
+      bg: "#879FFA",
+      progress: "#0F40F5",
+      delay: "#D87882",
+    },
+    "已撤销": {
+      bg: "#CCCCCC",
+      progress: "#CCCCCC",
+      delay: "#CCCCCC",
+    },
   };
 
   // 计算延期：优先使用 actualEnd（如果任务已完成），否则使用当前时间（任务进行中）
@@ -59,18 +98,18 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
     ? Math.ceil((endTimeForDelay.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
-  const colors = status ? statusColors[status] : { bg: "#E6E6E6", progress: "#E6E6E6", delay: "#E6E6E6" };
+  const colors = statusDescription ? statusColors[statusDescription] : { bg: "#E6E6E6", progress: "#E6E6E6", delay: "#E6E6E6" };
   
   // 计算进度宽度
   const progressWidth = (width * progress) / 100;
   
   // 计算延期部分（从计划结束时间到目前时间）
-  const delayWidth = isDelayed && status === "处理中" 
+  const delayWidth = isDelayed && (statusDescription === "处理中" || statusDescription === "處理中")
     ? Math.min(width * (delayDays / ((plannedEnd.getTime() - plannedStart.getTime()) / (1000 * 60 * 60 * 24))), width * 0.3) // 限制延期部分最大宽度
     : 0;
 
-  if (status === "待验收") {
-    // 待验收：条形图颜色为A2EF4D
+  if (statusDescription === "待验收" || statusDescription === "待驗收" || statusDescription === "已完成") {
+    // 待验收/待驗收/已完成：条形图颜色为A2EF4D
     return (
       <g onMouseDown={onMouseDown}>
         <rect
@@ -85,8 +124,8 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
         />
       </g>
     );
-  } else if (status === "处理中") {
-    // 处理中：条形图颜色为879FFA，从计划开始时间到计划结束时间
+  } else if (statusDescription === "处理中" || statusDescription === "處理中") {
+    // 处理中/處理中：条形图颜色为879FFA，从计划开始时间到计划结束时间
     // 上面有进度覆盖，颜色为0F40F5
     // 延期条形段从计划结束时间到目前时间，颜色是D87882
     return (
@@ -148,8 +187,8 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
         )}
       </g>
     );
-  } else if (status === "挂起中") {
-    // 挂起中：颜色E6E6E6的条形图，从计划开始时间到计划结束时间
+  } else if (statusDescription === "挂起中" || statusDescription === "掛起中") {
+    // 挂起中/掛起中：颜色E6E6E6的条形图，从计划开始时间到计划结束时间
     return (
       <g onMouseDown={onMouseDown}>
         <rect

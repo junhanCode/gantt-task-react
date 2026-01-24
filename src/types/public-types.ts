@@ -11,7 +11,12 @@ export enum ViewMode {
   DayShift = "DayShift",
 }
 export type TaskType = "task" | "milestone" | "project";
-export type TaskStatus = "待验收" | "处理中" | "挂起中";
+export type TaskStatus = "待验收" | "处理中" | "挂起中" | "待確認" | "已完成" | "掛起中" | "待驗收" | "處理中" | "已撤销";
+export type StatusInfo = {
+  code: number;
+  description: string;
+  color: string;
+};
 export type ViewType = "default" | "oaTask";
 export type OATaskViewMode = "日" | "月" | "季";
 export interface Task {
@@ -43,8 +48,8 @@ export interface Task {
   // 新增字段
   /** 是否禁用拖拽 */
   disableDrag?: boolean;
-  /** 任务状态（用于oaTask模式） */
-  status?: TaskStatus;
+  /** 任务状态（用于oaTask模式），可以是字符串或对象 */
+  status?: TaskStatus | StatusInfo;
   /** 负责人（用于oaTask模式） */
   assignee?: string;
 }

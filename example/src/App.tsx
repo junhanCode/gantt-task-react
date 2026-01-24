@@ -664,6 +664,19 @@ const App = () => {
               {meta.displayValue}
             </span>
           ),
+          status: (task: Task) => {
+            // 如果 status 是对象，渲染带颜色的文本
+            if (task.status && typeof task.status === 'object') {
+              const statusObj = task.status as { color: string; description: string };
+              return (
+                <span style={{ color: statusObj.color }}>
+                  {statusObj.description}
+                </span>
+              );
+            }
+            // 否则直接返回状态文本
+            return <span>{String(task.status || '')}</span>;
+          },
           operations: (task: Task) => (
             <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
               <a
