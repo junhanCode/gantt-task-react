@@ -19,6 +19,7 @@ export type TaskItemProps = {
   viewType?: "default" | "oaTask";
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
+  isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
   onEventStart: (
     action: GanttContentMoveAction,
     selectedTask: BarTask,
@@ -41,6 +42,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
   const textRef = useRef<SVGTextElement>(null);
   const [taskItem, setTaskItem] = useState<JSX.Element>(<div />);
   const [isTextInside, setIsTextInside] = useState(true);
+  const [isTextOverflow, setIsTextOverflow] = useState(false);
 
   useEffect(() => {
     // oaTask模式下，所有任务类型都使用Bar组件（单条显示）
@@ -67,7 +69,10 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
 
   useEffect(() => {
     if (textRef.current) {
-      setIsTextInside(textRef.current.getBBox().width < task.x2 - task.x1);
+      const textWidth = textRef.current.getBBox().width;
+      const barWidth = task.x2 - task.x1;
+      setIsTextInside(textWidth < barWidth);
+      setIsTextOverflow(textWidth > barWidth);
     }
   }, [textRef, task]);
 
@@ -117,18 +122,34 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
       }}
     >
       {taskItem}
-      <text
-        x={getX()}
-        y={task.y + taskHeight * 0.5}
-        className={
-          isTextInside
-            ? style.barLabel
-            : style.barLabel && style.barLabelOutside
-        }
-        ref={textRef}
-      >
-        {task.name}
-      </text>
+      {/* 当文本在条形图内时，如果溢出则添加tooltip */}
+      {isTextInside ? (
+        <g>
+          <text
+            x={getX()}
+            y={task.y + taskHeight * 0.5}
+            className={style.barLabel}
+            ref={textRef}
+            style={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {task.name}
+          </text>
+          {/* SVG tooltip - 当文本溢出时显示完整名称 */}
+          {isTextOverflow && <title>{task.name}</title>}
+        </g>
+      ) : (
+        <text
+          x={getX()}
+          y={task.y + taskHeight * 0.5}
+          className={style.barLabel && style.barLabelOutside}
+          ref={textRef}
+        >
+          {task.name}
+        </text>
+      )}
     </g>
   );
 };

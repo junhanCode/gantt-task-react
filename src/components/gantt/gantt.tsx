@@ -96,6 +96,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   columnEllipsisMaxChars,
   onCellOverflow,
   tableStyles,
+  isTaskDraggable,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -684,6 +685,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     viewType,
     enableTaskDrag,
     enableTaskResize,
+    isTaskDraggable,
     setGanttEvent,
     setFailedTask,
     setSelectedTask: handleSelectedTask,

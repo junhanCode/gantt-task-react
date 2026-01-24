@@ -74,6 +74,14 @@ export const ganttDateRange = (
   viewMode: ViewMode,
   preStepsCount: number
 ) => {
+  // 处理空数组情况
+  if (!tasks || tasks.length === 0) {
+    const now = new Date();
+    const defaultStart = addToDate(now, -7, "day");
+    const defaultEnd = addToDate(now, 30, "day");
+    return [defaultStart, defaultEnd];
+  }
+  
   let newStartDate: Date = tasks[0].start;
   let newEndDate: Date = tasks[0].start;
   for (const task of tasks) {

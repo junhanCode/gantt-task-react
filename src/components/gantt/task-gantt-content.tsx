@@ -31,6 +31,7 @@ export type TaskGanttContentProps = {
   viewType?: "default" | "oaTask";
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
+  isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
   setGanttEvent: (value: GanttEvent) => void;
   setFailedTask: (value: BarTask | null) => void;
   setSelectedTask: (taskId: string) => void;
@@ -55,6 +56,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   viewType = "default",
   enableTaskDrag = false,
   enableTaskResize = true,
+  isTaskDraggable,
   setGanttEvent,
   setFailedTask,
   setSelectedTask,
@@ -283,12 +285,26 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
     }
     // Change task event start
     else if (action === "move") {
+      // 检查是否允许移动
+      if (isTaskDraggable && !isTaskDraggable(task, 'move')) {
+        return;
+      }
       if (!svg?.current || !point) return;
       point.x = event.clientX;
       const cursor = point.matrixTransform(
         svg.current.getScreenCTM()?.inverse()
       );
       setInitEventX1Delta(cursor.x - task.x1);
+      setGanttEvent({
+        action,
+        changedTask: task,
+        originalSelectedTask: task,
+      });
+    } else if (action === "start" || action === "end" || action === "actualStart" || action === "actualEnd") {
+      // 检查是否允许该操作
+      if (isTaskDraggable && !isTaskDraggable(task, action)) {
+        return;
+      }
       setGanttEvent({
         action,
         changedTask: task,
@@ -326,13 +342,18 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
       )}
       <g className="bar" fontFamily={fontFamily} fontSize={fontSize}>
         {tasks.map(task => {
+          // 判断任务是否可以拖动/调整（基础判断）
+          const canDragBase = isTaskDraggable ? isTaskDraggable(task) : true;
+          const isDateChangeableForTask = (!!onDateChange || !!onTaskDragEnd) && !task.isDisabled && !task.disableDrag && canDragBase;
+          const isProgressChangeableForTask = !!onProgressChange && !task.isDisabled && !task.disableDrag && canDragBase;
+          
           return (
             <TaskItem
               task={task}
               arrowIndent={arrowIndent}
               taskHeight={taskHeight}
-              isProgressChangeable={!!onProgressChange && !task.isDisabled && !task.disableDrag}
-              isDateChangeable={(!!onDateChange || !!onTaskDragEnd) && !task.isDisabled && !task.disableDrag}
+              isProgressChangeable={isProgressChangeableForTask}
+              isDateChangeable={isDateChangeableForTask}
               isDelete={!task.isDisabled}
               enableTaskDrag={enableTaskDrag}
               enableTaskResize={enableTaskResize}
@@ -341,6 +362,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               isSelected={!!selectedTask && task.id === selectedTask.id}
               rtl={rtl}
               viewType={viewType}
+              isTaskDraggable={isTaskDraggable}
             />
           );
         })}

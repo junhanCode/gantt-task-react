@@ -8,11 +8,24 @@
   opacity: 1;
 }
 
+.barWrapper:hover .barHandleVisible {
+  opacity: 1;
+  visibility: visible;
+}
+
 .barHandle {
   fill: #ddd;
   cursor: ew-resize;
   opacity: 0;
   visibility: hidden;
+  transition: opacity 0.2s ease;
+}
+
+.barHandleVisible {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
 }
 
 .barBackground {

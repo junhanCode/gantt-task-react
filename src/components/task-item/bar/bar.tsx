@@ -13,6 +13,7 @@ export const Bar: React.FC<TaskItemProps> = ({
   viewType = "default",
   enableTaskDrag = false,
   enableTaskResize = true,
+  isTaskDraggable,
 }) => {
   // oaTask模式使用OABarDisplay（单条形图，基于plannedStart和plannedEnd）
   if (viewType === "oaTask") {
@@ -38,31 +39,36 @@ export const Bar: React.FC<TaskItemProps> = ({
         />
         <g className="handleGroup">
           {isDateChangeable && enableTaskResize && (
-            <g>
-              {/* 左侧手柄 - 调整计划开始时间 */}
-              <BarDateHandle
-                x={task.x1 - task.handleWidth / 2}
-                y={task.y}
-                width={task.handleWidth}
-                height={task.height}
-                barCornerRadius={task.barCornerRadius}
-                onMouseDown={e => {
-                  e.stopPropagation();
-                  onEventStart("start", task, e);
-                }}
-              />
-              {/* 右侧手柄 - 调整计划结束时间 */}
-              <BarDateHandle
-                x={task.x2 - task.handleWidth / 2}
-                y={task.y}
-                width={task.handleWidth}
-                height={task.height}
-                barCornerRadius={task.barCornerRadius}
-                onMouseDown={e => {
-                  e.stopPropagation();
-                  onEventStart("end", task, e);
-                }}
-              />
+            <g className={styles.handleGroup}>
+              {/* 左侧手柄 - 调整计划开始时间 - 已禁用，不允许拉伸 */}
+              {/* {(!isTaskDraggable || isTaskDraggable(task, 'start')) && (
+                <BarDateHandle
+                  x={task.x1 - task.handleWidth / 2}
+                  y={task.y}
+                  width={task.handleWidth}
+                  height={task.height}
+                  barCornerRadius={task.barCornerRadius}
+                  onMouseDown={e => {
+                    e.stopPropagation();
+                    onEventStart("start", task, e);
+                  }}
+                />
+              )} */}
+              {/* 右侧手柄 - 调整计划结束时间（plannedEnd，对应deadLine计划截止时间） */}
+              {/* 只有当proposer包含登录用户时，才允许拖动计划结束时间 */}
+              {(!isTaskDraggable || isTaskDraggable(task, 'end')) && (
+                <BarDateHandle
+                  x={task.x2 - task.handleWidth / 2}
+                  y={task.y}
+                  width={task.handleWidth}
+                  height={task.height}
+                  barCornerRadius={task.barCornerRadius}
+                  onMouseDown={e => {
+                    e.stopPropagation();
+                    onEventStart("end", task, e);
+                  }}
+                />
+              )}
             </g>
           )}
         </g>
@@ -91,53 +97,61 @@ export const Bar: React.FC<TaskItemProps> = ({
         {isDateChangeable && enableTaskResize && (
           <g>
             {/* 实际条左侧手柄 - 调整实际开始时间 */}
-            <BarDateHandle
-              x={task.actualX1 - task.handleWidth / 2}
-              y={task.y + task.height * 0.6}
-              width={task.handleWidth}
-              height={task.height * 0.3}
-              barCornerRadius={task.barCornerRadius}
-              onMouseDown={e => {
-                e.stopPropagation();
-                onEventStart("actualStart", task, e);
-              }}
-            />
+            {(!isTaskDraggable || isTaskDraggable(task, 'actualStart')) && (
+              <BarDateHandle
+                x={task.actualX1 - task.handleWidth / 2}
+                y={task.y + task.height * 0.6}
+                width={task.handleWidth}
+                height={task.height * 0.3}
+                barCornerRadius={task.barCornerRadius}
+                onMouseDown={e => {
+                  e.stopPropagation();
+                  onEventStart("actualStart", task, e);
+                }}
+              />
+            )}
             {/* 实际条右侧手柄 - 调整实际结束时间 */}
-            <BarDateHandle
-              x={task.actualX2 - task.handleWidth / 2}
-              y={task.y + task.height * 0.6}
-              width={task.handleWidth}
-              height={task.height * 0.3}
-              barCornerRadius={task.barCornerRadius}
-              onMouseDown={e => {
-                e.stopPropagation();
-                onEventStart("actualEnd", task, e);
-              }}
-            />
+            {(!isTaskDraggable || isTaskDraggable(task, 'actualEnd')) && (
+              <BarDateHandle
+                x={task.actualX2 - task.handleWidth / 2}
+                y={task.y + task.height * 0.6}
+                width={task.handleWidth}
+                height={task.height * 0.3}
+                barCornerRadius={task.barCornerRadius}
+                onMouseDown={e => {
+                  e.stopPropagation();
+                  onEventStart("actualEnd", task, e);
+                }}
+              />
+            )}
             {/* 计划条左侧手柄 - 调整计划开始时间 */}
-            <BarDateHandle
-              x={task.x1 - task.handleWidth / 2}
-              y={task.y + task.height * 0.1}
-              width={task.handleWidth}
-              height={task.height * 0.3}
-              barCornerRadius={task.barCornerRadius}
-              onMouseDown={e => {
-                e.stopPropagation();
-                onEventStart("start", task, e);
-              }}
-            />
+            {(!isTaskDraggable || isTaskDraggable(task, 'start')) && (
+              <BarDateHandle
+                x={task.x1 - task.handleWidth / 2}
+                y={task.y + task.height * 0.1}
+                width={task.handleWidth}
+                height={task.height * 0.3}
+                barCornerRadius={task.barCornerRadius}
+                onMouseDown={e => {
+                  e.stopPropagation();
+                  onEventStart("start", task, e);
+                }}
+              />
+            )}
             {/* 计划条右侧手柄 - 调整计划结束时间 */}
-            <BarDateHandle
-              x={task.x2 - task.handleWidth / 2}
-              y={task.y + task.height * 0.1}
-              width={task.handleWidth}
-              height={task.height * 0.3}
-              barCornerRadius={task.barCornerRadius}
-              onMouseDown={e => {
-                e.stopPropagation();
-                onEventStart("end", task, e);
-              }}
-            />
+            {(!isTaskDraggable || isTaskDraggable(task, 'end')) && (
+              <BarDateHandle
+                x={task.x2 - task.handleWidth / 2}
+                y={task.y + task.height * 0.1}
+                width={task.handleWidth}
+                height={task.height * 0.3}
+                barCornerRadius={task.barCornerRadius}
+                onMouseDown={e => {
+                  e.stopPropagation();
+                  onEventStart("end", task, e);
+                }}
+              />
+            )}
           </g>
         )}
       </g>

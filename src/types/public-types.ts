@@ -284,6 +284,12 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   onOATaskViewModeChange?: (mode: OATaskViewMode) => void;
   /** 列配置（用于显示/隐藏和自定义标题） */
   columns?: ColumnConfig[];
+  /** 自定义判断任务是否可以拖动/调整的函数
+   * @param task 任务对象
+   * @param action 操作类型：'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress'
+   * @returns 返回true表示允许该操作，false表示禁止
+   */
+  isTaskDraggable?: (task: Task, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
 }
 
 export interface GanttRef {

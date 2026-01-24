@@ -18,7 +18,7 @@ export const BarDateHandle: React.FC<BarDateHandleProps> = ({
   onMouseDown,
 }) => {
   return (
-    <g>
+    <g className={styles.handleGroup}>
       {/* 背景区域 - 更大的可点击区域 */}
       <rect
         x={x}
@@ -33,26 +33,28 @@ export const BarDateHandle: React.FC<BarDateHandleProps> = ({
         stroke="none"
         style={{ cursor: 'ew-resize' }}
       />
-      {/* 可见的手柄指示器 - 更明显的视觉反馈 */}
+      {/* 可见的手柄指示器 - 悬浮时显示，宽度4px，样式优化 */}
       <rect
-        x={x + width / 2 - 1.5}
-        y={y + 1}
-        width={3}
-        height={height - 2}
-        fill="#333"
-        ry={1.5}
-        rx={1.5}
+        x={x + width / 2 - 2}
+        y={y + 2}
+        width={4}
+        height={height - 4}
+        className={styles.barHandleVisible}
+        fill="#4a90e2"
+        ry={2}
+        rx={2}
         onMouseDown={onMouseDown}
         style={{ cursor: 'ew-resize' }}
       />
-      {/* 手柄中心线 */}
+      {/* 手柄中心线 - 更明显的视觉反馈 */}
       <line
         x1={x + width / 2}
-        y1={y + 2}
+        y1={y + 3}
         x2={x + width / 2}
-        y2={y + height - 2}
+        y2={y + height - 3}
         stroke="#fff"
         strokeWidth={1}
+        className={styles.barHandleVisible}
         onMouseDown={onMouseDown}
         style={{ cursor: 'ew-resize' }}
       />
