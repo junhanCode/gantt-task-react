@@ -1381,7 +1381,29 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
   const plannedStart = parseDate(mockTask.createDate);
   const plannedEnd = parseDate(mockTask.deadLine);
   const actualStart = parseDate(mockTask.createDate);
-  const actualEnd = mockTask.finishDate ? parseDate(mockTask.finishDate) : plannedEnd;
+  
+  // 计算actualEnd：如果有finishDate则使用，否则根据delayDays和状态计算
+  let actualEnd: Date;
+  if (mockTask.finishDate) {
+    // 已完成的任务，使用finishDate
+    actualEnd = parseDate(mockTask.finishDate);
+  } else {
+    // 未完成的任务
+    const statusCode = mockTask.statusInfoVo?.code;
+    const isProcessing = statusCode === 2; // 处理中/處理中
+    
+    if (isProcessing && mockTask.delayDays > 0) {
+      // 处理中状态且有延期天数，计算actualEnd = plannedEnd + delayDays
+      actualEnd = new Date(plannedEnd.getTime() + mockTask.delayDays * 24 * 60 * 60 * 1000);
+    } else if (isProcessing) {
+      // 处理中状态但没有延期天数，使用当前时间（确保延期条形区能显示）
+      const now = new Date();
+      actualEnd = now > plannedEnd ? now : plannedEnd;
+    } else {
+      // 其他状态，使用plannedEnd
+      actualEnd = plannedEnd;
+    }
+  }
   
   // 拼接项目前缀到名称：【系統開發】test 或 【a】【b】title
   const projectPrefix = mockTask.project && mockTask.project.length > 0

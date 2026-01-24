@@ -13,6 +13,7 @@ type OABarDisplayProps = {
   progress: number;
   plannedStart: Date;
   plannedEnd: Date;
+  actualStart?: Date;
   actualEnd?: Date;
   onMouseDown: (event: React.MouseEvent<SVGPolygonElement, MouseEvent>) => void;
 };
@@ -29,6 +30,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   progress,
   plannedStart,
   plannedEnd,
+  actualStart,
   actualEnd,
   onMouseDown,
 }) => {
@@ -100,13 +102,19 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
 
   const colors = statusDescription ? statusColors[statusDescription] : { bg: "#E6E6E6", progress: "#E6E6E6", delay: "#E6E6E6" };
   
-  // 计算进度宽度
-  const progressWidth = (width * progress) / 100;
+  // 对于"處理中"任务，计算实际时间段
+  const plannedDuration = plannedEnd.getTime() - plannedStart.getTime();
+  const effectiveActualStart = actualStart || plannedStart;
+  const effectiveActualEnd = actualEnd || now;
   
-  // 计算延期部分（从计划结束时间到目前时间）
-  const delayWidth = isDelayed && (statusDescription === "处理中" || statusDescription === "處理中")
-    ? Math.min(width * (delayDays / ((plannedEnd.getTime() - plannedStart.getTime()) / (1000 * 60 * 60 * 24))), width * 0.3) // 限制延期部分最大宽度
-    : 0;
+  // 计算实际结束时间在计划时间段中的位置（相对于x的偏移）
+  // 如果实际结束时间超过计划结束时间，actualEndOffset会超过width，这是延期部分
+  const actualEndOffset = plannedDuration > 0 
+    ? ((effectiveActualEnd.getTime() - plannedStart.getTime()) / plannedDuration) * width
+    : width;
+  
+  // 判断是否延期完成
+  const isDelayedCompletion = effectiveActualEnd > plannedEnd;
 
   if (statusDescription === "待验收" || statusDescription === "待驗收" || statusDescription === "已完成") {
     // 待验收/待驗收/已完成：条形图颜色为A2EF4D
@@ -124,69 +132,99 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
         />
       </g>
     );
-  } else if (statusDescription === "处理中" || statusDescription === "處理中") {
-    // 处理中/處理中：条形图颜色为879FFA，从计划开始时间到计划结束时间
-    // 上面有进度覆盖，颜色为0F40F5
-    // 延期条形段从计划结束时间到目前时间，颜色是D87882
-    return (
-      <g onMouseDown={onMouseDown}>
-        {/* 背景条（计划开始到计划结束） */}
-        <rect
-          x={x}
-          width={width}
-          y={y}
-          height={height}
-          ry={barCornerRadius}
-          rx={barCornerRadius}
-          fill={colors.bg}
-          className={style.barBackground}
-        />
-        {/* 进度覆盖 */}
-        {progressWidth > 0 && (
+  
+  // 对于"處理中"任务：
+  // 如果延期完成：显示计划开始到实际结束（深蓝色占比progress%，浅蓝色占比100-progress%），然后实际结束到计划结束（延期部分）
+  // 如果没有延期：显示计划开始到实际结束（深蓝色）
+  if (statusDescription === "处理中" || statusDescription === "處理中") {
+    if (isDelayedCompletion) {
+      // 延期完成的情况
+      // 总长度 = 从计划开始到实际结束
+      const totalActualWidth = actualEndOffset;
+      // 深蓝色部分 = progress% 的总长度
+      const progressPartWidth = (totalActualWidth * progress) / 100;
+      // 浅蓝色部分 = (100 - progress)% 的总长度
+      const remainingPartWidth = totalActualWidth - progressPartWidth;
+      // 延期部分 = 从实际结束到计划结束
+      const delayPartWidth = actualEndOffset - width; // actualEndOffset > width，所以这是延期部分
+      
+      return (
+        <g onMouseDown={onMouseDown}>
+          {/* 深蓝色部分（已完成部分） */}
+          {progressPartWidth > 0 && (
+            <rect
+              x={x}
+              width={progressPartWidth}
+              y={y}
+              height={height}
+              ry={barCornerRadius}
+              rx={barCornerRadius}
+              fill={colors.progress}
+            />
+          )}
+          {/* 浅蓝色部分（未完成部分） */}
+          {remainingPartWidth > 0 && (
+            <rect
+              x={x + progressPartWidth}
+              width={remainingPartWidth}
+              y={y}
+              height={height}
+              ry={barCornerRadius}
+              rx={barCornerRadius}
+              fill={colors.bg}
+            />
+          )}
+          {/* 延期部分（从计划结束到实际结束） */}
+          {delayPartWidth > 0 && (
+            <g>
+              <rect
+                x={x + width}
+                width={delayPartWidth}
+                y={y}
+                height={height}
+                ry={barCornerRadius}
+                rx={barCornerRadius}
+                fill={colors.delay}
+              />
+              {/* 延期文字 */}
+              {delayPartWidth > 30 && (
+                <text
+                  x={x + width + delayPartWidth / 2}
+                  y={y + height / 2}
+                  fill="#FFFFFF"
+                  fontSize="12"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{
+                    pointerEvents: "none",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  延期{delayDays}天
+                </text>
+              )}
+            </g>
+          )}
+        </g>
+      );
+    } else {
+      // 没有延期的情况：只显示计划开始到实际结束（深蓝色）
+      const actualWidth = actualEndOffset;
+      return (
+        <g onMouseDown={onMouseDown}>
           <rect
             x={x}
-            width={progressWidth}
+            width={actualWidth}
             y={y}
             height={height}
             ry={barCornerRadius}
             rx={barCornerRadius}
             fill={colors.progress}
           />
-        )}
-        {/* 延期部分 */}
-        {delayWidth > 0 && (
-          <g>
-            <rect
-              x={x + width}
-              width={delayWidth}
-              y={y}
-              height={height}
-              ry={barCornerRadius}
-              rx={barCornerRadius}
-              fill={colors.delay}
-            />
-            {/* 延期文字：延期xx天，白色字体，文字水平垂直居中显示，文字超出则省略号且悬浮出现文字 */}
-            {delayWidth > 30 && (
-              <text
-                x={x + width + delayWidth / 2}
-                y={y + height / 2}
-                fill="#FFFFFF"
-                fontSize="12"
-                textAnchor="middle"
-                dominantBaseline="middle"
-                style={{
-                  pointerEvents: "none",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                延期{delayDays}天
-              </text>
-            )}
-          </g>
-        )}
-      </g>
-    );
+        </g>
+      );
+    }
   } else if (statusDescription === "挂起中" || statusDescription === "掛起中") {
     // 挂起中/掛起中：颜色E6E6E6的条形图，从计划开始时间到计划结束时间
     return (

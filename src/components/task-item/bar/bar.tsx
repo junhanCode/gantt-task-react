@@ -19,6 +19,7 @@ export const Bar: React.FC<TaskItemProps> = ({
   if (viewType === "oaTask") {
     const plannedStart = task.plannedStart || task.start;
     const plannedEnd = task.plannedEnd || task.end;
+    const actualStart = task.actualStart || task.start;
     return (
       <g className={styles.barWrapper} tabIndex={0}>
         <OABarDisplay
@@ -31,6 +32,7 @@ export const Bar: React.FC<TaskItemProps> = ({
           progress={task.progress}
           plannedStart={plannedStart}
           plannedEnd={plannedEnd}
+          actualStart={actualStart}
           actualEnd={task.actualEnd}
           isSelected={isSelected}
           onMouseDown={e => {
