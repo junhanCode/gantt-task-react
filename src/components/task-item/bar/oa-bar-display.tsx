@@ -30,6 +30,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   progress,
   plannedStart,
   plannedEnd,
+  // @ts-expect-error - Reserved for future actualStart usage
   actualStart,
   actualEnd,
   onMouseDown,
@@ -104,7 +105,6 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   
   // 对于"處理中"任务，计算实际时间段
   const plannedDuration = plannedEnd.getTime() - plannedStart.getTime();
-  const effectiveActualStart = actualStart || plannedStart;
   const effectiveActualEnd = actualEnd || now;
   
   // 计算实际结束时间在计划时间段中的位置（相对于x的偏移）
@@ -132,11 +132,10 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
         />
       </g>
     );
-  
-  // 对于"處理中"任务：
-  // 如果延期完成：显示计划开始到实际结束（深蓝色占比progress%，浅蓝色占比100-progress%），然后实际结束到计划结束（延期部分）
-  // 如果没有延期：显示计划开始到实际结束（深蓝色）
-  if (statusDescription === "处理中" || statusDescription === "處理中") {
+  } else if (statusDescription === "处理中" || statusDescription === "處理中") {
+    // 对于"處理中"任务：
+    // 如果延期完成：显示计划开始到实际结束（深蓝色占比progress%，浅蓝色占比100-progress%），然后实际结束到计划结束（延期部分）
+    // 如果没有延期：显示计划开始到实际结束（深蓝色）
     if (isDelayedCompletion) {
       // 延期完成的情况
       // 总长度 = 从计划开始到实际结束

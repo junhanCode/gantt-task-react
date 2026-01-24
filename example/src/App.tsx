@@ -382,7 +382,7 @@ const App = () => {
       
       // 如果状态是"已完成"，则不允许拉伸计划结束时间
       if (isCompleted) {
-        console.log(`[isTaskDraggable] task: ${task.name}, action: ${action}, status: 已完成, result: false (已完成状态不允许拉伸)`);
+        // console.log(`[isTaskDraggable] task: ${task.name}, action: ${action}, status: 已完成, result: false (已完成状态不允许拉伸)`);
         return false;
       }
       
@@ -402,7 +402,7 @@ const App = () => {
       
       // 只有当proposer包含当前登录用户时才允许
       const result = isProposerMatch;
-      console.log(`[isTaskDraggable] task: ${task.name}, action: ${action}, proposer: ${taskAny.proposer?.name}, currentUser: ${currentUser}, result: ${result}`);
+      // console.log(`[isTaskDraggable] task: ${task.name}, action: ${action}, proposer: ${taskAny.proposer?.name}, currentUser: ${currentUser}, result: ${result}`);
       return result;
     }
     
@@ -464,7 +464,7 @@ const App = () => {
 
   const handleProgressChange = async (task: Task) => {
     setTasks(tasks.map(t => (t.id === task.id ? task : t)));
-    console.log("On progress change Id:" + task.id);
+    // console.log("On progress change Id:" + task.id);
   };
 
   const handleDblClick = (task: Task) => {
@@ -481,7 +481,7 @@ const App = () => {
 
   const handleExpanderClick = (task: Task) => {
     setTasks(tasks.map(t => (t.id === task.id ? task : t)));
-    console.log("On expander click Id:" + task.id);
+    // console.log("On expander click Id:" + task.id);
   };
 
   // 弹框状态管理
@@ -491,12 +491,12 @@ const App = () => {
   const [selectedEditTask, setSelectedEditTask] = React.useState<Task | null>(null);
 
   const handleAddTask = (parentTask: Task) => {
-    console.log("=== handleAddTask called ===");
-    console.log("Add task clicked for parent:", parentTask);
-    console.log("Current showAddModal state:", showAddModal);
+    // console.log("=== handleAddTask called ===");
+    // console.log("Add task clicked for parent:", parentTask);
+    // console.log("Current showAddModal state:", showAddModal);
     setSelectedParentTask(parentTask);
     setShowAddModal(true);
-    console.log("Set showAddModal to true");
+    // console.log("Set showAddModal to true");
   };
 
   const handleEditTask = (task: Task) => {
@@ -576,6 +576,21 @@ const App = () => {
           resolve(false);
         }
       }, 1000); // 模拟1秒的网络延迟
+    });
+  };
+
+  // 拖动完成事件处理器 - 在拖动操作完全结束后触发（无论成功或失败）
+  const handleTaskDragComplete = (task: Task, children: Task[], action: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => {
+    console.log("🎯 Task drag complete! Action:", action);
+    console.log("  Task ID:", task.id);
+    console.log("  Task Name:", task.name);
+    console.log("  Children count:", children.length);
+    console.log("  Final state:", {
+      plannedStart: task.plannedStart,
+      plannedEnd: task.plannedEnd,
+      actualStart: task.actualStart,
+      actualEnd: task.actualEnd,
+      progress: task.progress,
     });
   };
 
@@ -709,6 +724,7 @@ const App = () => {
         enableTaskDrag={enableTaskDrag}
         enableTaskResize={enableTaskResize}
         onTaskDragEnd={handleTaskDragEnd}
+        onTaskDragComplete={handleTaskDragComplete}
         // 自定义禁用规则：只有当proposer包含当前登录用户时才可以拖动
         isTaskDraggable={isTaskDraggable}
         // 自定义展开/折叠图标：与表头保持一致
@@ -763,9 +779,9 @@ const App = () => {
             </div>
           ),
         }}
-        onCellOverflow={({ column, task }: { column: "name" | "status" | "assignee"; task: Task }) => {
-          console.log("列内容溢出:", column, "任务:", task.name);
-        }}
+        // onCellOverflow={({ column, task }: { column: "name" | "status" | "assignee"; task: Task }) => {
+        //   console.log("列内容溢出:", column, "任务:", task.name);
+        // }}
         viewType={viewType}
         oaTaskViewMode={oaTaskViewMode}
         onOATaskViewModeChange={(mode) => {

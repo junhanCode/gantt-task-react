@@ -101,6 +101,16 @@ export interface EventOption {
     task: Task,
     children: Task[]
   ) => void | boolean | Promise<void> | Promise<boolean>;
+  /**
+   * Invokes after task drag/resize is completed and placed (mouse released).
+   * This event fires after the drag operation is done, regardless of success or failure.
+   * Use this for notifications or logging. Does not affect the drag operation result.
+   */
+  onTaskDragComplete?: (
+    task: Task,
+    children: Task[],
+    action: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress'
+  ) => void;
 }
 
 export interface DisplayOption {

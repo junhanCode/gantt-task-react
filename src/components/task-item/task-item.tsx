@@ -65,6 +65,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
         setTaskItem(<Bar {...props} viewType={props.viewType} />);
         break;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task, isSelected, props.viewType]);
 
   useEffect(() => {

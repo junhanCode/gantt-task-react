@@ -66,6 +66,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   onClick,
   onDelete,
   onTaskDragEnd,
+  onTaskDragComplete,
 }) => {
   const point = svg?.current?.createSVGPoint();
   const [xStep, setXStep] = useState(0);
@@ -106,7 +107,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
       );
       if (isChanged) {
         setGanttEvent({ action: ganttEvent.action, changedTask });
-        // 实时更新任务数据，使左侧列表同步更新
+        // 拖动过程中实时更新视觉效果
         if (onDateChange) {
           try {
             await onDateChange(changedTask, changedTask.barChildren);
@@ -143,8 +144,10 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
         originalSelectedTask.start !== newChangedTask.start ||
         originalSelectedTask.end !== newChangedTask.end ||
         originalSelectedTask.progress !== newChangedTask.progress ||
-        originalSelectedTask.actualX1 !== newChangedTask.actualX1 ||
-        originalSelectedTask.actualX2 !== newChangedTask.actualX2;
+        originalSelectedTask.actualStart?.getTime() !== newChangedTask.actualStart?.getTime() ||
+        originalSelectedTask.actualEnd?.getTime() !== newChangedTask.actualEnd?.getTime() ||
+        originalSelectedTask.plannedStart?.getTime() !== newChangedTask.plannedStart?.getTime() ||
+        originalSelectedTask.plannedEnd?.getTime() !== newChangedTask.plannedEnd?.getTime();
 
       // remove listeners
       svg.current.removeEventListener("mousemove", handleMouseMove);
@@ -158,33 +161,31 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
         (action === "move" || action === "end" || action === "start" || action === "actualStart" || action === "actualEnd") &&
         isNotLikeOriginal
       ) {
-        // First call onDateChange for immediate update
-        if (onDateChange) {
-          try {
-            const result = await onDateChange(
-              newChangedTask,
-              newChangedTask.barChildren
-            );
-            if (result !== undefined) {
-              operationSuccess = result;
-            }
-          } catch (error) {
-            operationSuccess = false;
-          }
-        }
-        
-        // Then call onTaskDragEnd for async API calls
-        if (operationSuccess && onTaskDragEnd) {
+        // 调用 onTaskDragEnd 进行API验证（如果提供的话）
+        if (onTaskDragEnd) {
           try {
             const result = await onTaskDragEnd(
               newChangedTask,
               newChangedTask.barChildren
             );
-            if (result !== undefined) {
-              operationSuccess = result;
-            }
+            operationSuccess = result !== undefined ? Boolean(result) : true;
           } catch (error) {
+            console.error("onTaskDragEnd 调用失败:", error);
             operationSuccess = false;
+          }
+        }
+        
+        // 如果没有 onTaskDragEnd 或者 API 验证成功，确保状态已更新
+        // （如果拖动过程中已经调用了 onDateChange，这里就不需要再调用了）
+        // 但如果 onTaskDragEnd 返回 false，我们需要恢复原始状态
+        if (!operationSuccess) {
+          // 恢复到原始状态
+          if (onDateChange) {
+            try {
+              await onDateChange(originalSelectedTask, originalSelectedTask.barChildren);
+            } catch (error) {
+              console.error("恢复原始状态失败:", error);
+            }
           }
         }
       } else if (onProgressChange && isNotLikeOriginal) {
@@ -204,6 +205,19 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
       // If operation is failed - return old state
       if (!operationSuccess) {
         setFailedTask(originalSelectedTask);
+      }
+      
+      // 触发拖动完成事件（无论成功或失败）
+      if (onTaskDragComplete && isNotLikeOriginal && action) {
+        try {
+          onTaskDragComplete(
+            operationSuccess ? newChangedTask : originalSelectedTask,
+            operationSuccess ? newChangedTask.barChildren : originalSelectedTask.barChildren,
+            action as 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress'
+          );
+        } catch (error) {
+          console.error("onTaskDragComplete 回调执行失败:", error);
+        }
       }
     };
 
@@ -229,12 +243,15 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
     timeStep,
     onDateChange,
     onTaskDragEnd,
+    onTaskDragComplete,
     svg,
     isMoving,
     point,
     rtl,
     setFailedTask,
     setGanttEvent,
+    dates,
+    columnWidth,
   ]);
 
   /**

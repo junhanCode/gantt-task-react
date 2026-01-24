@@ -90,6 +90,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   enableTaskDrag = false,
   enableTaskResize = true,
   onTaskDragEnd,
+  onTaskDragComplete,
   // @ts-expect-error - Reserved for future column configuration feature
   columns,
   columnRenderers,
@@ -103,6 +104,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const ganttContainerRef = useRef<HTMLDivElement>(null);
   const [currentOATaskViewMode, setCurrentOATaskViewMode] = useState<OATaskViewMode>(oaTaskViewMode);
   // @ts-expect-error - Reserved for future fullscreen state tracking
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [dateSetup, setDateSetup] = useState<DateSetup>(() => {
     const [startDate, endDate] = ganttDateRange(tasks, viewMode, preStepsCount);
@@ -535,11 +537,12 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     };
 
     // subscribe if scroll is necessary
-    wrapperRef.current?.addEventListener("wheel", handleWheel, {
+    const wrapperElement = wrapperRef.current;
+    wrapperElement?.addEventListener("wheel", handleWheel, {
       passive: false,
     });
     return () => {
-      wrapperRef.current?.removeEventListener("wheel", handleWheel);
+      wrapperElement?.removeEventListener("wheel", handleWheel);
     };
   }, [
     wrapperRef,
@@ -695,6 +698,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     onClick,
     onDelete,
     onTaskDragEnd,
+    onTaskDragComplete,
   };
 
   const [expandAllLeafTasks, setExpandAllLeafTasks] = useState(true);

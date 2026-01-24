@@ -88,8 +88,17 @@ export const OATaskListTable: React.FC<{
     return taskList.some(t => t.project === task.id);
   };
 
-  const getEllipsisData = (column: "name" | "status" | "assignee", rawValue?: string) => {
-    const value = rawValue ?? "";
+  const getEllipsisData = (column: "name" | "status" | "assignee", rawValue?: string | any) => {
+    // 处理 status 可能是 StatusInfo 对象的情况
+    let value = "";
+    if (typeof rawValue === "string") {
+      value = rawValue;
+    } else if (rawValue && typeof rawValue === "object" && "description" in rawValue) {
+      value = rawValue.description || "";
+    } else {
+      value = rawValue ?? "";
+    }
+    
     const max =
       columnEllipsisMaxChars?.[column] ??
       (column === "name" ? 20 : column === "status" ? 8 : 12);
@@ -197,21 +206,33 @@ export const OATaskListTable: React.FC<{
                 if (meta.isOverflow && onCellOverflow) {
                   onCellOverflow({ column: "status", task: t });
                 }
-                const defaultNode = t.status && (
+                // 获取状态的字符串表示和颜色
+                const statusText = typeof t.status === "string" 
+                  ? t.status 
+                  : t.status && typeof t.status === "object" 
+                    ? t.status.description 
+                    : "";
+                const statusColor = typeof t.status === "string"
+                  ? statusColors[t.status] || "#E6E6E6"
+                  : t.status && typeof t.status === "object" && t.status.color
+                    ? t.status.color
+                    : "#E6E6E6";
+                    
+                const defaultNode = statusText && (
                   <span
                     style={{
                       display: "inline-block",
                       padding: "2px 8px",
                       borderRadius: "4px",
-                      backgroundColor: statusColors[t.status] || "#E6E6E6",
-                      color: t.status === "挂起中" ? "#666" : "#000",
+                      backgroundColor: statusColor,
+                      color: statusText === "挂起中" || statusText === "掛起中" ? "#666" : "#000",
                       fontSize: "12px",
                       maxWidth: "100%",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                     }}
-                    title={meta.isOverflow ? t.status : undefined}
+                    title={meta.isOverflow ? statusText : undefined}
                   >
                     {meta.displayValue}
                   </span>
