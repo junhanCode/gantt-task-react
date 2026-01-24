@@ -355,6 +355,63 @@ const App = () => {
   const [showArrows, setShowArrows] = React.useState<boolean>(true);
   const [enableTaskDrag, setEnableTaskDrag] = React.useState<boolean>(false);
   const [enableTaskResize, setEnableTaskResize] = React.useState<boolean>(true);
+  
+  // 模拟当前登录用户（用于演示isTaskDraggable功能）
+  // 注意：第一个mock数据的proposer是"张三"，其他是"何聪"
+  // 所以只有proposer为"何聪"的任务才能拖动计划结束时间，第一个任务（proposer为"张三"）的右侧手柄应该被禁用
+  const currentUser = React.useMemo(() => "何聪", []);
+
+  // 自定义判断任务是否可以拖动/调整的函数
+  // 只有当proposer包含当前登录用户时才可以拖动计划结束时间（plannedEnd，对应deadLine计划截止时间）
+  // 如果状态是"已完成"，则不可拉伸计划结束时间
+  const isTaskDraggable = React.useCallback((task: Task, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => {
+    const taskAny = task as any;
+    let canDrag = true;
+    
+    // 对于"end"操作（拖动右侧手柄调整计划结束时间plannedEnd，对应deadLine计划截止时间）
+    if (action === 'end') {
+      // 检查状态是否为"已完成"，如果是则不允许拉伸
+      let isCompleted = false;
+      if (task.status) {
+        if (typeof task.status === 'string') {
+          isCompleted = task.status === '已完成';
+        } else if (typeof task.status === 'object' && task.status.description) {
+          isCompleted = task.status.description === '已完成';
+        }
+      }
+      
+      // 如果状态是"已完成"，则不允许拉伸计划结束时间
+      if (isCompleted) {
+        console.log(`[isTaskDraggable] task: ${task.name}, action: ${action}, status: 已完成, result: false (已完成状态不允许拉伸)`);
+        return false;
+      }
+      
+      // 检查proposer是否包含当前登录用户
+      let isProposerMatch = false;
+      if (taskAny.proposer) {
+        if (typeof taskAny.proposer === 'object' && taskAny.proposer.name) {
+          isProposerMatch = taskAny.proposer.name === currentUser;
+        } else if (typeof taskAny.proposer === 'string') {
+          isProposerMatch = taskAny.proposer === currentUser;
+        }
+      }
+      // 如果没有proposer字段，检查assignee
+      if (!isProposerMatch && task.assignee) {
+        isProposerMatch = task.assignee === currentUser;
+      }
+      
+      // 只有当proposer包含当前登录用户时才允许
+      const result = isProposerMatch;
+      console.log(`[isTaskDraggable] task: ${task.name}, action: ${action}, proposer: ${taskAny.proposer?.name}, currentUser: ${currentUser}, result: ${result}`);
+      return result;
+    }
+    
+    // 对于其他操作，默认允许（可以根据需要调整）
+    return canDrag;
+  }, [currentUser]);
+  
+  // 测试空数组功能
+  const [testEmptyArray, setTestEmptyArray] = React.useState(false);
 
   // 为了在 demo 中方便使用最新扩展 props，这里对 Gantt 做一次 any 断言
   
@@ -601,12 +658,18 @@ const App = () => {
           checked={enableTaskResize}
           onChange={e => setEnableTaskResize(e.target.checked)}
         />
+        <label style={{ marginLeft: 16, marginRight: 8 }}>测试空数组：</label>
+        <input
+          type="checkbox"
+          checked={testEmptyArray}
+          onChange={e => setTestEmptyArray(e.target.checked)}
+        />
       </div>
       <Gantt
         // 需要依赖库版本包含 forwardRef 才可生效
         // @ts-ignore
         ref={ganttRef}
-        tasks={tasks}
+        tasks={testEmptyArray ? [] : tasks}
         viewMode={view}
         onDateChange={handleTaskChange}
         onDelete={handleTaskDelete}
@@ -646,6 +709,8 @@ const App = () => {
         enableTaskDrag={enableTaskDrag}
         enableTaskResize={enableTaskResize}
         onTaskDragEnd={handleTaskDragEnd}
+        // 自定义禁用规则：只有当proposer包含当前登录用户时才可以拖动
+        isTaskDraggable={isTaskDraggable}
         // 自定义展开/折叠图标：与表头保持一致
         expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
         collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}

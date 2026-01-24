@@ -64,7 +64,7 @@ const mockData: MockTask[] = [
     "delayDays": 1,
     "proposer": {
       "employeeNo": "F1669075",
-      "name": "何聪",
+      "name": "张三",
       "leaveStatus": 0
     },
     "supervisor": [
@@ -1408,6 +1408,9 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
     assignee,
     hideChildren: false,
   };
+  
+  // 将proposer信息添加到task中（用于isTaskDraggable判断）
+  (task as any).proposer = mockTask.proposer;
   
   if (parentId) {
     task.project = parentId;
