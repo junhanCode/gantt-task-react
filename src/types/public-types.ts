@@ -11,7 +11,7 @@ export enum ViewMode {
   DayShift = "DayShift",
 }
 export type TaskType = "task" | "milestone" | "project";
-export type TaskStatus = "待验收" | "处理中" | "挂起中" | "待確認" | "已完成" | "掛起中" | "待驗收" | "處理中" | "已撤销";
+export type TaskStatus = "待驗收" | "處理中" | "掛起中" | "待確認" | "已完成" | "已撤銷";
 export type StatusInfo = {
   code: number;
   description: string;

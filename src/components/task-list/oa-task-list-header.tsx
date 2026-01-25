@@ -67,7 +67,7 @@ export const OATaskListHeader: React.FC<{
           ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
         }}
       >
-        {/* 任务标题列 */}
+        {/* 任務標題列 */}
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
@@ -91,7 +91,7 @@ export const OATaskListHeader: React.FC<{
                 }
               </div>
             )}
-            <span>任务标题</span>
+            <span>任務標題</span>
           </div>
         </div>
         <div
@@ -102,7 +102,7 @@ export const OATaskListHeader: React.FC<{
           }}
         />
         
-        {/* 状态列 */}
+        {/* 狀態列 */}
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
@@ -115,7 +115,7 @@ export const OATaskListHeader: React.FC<{
             ...(tableStyles?.headerCell || {}),
           }}
         >
-          <span>状态</span>
+          <span>狀態</span>
         </div>
         <div
           className={styles.ganttTable_HeaderSeparator}
@@ -125,7 +125,7 @@ export const OATaskListHeader: React.FC<{
           }}
         />
         
-        {/* 负责人列 */}
+        {/* 負責人列 */}
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
@@ -138,7 +138,7 @@ export const OATaskListHeader: React.FC<{
             ...(tableStyles?.headerCell || {}),
           }}
         >
-          <span>负责人</span>
+          <span>負責人</span>
         </div>
         {showOperationsColumn && (
           <React.Fragment>

@@ -1483,7 +1483,7 @@ export function initTasksOld() {
       type: "project",
       hideChildren: false,
       displayOrder: 1,
-      status: "处理中",
+      status: "處理中",
       assignee: "张三11111111111111111111111111111",
       // 不设置 plannedStart, plannedEnd, actualStart, actualEnd
       // 这样项目会根据子项自动计算时间范围
@@ -1509,7 +1509,7 @@ export function initTasksOld() {
       type: "task",
       project: "ProjectSample",
       displayOrder: 2,
-      status: "待验收",
+      status: "待驗收",
       assignee: "李四",
     },
     {
@@ -1528,7 +1528,7 @@ export function initTasksOld() {
       type: "task",
       project: "ProjectSample",
       displayOrder: 3,
-      status: "待验收",
+      status: "待驗收",
       assignee: "王五",
     },
     {
@@ -1547,7 +1547,7 @@ export function initTasksOld() {
       type: "task",
       project: "ProjectSample",
       displayOrder: 4,
-      status: "处理中",
+      status: "處理中",
       assignee: "赵六",
     },
     {
@@ -1566,7 +1566,7 @@ export function initTasksOld() {
       type: "task",
       project: "ProjectSample",
       displayOrder: 5,
-      status: "处理中",
+      status: "處理中",
       assignee: "孙七",
     },
     {
@@ -1585,7 +1585,7 @@ export function initTasksOld() {
       dependencies: ["Task 2"],
       project: "ProjectSample",
       displayOrder: 6,
-      status: "处理中",
+      status: "處理中",
       assignee: "周八",
     },
     {
@@ -1604,7 +1604,7 @@ export function initTasksOld() {
       dependencies: ["Task 4"],
       project: "ProjectSample",
       displayOrder: 7,
-      status: "待验收",
+      status: "待驗收",
       assignee: "吴九",
     },
     {
@@ -1621,7 +1621,7 @@ export function initTasksOld() {
       progress: 0,
       isDisabled: true,
       type: "task",
-      status: "挂起中",
+      status: "掛起中",
       assignee: "郑十",
     },
   ];

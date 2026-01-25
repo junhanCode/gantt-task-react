@@ -69,21 +69,21 @@ export const OATaskListTable: React.FC<{
   onDeleteTask,
   tableStyles,
 }) => {
-  // 状态颜色映射
+  // 狀態顏色映射
   const statusColors: Record<string, string> = {
-    "待验收": "#A2EF4D",
-    "处理中": "#0F40F5",
-    "挂起中": "#E6E6E6",
+    "待驗收": "#A2EF4D",
+    "處理中": "#0F40F5",
+    "掛起中": "#E6E6E6",
   };
 
-  // 判断任务是否有子任务
+  // 判斷任務是否有子任務
   const hasChildren = (task: Task): boolean => {
-    // 优先使用 barChildren（来自内部计算的依赖关系），不受折叠影响
+    // 優先使用 barChildren（來自內部計算的依賴關係），不受折疊影響
     const anyTask = task as any;
     if (Array.isArray(anyTask.barChildren) && anyTask.barChildren.length > 0) {
       return true;
     }
-    // 兜底：根据 project 字段判断，使用原始的 allTasks 列表（包含被隐藏的任务）
+    // 兜底：根據 project 字段判斷，使用原始的 allTasks 列表（包含被隱藏的任務）
     const taskList = allTasks || tasks;
     return taskList.some(t => t.project === task.id);
   };
@@ -106,8 +106,8 @@ export const OATaskListTable: React.FC<{
     const displayValue = isOverflow
       ? `${value.slice(0, Math.max(1, max - 1))}…`
       : value;
-    // 溢出时通知调用方
-    // 具体任务在调用方外层循环里传入
+    // 溢出時通知調用方
+    // 具體任務在調用方外層循環裡傳入
     return { value, displayValue, isOverflow, maxLength: max };
   };
 
@@ -155,7 +155,7 @@ export const OATaskListTable: React.FC<{
                   : tableStyles?.row || {}),
               }}
             >
-              {/* 任务标题列 */}
+              {/* 任務標題列 */}
               {(() => {
                 const meta = getEllipsisData("name", t.name);
                 if (meta.isOverflow && onCellOverflow) {
@@ -200,13 +200,13 @@ export const OATaskListTable: React.FC<{
                 );
               })()}
               
-              {/* 状态列 */}
+              {/* 狀態列 */}
               {(() => {
                 const meta = getEllipsisData("status", t.status);
                 if (meta.isOverflow && onCellOverflow) {
                   onCellOverflow({ column: "status", task: t });
                 }
-                // 获取状态的字符串表示和颜色
+                // 獲取狀態的字符串表示和顏色
                 const statusText = typeof t.status === "string" 
                   ? t.status 
                   : t.status && typeof t.status === "object" 
@@ -225,7 +225,7 @@ export const OATaskListTable: React.FC<{
                       padding: "2px 8px",
                       borderRadius: "4px",
                       backgroundColor: statusColor,
-                      color: statusText === "挂起中" || statusText === "掛起中" ? "#666" : "#000",
+                      color: statusText === "掛起中" ? "#666" : "#000",
                       fontSize: "12px",
                       maxWidth: "100%",
                       whiteSpace: "nowrap",
@@ -257,7 +257,7 @@ export const OATaskListTable: React.FC<{
                 );
               })()}
               
-              {/* 负责人列 */}
+              {/* 負責人列 */}
               {(() => {
                 const meta = getEllipsisData("assignee", t.assignee || "-");
                 if (meta.isOverflow && onCellOverflow) {
@@ -314,7 +314,7 @@ export const OATaskListTable: React.FC<{
                             e.stopPropagation();
                             onAddTask(t);
                           }}
-                          title="新增子任务"
+                          title="新增子任務"
                         >
                           +
                         </span>
@@ -326,7 +326,7 @@ export const OATaskListTable: React.FC<{
                             e.stopPropagation();
                             onEditTask(t);
                           }}
-                          title="编辑"
+                          title="編輯"
                         >
                           ✎
                         </span>
@@ -338,7 +338,7 @@ export const OATaskListTable: React.FC<{
                             e.stopPropagation();
                             onDeleteTask(t);
                           }}
-                          title="删除"
+                          title="刪除"
                         >
                           ×
                         </span>

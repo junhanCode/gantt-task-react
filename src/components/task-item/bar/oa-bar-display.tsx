@@ -35,6 +35,16 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   actualEnd,
   onMouseDown,
 }) => {
+  // 驗證並修正輸入參數
+  const safeWidth = Math.max(0, width || 0);
+  const safeProgress = Math.max(0, Math.min(100, progress || 0));
+  
+  // 驗證日期
+  if (!plannedStart || !plannedEnd || isNaN(plannedStart.getTime()) || isNaN(plannedEnd.getTime())) {
+    console.error('Invalid dates provided to OABarDisplay:', { plannedStart, plannedEnd });
+    return null;
+  }
+
   // 提取状态描述文本
   const getStatusDescription = (status?: TaskStatus | StatusInfo): TaskStatus | undefined => {
     if (!status) return undefined;
@@ -44,19 +54,19 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
 
   const statusDescription = getStatusDescription(status);
 
-  // 状态颜色映射
+  // 狀態顏色映射
   const statusColors: Record<TaskStatus, { bg: string; progress: string; delay: string }> = {
-    "待验收": {
+    "待驗收": {
       bg: "#A2EF4D",
       progress: "#A2EF4D",
       delay: "#A2EF4D",
     },
-    "处理中": {
+    "處理中": {
       bg: "#879FFA",
       progress: "#0F40F5",
       delay: "#D87882",
     },
-    "挂起中": {
+    "掛起中": {
       bg: "#E6E6E6",
       progress: "#E6E6E6",
       delay: "#E6E6E6",
@@ -71,29 +81,14 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
       progress: "#A2EF4D",
       delay: "#A2EF4D",
     },
-    "掛起中": {
-      bg: "#E6E6E6",
-      progress: "#E6E6E6",
-      delay: "#E6E6E6",
-    },
-    "待驗收": {
-      bg: "#A2EF4D",
-      progress: "#A2EF4D",
-      delay: "#A2EF4D",
-    },
-    "處理中": {
-      bg: "#879FFA",
-      progress: "#0F40F5",
-      delay: "#D87882",
-    },
-    "已撤销": {
+    "已撤銷": {
       bg: "#CCCCCC",
       progress: "#CCCCCC",
       delay: "#CCCCCC",
     },
   };
 
-  // 计算延期：优先使用 actualEnd（如果任务已完成），否则使用当前时间（任务进行中）
+  // 計算延期：優先使用 actualEnd（如果任務已完成），否則使用當前時間（任務進行中）
   const now = new Date();
   const endTimeForDelay = actualEnd || now;
   const isDelayed = endTimeForDelay > plannedEnd;
@@ -101,28 +96,30 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
     ? Math.ceil((endTimeForDelay.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
-  const colors = statusDescription ? statusColors[statusDescription] : { bg: "#E6E6E6", progress: "#E6E6E6", delay: "#E6E6E6" };
+  // 獲取顏色配置，確保始終有默認值
+  const colors = (statusDescription && statusColors[statusDescription as TaskStatus]) || { bg: "#E6E6E6", progress: "#E6E6E6", delay: "#E6E6E6" };
   
-  // 对于"處理中"任务，计算实际时间段
+  // 對於"處理中"任務，計算實際時間段
   const plannedDuration = plannedEnd.getTime() - plannedStart.getTime();
   const effectiveActualEnd = actualEnd || now;
   
-  // 计算实际结束时间在计划时间段中的位置（相对于x的偏移）
-  // 如果实际结束时间超过计划结束时间，actualEndOffset会超过width，这是延期部分
+  // 計算實際結束時間在計劃時間段中的位置（相對於x的偏移）
+  // 如果實際結束時間超過計劃結束時間，actualEndOffset會超過width，這是延期部分
+  // 確保 actualEndOffset 不會是負數
   const actualEndOffset = plannedDuration > 0 
-    ? ((effectiveActualEnd.getTime() - plannedStart.getTime()) / plannedDuration) * width
-    : width;
+    ? Math.max(0, ((effectiveActualEnd.getTime() - plannedStart.getTime()) / plannedDuration) * safeWidth)
+    : safeWidth;
   
-  // 判断是否延期完成
+  // 判斷是否延期完成
   const isDelayedCompletion = effectiveActualEnd > plannedEnd;
 
-  if (statusDescription === "待验收" || statusDescription === "待驗收" || statusDescription === "已完成") {
-    // 待验收/待驗收/已完成：条形图颜色为A2EF4D
+  if (statusDescription === "待驗收" || statusDescription === "已完成") {
+    // 待驗收/已完成：條形圖顏色為A2EF4D
     return (
       <g onMouseDown={onMouseDown}>
         <rect
           x={x}
-          width={width}
+          width={safeWidth}
           y={y}
           height={height}
           ry={barCornerRadius}
@@ -132,24 +129,24 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
         />
       </g>
     );
-  } else if (statusDescription === "处理中" || statusDescription === "處理中") {
-    // 对于"處理中"任务：
-    // 如果延期完成：显示计划开始到实际结束（深蓝色占比progress%，浅蓝色占比100-progress%），然后实际结束到计划结束（延期部分）
-    // 如果没有延期：显示计划开始到实际结束（深蓝色）
+  } else if (statusDescription === "處理中") {
+    // 對於"處理中"任務：
+    // 如果延期完成：顯示計劃開始到實際結束（深藍色占比progress%，淺藍色占比100-progress%），然後實際結束到計劃結束（延期部分）
+    // 如果沒有延期：顯示計劃開始到實際結束（深藍色）
     if (isDelayedCompletion) {
-      // 延期完成的情况
-      // 总长度 = 从计划开始到实际结束
-      const totalActualWidth = actualEndOffset;
-      // 深蓝色部分 = progress% 的总长度
-      const progressPartWidth = (totalActualWidth * progress) / 100;
-      // 浅蓝色部分 = (100 - progress)% 的总长度
-      const remainingPartWidth = totalActualWidth - progressPartWidth;
-      // 延期部分 = 从实际结束到计划结束
-      const delayPartWidth = actualEndOffset - width; // actualEndOffset > width，所以这是延期部分
+      // 延期完成的情況
+      // 總長度 = 從計劃開始到實際結束
+      const totalActualWidth = Math.max(0, actualEndOffset);
+      // 深藍色部分 = progress% 的總長度
+      const progressPartWidth = Math.max(0, (totalActualWidth * safeProgress) / 100);
+      // 淺藍色部分 = (100 - progress)% 的總長度
+      const remainingPartWidth = Math.max(0, totalActualWidth - progressPartWidth);
+      // 延期部分 = 從實際結束到計劃結束
+      const delayPartWidth = Math.max(0, actualEndOffset - safeWidth); // actualEndOffset > width，所以這是延期部分
       
       return (
         <g onMouseDown={onMouseDown}>
-          {/* 深蓝色部分（已完成部分） */}
+          {/* 深藍色部分（已完成部分） */}
           {progressPartWidth > 0 && (
             <rect
               x={x}
@@ -161,7 +158,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
               fill={colors.progress}
             />
           )}
-          {/* 浅蓝色部分（未完成部分） */}
+          {/* 淺藍色部分（未完成部分） */}
           {remainingPartWidth > 0 && (
             <rect
               x={x + progressPartWidth}
@@ -173,11 +170,11 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
               fill={colors.bg}
             />
           )}
-          {/* 延期部分（从计划结束到实际结束） */}
+          {/* 延期部分（從計劃結束到實際結束） */}
           {delayPartWidth > 0 && (
             <g>
               <rect
-                x={x + width}
+                x={x + safeWidth}
                 width={delayPartWidth}
                 y={y}
                 height={height}
@@ -188,7 +185,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
               {/* 延期文字 */}
               {delayPartWidth > 30 && (
                 <text
-                  x={x + width + delayPartWidth / 2}
+                  x={x + safeWidth + delayPartWidth / 2}
                   y={y + height / 2}
                   fill="#FFFFFF"
                   fontSize="12"
@@ -208,8 +205,8 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
         </g>
       );
     } else {
-      // 没有延期的情况：只显示计划开始到实际结束（深蓝色）
-      const actualWidth = actualEndOffset;
+      // 沒有延期的情況：只顯示計劃開始到實際結束（深藍色）
+      const actualWidth = Math.max(0, actualEndOffset);
       return (
         <g onMouseDown={onMouseDown}>
           <rect
@@ -224,13 +221,13 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
         </g>
       );
     }
-  } else if (statusDescription === "挂起中" || statusDescription === "掛起中") {
-    // 挂起中/掛起中：颜色E6E6E6的条形图，从计划开始时间到计划结束时间
+  } else if (statusDescription === "掛起中") {
+    // 掛起中：顏色E6E6E6的條形圖，從計劃開始時間到計劃結束時間
     return (
       <g onMouseDown={onMouseDown}>
         <rect
           x={x}
-          width={width}
+          width={safeWidth}
           y={y}
           height={height}
           ry={barCornerRadius}
@@ -242,12 +239,12 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
     );
   }
 
-  // 默认样式
+  // 默認樣式
   return (
     <g onMouseDown={onMouseDown}>
       <rect
         x={x}
-        width={width}
+        width={safeWidth}
         y={y}
         height={height}
         ry={barCornerRadius}
