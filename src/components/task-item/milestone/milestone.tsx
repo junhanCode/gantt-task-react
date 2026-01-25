@@ -16,8 +16,10 @@ export const Milestone: React.FC<TaskItemProps> = ({
       : task.styles.backgroundColor;
   };
 
+  const isDraggable = isDateChangeable;
+
   return (
-    <g tabIndex={0} className={styles.milestoneWrapper}>
+    <g tabIndex={0} className={`${styles.milestoneWrapper} ${isDraggable ? styles.draggable : ''}`}>
       <rect
         fill={getBarColor()}
         x={task.x1}

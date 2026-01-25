@@ -20,8 +20,9 @@ export const Bar: React.FC<TaskItemProps> = ({
     const plannedStart = task.plannedStart || task.start;
     const plannedEnd = task.plannedEnd || task.end;
     const actualStart = task.actualStart || task.start;
+    const isDraggable = isDateChangeable && enableTaskDrag;
     return (
-      <g className={styles.barWrapper} tabIndex={0}>
+      <g className={`${styles.barWrapper} ${isDraggable ? styles.draggable : ''}`} tabIndex={0}>
         <OABarDisplay
           x={task.x1}
           y={task.y}
@@ -79,8 +80,9 @@ export const Bar: React.FC<TaskItemProps> = ({
   }
   
   // 默认模式使用BarDisplay
+  const isDraggable = isDateChangeable && enableTaskDrag;
   return (
-    <g className={styles.barWrapper} tabIndex={0}>
+    <g className={`${styles.barWrapper} ${isDraggable ? styles.draggable : ''}`} tabIndex={0}>
       <BarDisplay
         x={task.x1}
         y={task.y}

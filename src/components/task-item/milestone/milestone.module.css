@@ -3,6 +3,14 @@
   outline: none;
 }
 
+.milestoneWrapper.draggable {
+  cursor: grab;
+}
+
+.milestoneWrapper.draggable:active {
+  cursor: grabbing;
+}
+
 .milestoneBackground {
   user-select: none;
 }

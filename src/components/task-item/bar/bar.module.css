@@ -3,6 +3,14 @@
   outline: none;
 }
 
+.barWrapper.draggable {
+  cursor: grab;
+}
+
+.barWrapper.draggable:active {
+  cursor: grabbing;
+}
+
 .barWrapper:hover .barHandle {
   visibility: visible;
   opacity: 1;
