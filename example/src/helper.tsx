@@ -41,6 +41,302 @@ interface MockTask {
 // Mock数据
 const mockData: MockTask[] = [
   {
+    "id": 9999,
+    "parentId": 0,
+    "taskNo": 202601250001,
+    "title": "实际时间测试任务",
+    "project": [
+      "时间测试"
+    ],
+    "statusInfoVo": {
+      "code": 2,
+      "description": "處理中",
+      "color": "blue"
+    },
+    "levelInfo": {
+      "code": 2,
+      "description": "中",
+      "color": "#3cb371"
+    },
+    "createDate": "2026-01-20",
+    "deadLine": "2026-01-30",
+    "finishDate": "",
+    "delayDays": 0,
+    "proposer": {
+      "employeeNo": "F1669075",
+      "name": "何聪",
+      "leaveStatus": 0
+    },
+    "supervisor": [
+      {
+        "type": "employee",
+        "name": "何聪",
+        "identity": "F1669075",
+        "leaveStatus": 0
+      }
+    ],
+    "progressPercent": 50,
+    "children": [
+      {
+        "id": 10001,
+        "parentId": 9999,
+        "taskNo": 202601250002,
+        "title": "同一天完成的任务1",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 4,
+          "description": "已完成",
+          "color": "#008000"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-22",
+        "deadLine": "2026-01-22",
+        "finishDate": "2026-01-22 18:30:00",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 100,
+        "children": null,
+        "number": 1
+      },
+      {
+        "id": 10002,
+        "parentId": 9999,
+        "taskNo": 202601250003,
+        "title": "同一天完成的任务2（上午开始下午结束）",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 4,
+          "description": "已完成",
+          "color": "#008000"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-23",
+        "deadLine": "2026-01-23",
+        "finishDate": "2026-01-23 17:00:00",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 100,
+        "children": null,
+        "number": 2
+      },
+      {
+        "id": 10003,
+        "parentId": 9999,
+        "taskNo": 202601250004,
+        "title": "跨两天完成的任务",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 4,
+          "description": "已完成",
+          "color": "#008000"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-24",
+        "deadLine": "2026-01-25",
+        "finishDate": "2026-01-25 14:30:00",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 100,
+        "children": null,
+        "number": 3
+      },
+      {
+        "id": 10004,
+        "parentId": 9999,
+        "taskNo": 202601250005,
+        "title": "跨多天完成的任务（3天）",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 4,
+          "description": "已完成",
+          "color": "#008000"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-21",
+        "deadLine": "2026-01-24",
+        "finishDate": "2026-01-24 16:00:00",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 100,
+        "children": null,
+        "number": 4
+      },
+      {
+        "id": 10005,
+        "parentId": 9999,
+        "taskNo": 202601250006,
+        "title": "进行中-同一天内（今天）",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 2,
+          "description": "處理中",
+          "color": "blue"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-25",
+        "deadLine": "2026-01-25",
+        "finishDate": "",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 60,
+        "children": null,
+        "number": 5
+      },
+      {
+        "id": 10006,
+        "parentId": 9999,
+        "taskNo": 202601250007,
+        "title": "进行中-跨天执行",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 2,
+          "description": "處理中",
+          "color": "blue"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-23",
+        "deadLine": "2026-01-26",
+        "finishDate": "",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 45,
+        "children": null,
+        "number": 6
+      },
+      {
+        "id": 10007,
+        "parentId": 9999,
+        "taskNo": 202601250008,
+        "title": "延期任务-从昨天到今天",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 2,
+          "description": "處理中",
+          "color": "blue"
+        },
+        "levelInfo": {
+          "code": 3,
+          "description": "高",
+          "color": "#ff6a6a"
+        },
+        "createDate": "2026-01-24",
+        "deadLine": "2026-01-24",
+        "finishDate": "",
+        "delayDays": 1,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 75,
+        "children": null,
+        "number": 7
+      },
+      {
+        "id": 10008,
+        "parentId": 9999,
+        "taskNo": 202601250009,
+        "title": "跨周完成的任务（7天）",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 4,
+          "description": "已完成",
+          "color": "#008000"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-15",
+        "deadLine": "2026-01-22",
+        "finishDate": "2026-01-22 10:15:00",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 100,
+        "children": null,
+        "number": 8
+      }
+    ],
+    "number": 0
+  },
+  {
     "id": 9287,
     "parentId": 0,
     "taskNo": 202601190004,
