@@ -145,7 +145,13 @@ export const StandardTooltipContent: React.FC<{
   return (
     <div className={styles.tooltipDefaultContainer} style={style}>
       {/* 任务名称 */}
-      <div style={{ fontSize: fontSize + 6, fontWeight: 'bold', marginBottom: '8px' }}>
+      <div style={{ 
+        fontSize: fontSize + 6, 
+        fontWeight: 'bold', 
+        marginBottom: '8px',
+        wordBreak: 'break-word',
+        overflowWrap: 'break-word',
+      }}>
         {task.name}
       </div>
       

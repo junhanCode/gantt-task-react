@@ -113,20 +113,24 @@ export const OATaskListTable: React.FC<{
 
 
   return (
-    <div
-      className={styles.taskListWrapper}
+    <table
+      className={styles.taskListTable}
       style={{
         fontFamily: fontFamily,
         fontSize: fontSize,
         ...(tableStyles?.borderColor ? {
           borderColor: tableStyles.borderColor,
-          borderBottomColor: tableStyles.borderColor,
-          borderLeftColor: tableStyles.borderColor,
-          borderRightColor: tableStyles.borderColor,
         } : {}),
         ...(tableStyles?.container || {}),
       }}
     >
+      <colgroup>
+        <col style={{ width: rowWidth }} />
+        <col style={{ width: "100px" }} />
+        <col style={{ width: "100px" }} />
+        {showOperationsColumn && <col style={{ width: operationsColumnWidth ?? "120px" }} />}
+      </colgroup>
+      <tbody>
       {tasks.map((t, index) => {
         const hasChild = hasChildren(t);
         const isCollapsed = t.hideChildren ?? false;
@@ -139,69 +143,67 @@ export const OATaskListTable: React.FC<{
         }
 
         return (
-          <div key={`${t.id}row`}>
-            <div
-              className={styles.taskListTableRow}
-              style={{
-                height: rowHeight,
-                ...(tableStyles?.rowBackgroundColor && index % 2 === 0
-                  ? { backgroundColor: tableStyles.rowBackgroundColor }
-                  : {}),
-                ...(tableStyles?.rowEvenBackgroundColor && index % 2 === 1
-                  ? { backgroundColor: tableStyles.rowEvenBackgroundColor }
-                  : {}),
-                ...(typeof tableStyles?.row === 'function'
-                  ? tableStyles.row(index)
-                  : tableStyles?.row || {}),
-              }}
-            >
-              {/* 任務標題列 */}
-              {(() => {
-                const meta = getEllipsisData("name", t.name);
-                if (meta.isOverflow && onCellOverflow) {
-                  onCellOverflow({ column: "name", task: t });
-                }
-                const content = columnRenderers?.name
-                  ? columnRenderers.name(t, meta)
-                  : (
-                    <span
-                      title={meta.isOverflow ? t.name : undefined}
-                      style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                    >
-                      {meta.displayValue}
-                    </span>
-                  );
-                return (
-                  <div
-                    className={styles.taskListCell}
-                    style={{
-                      minWidth: rowWidth,
-                      maxWidth: rowWidth,
-                      ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                      ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                      ...(tableStyles?.cell || {}),
-                    }}
+          <tr 
+            key={`${t.id}row`}
+            className={styles.taskListTableRow}
+            style={{
+              height: rowHeight,
+              ...(tableStyles?.rowBackgroundColor && index % 2 === 0
+                ? { backgroundColor: tableStyles.rowBackgroundColor }
+                : {}),
+              ...(tableStyles?.rowEvenBackgroundColor && index % 2 === 1
+                ? { backgroundColor: tableStyles.rowEvenBackgroundColor }
+                : {}),
+              ...(typeof tableStyles?.row === 'function'
+                ? tableStyles.row(index)
+                : tableStyles?.row || {}),
+            }}
+          >
+            {/* 任務標題列 */}
+            {(() => {
+              const meta = getEllipsisData("name", t.name);
+              if (meta.isOverflow && onCellOverflow) {
+                onCellOverflow({ column: "name", task: t });
+              }
+              const content = columnRenderers?.name
+                ? columnRenderers.name(t, meta)
+                : (
+                  <span
                     title={meta.isOverflow ? t.name : undefined}
+                    style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
                   >
-                    <div className={styles.taskListNameWrapper}>
-                      <div
-                        className={
-                          expanderContent
-                            ? styles.taskListExpander
-                            : styles.taskListEmptyExpander
-                        }
-                        onClick={() => onExpanderClick(t)}
-                      >
-                        {expanderContent}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>{content}</div>
-                    </div>
-                  </div>
+                    {meta.displayValue}
+                  </span>
                 );
-              })()}
-              
-              {/* 狀態列 */}
-              {(() => {
+              return (
+                <td
+                  className={styles.taskListCell}
+                  style={{
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                    ...(tableStyles?.cell || {}),
+                  }}
+                  title={meta.isOverflow ? t.name : undefined}
+                >
+                  <div className={styles.taskListNameWrapper}>
+                    <div
+                      className={
+                        expanderContent
+                          ? styles.taskListExpander
+                          : styles.taskListEmptyExpander
+                      }
+                      onClick={() => onExpanderClick(t)}
+                    >
+                      {expanderContent}
+                    </div>
+                    <div className={styles.taskListNameText}>{content}</div>
+                  </div>
+                </td>
+              );
+            })()}
+            
+            {/* 狀態列 */}
+            {(() => {
                 const meta = getEllipsisData("status", t.status);
                 if (meta.isOverflow && onCellOverflow) {
                   onCellOverflow({ column: "status", task: t });
@@ -237,120 +239,114 @@ export const OATaskListTable: React.FC<{
                     {meta.displayValue}
                   </span>
                 );
-                const content = columnRenderers?.status
-                  ? columnRenderers.status(t, meta)
-                  : defaultNode;
-                return (
-                  <div
-                    className={styles.taskListCell}
-                    style={{
-                      minWidth: "100px",
-                      maxWidth: "100px",
-                      textAlign: "center",
-                      ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                      ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                      ...(tableStyles?.cell || {}),
-                    }}
-                  >
-                    {content}
-                  </div>
-                );
-              })()}
-              
-              {/* 負責人列 */}
-              {(() => {
-                const meta = getEllipsisData("assignee", t.assignee || "-");
-                if (meta.isOverflow && onCellOverflow) {
-                  onCellOverflow({ column: "assignee", task: t });
-                }
-                const content = columnRenderers?.assignee
-                  ? columnRenderers.assignee(t, meta)
-                  : (
-                    <span
-                      style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                      title={meta.isOverflow ? meta.value : undefined}
-                    >
-                      {meta.displayValue || "-"}
-                    </span>
-                  );
-                return (
-                  <div
-                    className={styles.taskListCell}
-                    style={{
-                      minWidth: "100px",
-                      maxWidth: "100px",
-                      textAlign: "center",
-                      ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                      ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                      ...(tableStyles?.cell || {}),
-                    }}
-                  >
-                    {content}
-                  </div>
-                );
-              })()}
-              
-              {/* 操作列 */}
-              {showOperationsColumn && (
-                <div
+              const content = columnRenderers?.status
+                ? columnRenderers.status(t, meta)
+                : defaultNode;
+              return (
+                <td
                   className={styles.taskListCell}
                   style={{
-                    minWidth: operationsColumnWidth ?? "120px",
-                    maxWidth: operationsColumnWidth ?? "120px",
                     textAlign: "center",
                     ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
                     ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
                     ...(tableStyles?.cell || {}),
                   }}
                 >
-                  {columnRenderers?.operations ? (
-                    columnRenderers.operations(t)
-                  ) : (
-                    <div className={styles.operationsContainer}>
-                      {onAddTask && (
-                        <span
-                          className={styles.addIcon}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onAddTask(t);
-                          }}
-                          title="新增子任務"
-                        >
-                          +
-                        </span>
-                      )}
-                      {onEditTask && (
-                        <span
-                          className={styles.actionIcon}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onEditTask(t);
-                          }}
-                          title="編輯"
-                        >
-                          ✎
-                        </span>
-                      )}
-                      {onDeleteTask && (
-                        <span
-                          className={styles.actionIcon}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteTask(t);
-                          }}
-                          title="刪除"
-                        >
-                          ×
-                        </span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+                  {content}
+                </td>
+              );
+            })()}
+            
+            {/* 負責人列 */}
+            {(() => {
+                const meta = getEllipsisData("assignee", t.assignee || "-");
+                if (meta.isOverflow && onCellOverflow) {
+                  onCellOverflow({ column: "assignee", task: t });
+                }
+              const content = columnRenderers?.assignee
+                ? columnRenderers.assignee(t, meta)
+                : (
+                  <span
+                    style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                    title={meta.isOverflow ? meta.value : undefined}
+                  >
+                    {meta.displayValue || "-"}
+                  </span>
+                );
+              return (
+                <td
+                  className={styles.taskListCell}
+                  style={{
+                    textAlign: "center",
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                    ...(tableStyles?.cell || {}),
+                  }}
+                >
+                  {content}
+                </td>
+              );
+            })()}
+            
+            {/* 操作列 */}
+            {showOperationsColumn && (
+              <td
+                className={styles.taskListCell}
+                style={{
+                  textAlign: "center",
+                  ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                  ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                  ...(tableStyles?.cell || {}),
+                }}
+              >
+                {columnRenderers?.operations ? (
+                  columnRenderers.operations(t)
+                ) : (
+                  <div className={styles.operationsContainer}>
+                    {onAddTask && (
+                      <span
+                        className={styles.addIcon}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onAddTask(t);
+                        }}
+                        title="新增子任務"
+                      >
+                        +
+                      </span>
+                    )}
+                    {onEditTask && (
+                      <span
+                        className={styles.actionIcon}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditTask(t);
+                        }}
+                        title="編輯"
+                      >
+                        ✎
+                      </span>
+                    )}
+                    {onDeleteTask && (
+                      <span
+                        className={styles.actionIcon}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteTask(t);
+                        }}
+                        title="刪除"
+                      >
+                        ×
+                      </span>
+                    )}
+                  </div>
+                )}
+              </td>
+            )}
+          </tr>
         );
       })}
-    </div>
+      </tbody>
+    </table>
   );
 };

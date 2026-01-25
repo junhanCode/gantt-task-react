@@ -43,6 +43,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
   const [taskItem, setTaskItem] = useState<JSX.Element>(<div />);
   const [isTextInside, setIsTextInside] = useState(true);
   const [isTextOverflow, setIsTextOverflow] = useState(false);
+  const [displayText, setDisplayText] = useState(task.name);
 
   useEffect(() => {
     // oaTask模式下，所有任务类型都使用Bar组件（单条显示）
@@ -72,8 +73,24 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
     if (textRef.current) {
       const textWidth = textRef.current.getBBox().width;
       const barWidth = task.x2 - task.x1;
-      setIsTextInside(textWidth < barWidth);
-      setIsTextOverflow(textWidth > barWidth);
+      const shouldBeInside = textWidth < barWidth;
+      setIsTextInside(shouldBeInside);
+      
+      // 如果文本在条形图内且溢出，进行截断处理
+      if (shouldBeInside && textWidth > barWidth) {
+        setIsTextOverflow(true);
+        // 计算可以显示的字符数
+        const charWidth = textWidth / task.name.length;
+        const availableChars = Math.floor(barWidth / charWidth) - 1; // 减1为省略号留空间
+        if (availableChars > 0) {
+          setDisplayText(task.name.slice(0, availableChars) + '…');
+        } else {
+          setDisplayText('…');
+        }
+      } else {
+        setIsTextOverflow(false);
+        setDisplayText(task.name);
+      }
     }
   }, [textRef, task]);
 
@@ -123,7 +140,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
       }}
     >
       {taskItem}
-      {/* 当文本在条形图内时，如果溢出则添加tooltip */}
+      {/* 当文本在条形图内时，显示文本（溢出时会截断并添加省略号） */}
       {isTextInside ? (
         <g>
           <text
@@ -131,12 +148,8 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
             y={task.y + taskHeight * 0.5}
             className={style.barLabel}
             ref={textRef}
-            style={{
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
           >
-            {task.name}
+            {displayText}
           </text>
           {/* SVG tooltip - 当文本溢出时显示完整名称 */}
           {isTextOverflow && <title>{task.name}</title>}

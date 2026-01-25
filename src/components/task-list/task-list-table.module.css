@@ -1,17 +1,15 @@
-.taskListWrapper {
-  display: table;
+.taskListTable {
+  width: 100%;
+  border-collapse: collapse;
   border-bottom: #e6e4e4 1px solid;
   border-left: #e6e4e4 1px solid;
   border-right: #e6e4e4 1px solid;
-  border-collapse: collapse;
   /* 视觉上收缩表体 2px，以对齐表头边框 */
-  padding-right: 2px;
+  margin-right: 2px;
 }
 
 .taskListTableRow {
-  display: table-row;
-  text-overflow: ellipsis;
-  border-bottom: 1px solid #e6e4e4; /* 添加底部边框 */
+  border-bottom: 1px solid #e6e4e4;
 }
 
 .taskListTableRow:nth-of-type(even) {
@@ -19,22 +17,34 @@
 }
 
 .taskListCell {
-  display: table-cell;
   vertical-align: middle;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   border-right: 1px solid rgb(196, 196, 196);
-  padding: 6px 4px; /* 与表头一致 */
+  padding: 6px 4px;
   box-sizing: border-box;
+  max-width: 0; /* 关键：让 table-layout: fixed 生效 */
 }
 
 /* 除了任务标题列（第一列）外，其他列内容垂直居中 */
 .taskListTableRow > .taskListCell:not(:first-child) {
   vertical-align: middle;
 }
+
 .taskListNameWrapper {
   display: flex;
+  align-items: center;
+  min-width: 0; /* 允许子元素收缩 */
+  width: 100%;
+}
+
+.taskListNameText {
+  flex: 1;
+  min-width: 0; /* 允许文本收缩 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .taskListExpander {

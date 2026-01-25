@@ -188,20 +188,26 @@ export const TaskListTableDefault: React.FC<{
 
   return (
     <div>
-      <div
-        className={styles.taskListWrapper}
+      <table
+        className={styles.taskListTable}
         style={{
           fontFamily: fontFamily,
           fontSize: fontSize,
           ...(tableStyles?.borderColor ? {
             borderColor: tableStyles.borderColor,
-            borderBottomColor: tableStyles.borderColor,
-            borderLeftColor: tableStyles.borderColor,
-            borderRightColor: tableStyles.borderColor,
           } : {}),
           ...(tableStyles?.container || {}),
         }}
       >
+        <colgroup>
+          <col style={{ width: nameColumnWidth ?? rowWidth }} />
+          <col style={{ width: timeColumnWidths?.plannedStart ?? rowWidth }} />
+          <col style={{ width: timeColumnWidths?.plannedEnd ?? rowWidth }} />
+          <col style={{ width: timeColumnWidths?.plannedDuration ?? "100px" }} />
+          <col style={{ width: timeColumnWidths?.actualStart ?? rowWidth }} />
+          <col style={{ width: timeColumnWidths?.actualEnd ?? rowWidth }} />
+        </colgroup>
+        <tbody>
         {tasks.map((t, index) => {
           let expanderContent: React.ReactNode = null;
           if (t.hideChildren === false) {
@@ -225,174 +231,163 @@ export const TaskListTableDefault: React.FC<{
           // if task has no children info, show nothing
 
           return (
-            <div key={`${t.id}row`} onContextMenu={(e) => openContextMenu(e, t)}>
-              <div
-                className={styles.taskListTableRow}
+            <tr 
+              key={`${t.id}row`} 
+              className={styles.taskListTableRow}
+              onContextMenu={(e) => openContextMenu(e, t)}
+              style={{
+                height: rowHeight,
+                ...(tableStyles?.rowBackgroundColor && index % 2 === 0
+                  ? { backgroundColor: tableStyles.rowBackgroundColor }
+                  : {}),
+                ...(tableStyles?.rowEvenBackgroundColor && index % 2 === 1
+                  ? { backgroundColor: tableStyles.rowEvenBackgroundColor }
+                  : {}),
+                ...(typeof tableStyles?.row === 'function'
+                  ? tableStyles.row(index)
+                  : tableStyles?.row || {}),
+              }}
+            >
+              <td
+                className={styles.taskListCell}
                 style={{
-                  height: rowHeight,
-                  ...(tableStyles?.rowBackgroundColor && index % 2 === 0
-                    ? { backgroundColor: tableStyles.rowBackgroundColor }
-                    : {}),
-                  ...(tableStyles?.rowEvenBackgroundColor && index % 2 === 1
-                    ? { backgroundColor: tableStyles.rowEvenBackgroundColor }
-                    : {}),
-                  ...(typeof tableStyles?.row === 'function'
-                    ? tableStyles.row(index)
-                    : tableStyles?.row || {}),
+                  ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                  ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                  ...(tableStyles?.cell || {}),
+                }}
+                title={t.name}
+              >
+                <div className={styles.taskListNameWrapper}>
+                  <div
+                    className={
+                      expanderContent
+                        ? styles.taskListExpander
+                        : styles.taskListEmptyExpander
+                    }
+                    onClick={() => onExpanderClick(t)}
+                  >
+                    {expanderContent}
+                  </div>
+                  <div className={styles.taskListNameText}>{t.name}</div>
+                </div>
+              </td>
+              <td
+                className={styles.taskListCell}
+                style={{
+                  ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                  ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                  ...(tableStyles?.cell || {}),
                 }}
               >
-                <div
-                  className={styles.taskListCell}
-                  style={{
-                    minWidth: nameColumnWidth ?? rowWidth,
-                    maxWidth: nameColumnWidth ?? rowWidth,
-                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                    ...(tableStyles?.cell || {}),
-                  }}
-                  title={t.name}
-                >
-                  <div className={styles.taskListNameWrapper}>
-                    <div
-                      className={
-                        expanderContent
-                          ? styles.taskListExpander
-                          : styles.taskListEmptyExpander
+                &nbsp;{formatYmd(t.plannedStart ?? t.start)}
+              </td>
+              <td
+                className={styles.taskListCell}
+                style={{
+                  ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                  ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                  ...(tableStyles?.cell || {}),
+                }}
+              >
+                &nbsp;{formatYmd(t.plannedEnd ?? t.end)}
+              </td>
+              <td
+                className={styles.taskListCell}
+                style={{
+                  cursor: "pointer",
+                  textAlign: "center",
+                  ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                  ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                  ...(tableStyles?.cell || {}),
+                }}
+                onDoubleClick={() => startEditDuration(t)}
+              >
+                {editingTaskId === t.id ? (
+                  <input
+                    type="number"
+                    min="1"
+                    value={editingDuration}
+                    onChange={(e) => setEditingDuration(e.target.value)}
+                    onBlur={() => saveDuration(t)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        saveDuration(t);
+                      } else if (e.key === "Escape") {
+                        cancelEditDuration();
                       }
-                      onClick={() => onExpanderClick(t)}
-                    >
-                      {expanderContent}
-                    </div>
-                    <div>{t.name}</div>
-                  </div>
-                </div>
-                <div
-                  className={styles.taskListCell}
-                  style={{
-                    minWidth: timeColumnWidths?.plannedStart ?? rowWidth,
-                    maxWidth: timeColumnWidths?.plannedStart ?? rowWidth,
-                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                    ...(tableStyles?.cell || {}),
-                  }}
-                >
-                  &nbsp;{formatYmd(t.plannedStart ?? t.start)}
-                </div>
-                <div
-                  className={styles.taskListCell}
-                  style={{
-                    minWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
-                    maxWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
-                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                    ...(tableStyles?.cell || {}),
-                  }}
-                >
-                  &nbsp;{formatYmd(t.plannedEnd ?? t.end)}
-                </div>
-                <div
-                  className={styles.taskListCell}
-                  style={{
-                    minWidth: timeColumnWidths?.plannedDuration ?? "100px",
-                    maxWidth: timeColumnWidths?.plannedDuration ?? "100px",
-                    cursor: "pointer",
-                    textAlign: "center",
-                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                    ...(tableStyles?.cell || {}),
-                  }}
-                  onDoubleClick={() => startEditDuration(t)}
-                >
-                  {editingTaskId === t.id ? (
-                    <input
-                      type="number"
-                      min="1"
-                      value={editingDuration}
-                      onChange={(e) => setEditingDuration(e.target.value)}
-                      onBlur={() => saveDuration(t)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          saveDuration(t);
-                        } else if (e.key === "Escape") {
-                          cancelEditDuration();
-                        }
-                      }}
-                      autoFocus
-                      style={{
-                        width: "80%",
-                        padding: "2px 4px",
-                        textAlign: "center",
-                      }}
-                    />
-                  ) : (
-                    <span>{calculateDuration(t.plannedStart ?? t.start, t.plannedEnd ?? t.end)}</span>
-                  )}
-                </div>
-                <div
-                  className={styles.taskListCell}
-                  style={{
-                    minWidth: timeColumnWidths?.actualStart ?? rowWidth,
-                    maxWidth: timeColumnWidths?.actualStart ?? rowWidth,
-                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                    ...(tableStyles?.cell || {}),
-                  }}
-                >
-                  &nbsp;{formatYmd(t.actualStart ?? t.start)}
-                </div>
-                <div
-                  className={styles.taskListCell}
-                  style={{
-                    minWidth: timeColumnWidths?.actualEnd ?? rowWidth,
-                    maxWidth: timeColumnWidths?.actualEnd ?? rowWidth,
-                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                    ...(tableStyles?.cell || {}),
-                  }}
-                >
-                  &nbsp;{formatYmd(t.actualEnd ?? t.end)}
-                </div>
-              </div>
-            </div>
+                    }}
+                    autoFocus
+                    style={{
+                      width: "80%",
+                      padding: "2px 4px",
+                      textAlign: "center",
+                    }}
+                  />
+                ) : (
+                  <span>{calculateDuration(t.plannedStart ?? t.start, t.plannedEnd ?? t.end)}</span>
+                )}
+              </td>
+              <td
+                className={styles.taskListCell}
+                style={{
+                  ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                  ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                  ...(tableStyles?.cell || {}),
+                }}
+              >
+                &nbsp;{formatYmd(t.actualStart ?? t.start)}
+              </td>
+              <td
+                className={styles.taskListCell}
+                style={{
+                  ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                  ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                  ...(tableStyles?.cell || {}),
+                }}
+              >
+                &nbsp;{formatYmd(t.actualEnd ?? t.end)}
+              </td>
+            </tr>
           );
         })}
-        {/* 右键菜单 */}
-        {menuVisible && menuTask && (
+        </tbody>
+      </table>
+      {/* 右键菜单 */}
+      {menuVisible && menuTask && (
+        <div
+          className={styles.contextMenu}
+          style={{ left: menuPos.x, top: menuPos.y }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
           <div
-            className={styles.contextMenu}
-            style={{ left: menuPos.x, top: menuPos.y }}
-            onContextMenu={(e) => e.preventDefault()}
+            className={styles.contextMenuItem}
+            onClick={() => {
+              closeMenu();
+              handleAddClick(menuTask);
+            }}
           >
-            <div
-              className={styles.contextMenuItem}
-              onClick={() => {
-                closeMenu();
-                handleAddClick(menuTask);
-              }}
-            >
-              新增子任务
-            </div>
-            <div
-              className={styles.contextMenuItem}
-              onClick={() => {
-                closeMenu();
-                handleEditClick(menuTask);
-              }}
-            >
-              编辑
-            </div>
-            <div
-              className={styles.contextMenuItem}
-              onClick={() => {
-                closeMenu();
-                handleDeleteClick(menuTask);
-              }}
-            >
-              删除
-            </div>
+            新增子任务
           </div>
-        )}
-      </div>
+          <div
+            className={styles.contextMenuItem}
+            onClick={() => {
+              closeMenu();
+              handleEditClick(menuTask);
+            }}
+          >
+            编辑
+          </div>
+          <div
+            className={styles.contextMenuItem}
+            onClick={() => {
+              closeMenu();
+              handleDeleteClick(menuTask);
+            }}
+          >
+            删除
+          </div>
+        </div>
+      )}
     </div>
   );
 };
