@@ -625,7 +625,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           topValues.push(
             <g key={`week-${weekKey}`}>
               <text
-                y={topDefaultHeight * 0.5}
+                y={topDefaultHeight * 0.7}
                 x={weekCenterX}
                 className={styles.calendarTopText}
               >
