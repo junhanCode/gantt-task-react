@@ -103,9 +103,8 @@ export const OATaskListTable: React.FC<{
       columnEllipsisMaxChars?.[column] ??
       (column === "name" ? 20 : column === "status" ? 8 : 12);
     const isOverflow = value.length > max;
-    const displayValue = isOverflow
-      ? `${value.slice(0, Math.max(1, max - 1))}…`
-      : value;
+    // 不再通过字符串截断添加省略号，而是返回完整文本，让CSS处理溢出
+    const displayValue = value;
     // 溢出時通知調用方
     // 具體任務在調用方外層循環裡傳入
     return { value, displayValue, isOverflow, maxLength: max };
@@ -180,14 +179,7 @@ export const OATaskListTable: React.FC<{
               }
               const content = columnRenderers?.name
                 ? columnRenderers.name(t, meta)
-                : (
-                  <span
-                    title={meta.isOverflow ? t.name : undefined}
-                    style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                  >
-                    {meta.displayValue}
-                  </span>
-                );
+                : meta.displayValue;
               return (
                 <td
                   className={styles.taskListCell}
@@ -196,7 +188,7 @@ export const OATaskListTable: React.FC<{
                     ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
                     ...(tableStyles?.cell || {}),
                   }}
-                  title={meta.isOverflow ? t.name : undefined}
+                  title={t.name}
                 >
                   <div className={styles.taskListNameWrapper}>
                     <div
@@ -247,7 +239,7 @@ export const OATaskListTable: React.FC<{
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                     }}
-                    title={meta.isOverflow ? statusText : undefined}
+                    title={statusText}
                   >
                     {meta.displayValue}
                   </span>
@@ -281,7 +273,7 @@ export const OATaskListTable: React.FC<{
                 : (
                   <span
                     style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                    title={meta.isOverflow ? meta.value : undefined}
+                    title={meta.value}
                   >
                     {meta.displayValue || "-"}
                   </span>

@@ -831,8 +831,15 @@ const App = () => {
         columnRenderers={{
           name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => (
             <span
-              style={{ color: "#1677ff" }}
-              title={meta.isOverflow ? task.name : undefined}
+              style={{ 
+                color: "#1677ff",
+                display: "inline-block",
+                maxWidth: "100%",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis"
+              }}
+              title={task.name}
             >
               {meta.displayValue}
             </span>
