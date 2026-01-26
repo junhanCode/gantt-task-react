@@ -1762,7 +1762,199 @@ function convertMockDataRecursive(mockTasks: MockTask[]): Task[] {
   return result;
 }
 
-export function initTasks() {
+// 生成大量假数据用于性能测试
+export function generateLargeMockData(
+  parentCount: number = 100, // 父任务数量
+  childrenPerParent: number = 10 // 每个父任务的子任务数量
+): MockTask[] {
+  const largeMockData: MockTask[] = [];
+  const today = new Date();
+  
+  // 项目类型列表
+  const projects = ["系統開發", "MIL", "RFQ", "Others", "MW-W (MW25)", "测试项目", "性能优化"];
+  
+  // 状态列表
+  const statuses = [
+    { code: 1, description: "待確認", color: "rgb(255,192,0)" },
+    { code: 2, description: "處理中", color: "blue" },
+    { code: 3, description: "待驗收", color: "#98FB98" },
+    { code: 4, description: "已完成", color: "#008000" },
+    { code: 5, description: "掛起中", color: "gray" },
+  ];
+  
+  // 优先级列表
+  const levels = [
+    { code: 1, description: "低", color: "#9a9a9a" },
+    { code: 2, description: "中", color: "#3cb371" },
+    { code: 3, description: "高", color: "#ff6a6a" },
+  ];
+  
+  // 人员列表
+  const employees = [
+    { employeeNo: "F1669075", name: "何聪" },
+    { employeeNo: "F1669076", name: "张三" },
+    { employeeNo: "F1669077", name: "李四" },
+    { employeeNo: "F1669078", name: "王五" },
+    { employeeNo: "F1669079", name: "赵六" },
+    { employeeNo: "G1659743", name: "凌峰" },
+    { employeeNo: "G1659987", name: "林俊翰" },
+    { employeeNo: "FSHK280", name: "Anthonne" },
+  ];
+  
+  // 随机获取数组元素
+  const randomItem = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  
+  // 格式化日期为字符串
+  const formatDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  // 格式化日期时间为字符串
+  const formatDateTime = (date: Date): string => {
+    const dateStr = formatDate(date);
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    const second = String(date.getSeconds()).padStart(2, '0');
+    return `${dateStr} ${hour}:${minute}:${second}`;
+  };
+  
+  let taskIdCounter = 20000; // 从20000开始，避免和现有数据冲突
+  let taskNoCounter = 202601260001;
+  
+  // 生成父任务
+  for (let i = 0; i < parentCount; i++) {
+    const parentId = taskIdCounter++;
+    const status = randomItem(statuses);
+    const level = randomItem(levels);
+    const proposer = randomItem(employees);
+    const projectList = [randomItem(projects)];
+    
+    // 随机生成时间范围（1-30天）
+    const daysFromNow = Math.floor(Math.random() * 60) - 30; // -30到+30天
+    const createDate = new Date(today.getTime() + daysFromNow * 24 * 60 * 60 * 1000);
+    const duration = Math.floor(Math.random() * 20) + 5; // 5-25天
+    const deadLine = new Date(createDate.getTime() + duration * 24 * 60 * 60 * 1000);
+    
+    // 根据状态决定是否有完成时间和延期
+    let finishDate = "";
+    let delayDays = 0;
+    let progressPercent = 0;
+    
+    if (status.code === 4) { // 已完成
+      const finishTime = new Date(deadLine.getTime() - Math.random() * 2 * 24 * 60 * 60 * 1000);
+      finishDate = formatDateTime(finishTime);
+      progressPercent = 100;
+    } else if (status.code === 2) { // 处理中
+      progressPercent = Math.floor(Math.random() * 80) + 10; // 10-90%
+      if (deadLine < today) {
+        delayDays = Math.ceil((today.getTime() - deadLine.getTime()) / (24 * 60 * 60 * 1000));
+      }
+    } else if (status.code === 3) { // 待验收
+      progressPercent = 100;
+      finishDate = formatDateTime(deadLine);
+    } else if (status.code === 5) { // 挂起中
+      progressPercent = Math.floor(Math.random() * 50);
+    }
+    
+    // 生成子任务
+    const children: MockTask[] = [];
+    for (let j = 0; j < childrenPerParent; j++) {
+      const childId = taskIdCounter++;
+      const childStatus = randomItem(statuses);
+      const childLevel = randomItem(levels);
+      const childProposer = randomItem(employees);
+      
+      const childCreateDate = new Date(createDate.getTime() + j * 24 * 60 * 60 * 1000);
+      const childDuration = Math.floor(Math.random() * 5) + 1; // 1-5天
+      const childDeadLine = new Date(childCreateDate.getTime() + childDuration * 24 * 60 * 60 * 1000);
+      
+      let childFinishDate = "";
+      let childDelayDays = 0;
+      let childProgressPercent = 0;
+      
+      if (childStatus.code === 4) {
+        const childFinishTime = new Date(childDeadLine.getTime() - Math.random() * 1 * 24 * 60 * 60 * 1000);
+        childFinishDate = formatDateTime(childFinishTime);
+        childProgressPercent = 100;
+      } else if (childStatus.code === 2) {
+        childProgressPercent = Math.floor(Math.random() * 80) + 10;
+        if (childDeadLine < today) {
+          childDelayDays = Math.ceil((today.getTime() - childDeadLine.getTime()) / (24 * 60 * 60 * 1000));
+        }
+      } else if (childStatus.code === 3) {
+        childProgressPercent = 100;
+        childFinishDate = formatDateTime(childDeadLine);
+      } else if (childStatus.code === 5) {
+        childProgressPercent = Math.floor(Math.random() * 50);
+      }
+      
+      children.push({
+        id: childId,
+        parentId,
+        taskNo: taskNoCounter++,
+        title: `子任务 ${i + 1}-${j + 1}`,
+        project: projectList,
+        statusInfoVo: childStatus,
+        levelInfo: childLevel,
+        createDate: formatDate(childCreateDate),
+        deadLine: formatDate(childDeadLine),
+        finishDate: childFinishDate,
+        delayDays: childDelayDays,
+        proposer: { ...childProposer, leaveStatus: 0 },
+        supervisor: Math.random() > 0.5 ? [
+          {
+            type: "employee",
+            name: randomItem(employees).name,
+            identity: randomItem(employees).employeeNo,
+            leaveStatus: 0
+          }
+        ] : [],
+        progressPercent: childProgressPercent,
+        children: null,
+        number: j + 1
+      });
+    }
+    
+    largeMockData.push({
+      id: parentId,
+      parentId: 0,
+      taskNo: taskNoCounter++,
+      title: `性能测试父任务 ${i + 1}`,
+      project: projectList,
+      statusInfoVo: status,
+      levelInfo: level,
+      createDate: formatDate(createDate),
+      deadLine: formatDate(deadLine),
+      finishDate,
+      delayDays,
+      proposer: { ...proposer, leaveStatus: 0 },
+      supervisor: [
+        {
+          type: "employee",
+          name: randomItem(employees).name,
+          identity: randomItem(employees).employeeNo,
+          leaveStatus: 0
+        }
+      ],
+      progressPercent,
+      children,
+      number: i
+    });
+  }
+  
+  return largeMockData;
+}
+
+// 初始化任务 - 可以选择使用真实数据或大量测试数据
+export function initTasks(useLargeData: boolean = false, parentCount: number = 100, childrenPerParent: number = 10) {
+  if (useLargeData) {
+    console.log(`🚀 生成大量测试数据：${parentCount} 个父任务，每个 ${childrenPerParent} 个子任务，共 ${parentCount * (childrenPerParent + 1)} 个任务`);
+    const largeData = generateLargeMockData(parentCount, childrenPerParent);
+    return convertMockDataRecursive(largeData);
+  }
   return convertMockDataRecursive(mockData);
 }
 

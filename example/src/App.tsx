@@ -332,6 +332,11 @@ const App = () => {
   const [viewType] = React.useState<"default" | "oaTask">("oaTask");
   const [oaTaskViewMode, setOATaskViewMode] = React.useState<OATaskViewMode>("日");
   
+  // 性能测试相关状态
+  const [useLargeData, setUseLargeData] = React.useState(false);
+  const [parentCount, setParentCount] = React.useState(100);
+  const [childrenPerParent, setChildrenPerParent] = React.useState(10);
+  
   // 根据oaTaskViewMode设置viewMode
   const getViewMode = React.useCallback((): ViewMode => {
     if (viewType === "oaTask") {
@@ -350,7 +355,7 @@ const App = () => {
   }, [oaTaskViewMode, viewType]);
   
   const [view, setView] = React.useState<ViewMode>(getViewMode());
-  const [tasks, setTasks] = React.useState<Task[]>(initTasks());
+  const [tasks, setTasks] = React.useState<Task[]>(initTasks(useLargeData, parentCount, childrenPerParent));
   const [isChecked, setIsChecked] = React.useState(true);
   const [showArrows, setShowArrows] = React.useState<boolean>(true);
   const [enableTaskDrag, setEnableTaskDrag] = React.useState<boolean>(false);
@@ -412,6 +417,15 @@ const App = () => {
   
   // 测试空数组功能
   const [testEmptyArray, setTestEmptyArray] = React.useState(false);
+  
+  // 重新加载数据
+  const handleReloadData = () => {
+    console.time('数据加载时间');
+    const newTasks = initTasks(useLargeData, parentCount, childrenPerParent);
+    setTasks(newTasks);
+    console.timeEnd('数据加载时间');
+    alert(`已加载 ${newTasks.length} 个任务`);
+  };
 
   // 为了在 demo 中方便使用最新扩展 props，这里对 Gantt 做一次 any 断言
   
@@ -596,6 +610,69 @@ const App = () => {
 
   return (
     <div className="Wrapper">
+      {/* 性能测试数据控制面板 */}
+      <div style={{ 
+        marginBottom: 16, 
+        padding: '12px', 
+        backgroundColor: '#f5f5f5', 
+        borderRadius: '4px',
+        border: '1px solid #d9d9d9'
+      }}>
+        <div style={{ marginBottom: 8, fontWeight: 'bold', fontSize: '14px' }}>
+          🚀 性能测试数据配置 (当前任务数: {tasks.length})
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <input
+              type="checkbox"
+              checked={useLargeData}
+              onChange={e => setUseLargeData(e.target.checked)}
+            />
+            使用大量测试数据
+          </label>
+          
+          {useLargeData && (
+            <>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                父任务数:
+                <InputNumber
+                  size="small"
+                  min={1}
+                  max={1000}
+                  value={parentCount}
+                  onChange={(value) => setParentCount(value || 100)}
+                  style={{ width: '80px' }}
+                />
+              </label>
+              
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                每个父任务的子任务数:
+                <InputNumber
+                  size="small"
+                  min={0}
+                  max={50}
+                  value={childrenPerParent}
+                  onChange={(value) => setChildrenPerParent(value || 10)}
+                  style={{ width: '80px' }}
+                />
+              </label>
+              
+              <span style={{ color: '#666', fontSize: '12px' }}>
+                = {parentCount + parentCount * childrenPerParent} 个任务
+              </span>
+            </>
+          )}
+          
+          <Button 
+            type="primary" 
+            size="small" 
+            onClick={handleReloadData}
+          >
+            重新加载数据
+          </Button>
+        </div>
+      </div>
+      
       <div style={{ marginBottom: 12 }}>
         <Button size="small" onClick={() => ganttRef.current?.scrollToDate(new Date(), { align: "center" })}>滚动到今天(居中)</Button>
         <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() - 24*3600*1000), { align: "start" })}>滚到昨天(开始)</Button>
