@@ -25,6 +25,7 @@ export type TaskGanttContentProps = {
   arrowColor: string;
   arrowIndent: number;
   showArrows?: boolean;
+  hideTaskName?: boolean;
   fontSize: string;
   fontFamily: string;
   rtl: boolean;
@@ -50,6 +51,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   arrowColor,
   arrowIndent,
   showArrows = true,
+  hideTaskName = false,
   fontFamily,
   fontSize,
   rtl,
@@ -374,6 +376,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               isDelete={!task.isDisabled}
               enableTaskDrag={enableTaskDrag}
               enableTaskResize={enableTaskResize}
+              hideTaskName={hideTaskName}
               onEventStart={handleBarEventStart}
               key={task.id}
               isSelected={!!selectedTask && task.id === selectedTask.id}

@@ -40,6 +40,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   locale = "en-GB",
   barFill = 60,
   barCornerRadius = 3,
+  hideTaskName = false,
   barProgressColor = "#a3a3ff",
   barProgressSelectedColor = "#8282f5",
   barBackgroundColor = "#b8c2cc",
@@ -73,6 +74,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   onDelete,
   onSelect,
   onExpanderClick,
+  onBatchExpanderClick,
   onAddTask,
   onEditTask,
   onDeleteTask,
@@ -683,6 +685,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     fontSize,
     arrowIndent,
     showArrows,
+    hideTaskName,
     svgWidth,
     rtl,
     viewType,
@@ -706,7 +709,18 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     const newValue = !expandAllLeafTasks;
     setExpandAllLeafTasks(newValue);
     // 展开/折叠所有任务（包括有子任务的任务）
-    if (onExpanderClick) {
+    if (onBatchExpanderClick) {
+      // 使用批量更新回调（推荐）
+      const updatedTasks = tasks.map(t => {
+        const hasChildren = tasks.some(child => child.project === t.id);
+        if (hasChildren && t.hideChildren !== newValue) {
+          return { ...t, hideChildren: newValue };
+        }
+        return t;
+      });
+      onBatchExpanderClick(updatedTasks);
+    } else if (onExpanderClick) {
+      // 兼容旧的方式（不推荐，因为在循环中多次调用setState可能导致问题）
       tasks.forEach(t => {
         const hasChildren = tasks.some(child => child.project === t.id);
         // 如果有子任务，则展开/折叠该任务

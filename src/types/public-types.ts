@@ -94,6 +94,11 @@ export interface EventOption {
    */
   onExpanderClick?: (task: Task) => void;
   /**
+   * Invokes when toggling expand/collapse all tasks in the header
+   * @param tasks All updated tasks with new hideChildren state
+   */
+  onBatchExpanderClick?: (tasks: Task[]) => void;
+  /**
    * Invokes when task drag/resize ends. Use this for async API calls to update task.
    * Return false or throw error to cancel the change.
    */
@@ -149,6 +154,8 @@ export interface StylingOption {
    * From 0 to 100
    */
   barFill?: number;
+  /** 是否隐藏条形图上的任务名文字，默认false */
+  hideTaskName?: boolean;
   barProgressColor?: string;
   barProgressSelectedColor?: string;
   barBackgroundColor?: string;

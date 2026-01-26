@@ -16,6 +16,7 @@ export type TaskItemProps = {
   isDelete: boolean;
   isSelected: boolean;
   rtl: boolean;
+  hideTaskName?: boolean;
   viewType?: "default" | "oaTask";
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
@@ -35,6 +36,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
     taskHeight,
     isSelected,
     rtl,
+    hideTaskName = false,
     onEventStart,
   } = {
     ...props,
@@ -140,8 +142,8 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
       }}
     >
       {taskItem}
-      {/* 当文本在条形图内时，显示文本（溢出时会截断并添加省略号） */}
-      {isTextInside ? (
+      {/* 如果hideTaskName为true，则不显示任务名文字 */}
+      {!hideTaskName && isTextInside && (
         <g>
           <text
             x={getX()}
@@ -154,7 +156,8 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
           {/* SVG tooltip - 当文本溢出时显示完整名称 */}
           {isTextOverflow && <title>{task.name}</title>}
         </g>
-      ) : (
+      )}
+      {!hideTaskName && !isTextInside && (
         <text
           x={getX()}
           y={task.y + taskHeight * 0.5}

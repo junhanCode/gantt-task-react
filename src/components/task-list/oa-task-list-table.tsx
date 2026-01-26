@@ -138,8 +138,21 @@ export const OATaskListTable: React.FC<{
         
         if (hasChild) {
           expanderContent = isCollapsed
-            ? (expandIcon ?? <span style={{ fontSize: 12 }}>+</span>)
-            : (collapseIcon ?? <span style={{ fontSize: 12 }}>−</span>);
+            ? (collapseIcon ?? (
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                  <rect x="2" y="2" width="12" height="2" rx="1" />
+                  <rect x="2" y="7" width="12" height="2" rx="1" />
+                  <rect x="2" y="12" width="12" height="2" rx="1" />
+                </svg>
+              ))
+            : (expandIcon ?? (
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                  <rect x="2" y="2" width="4" height="4" rx="1" />
+                  <rect x="10" y="2" width="4" height="4" rx="1" />
+                  <rect x="2" y="10" width="4" height="4" rx="1" />
+                  <rect x="10" y="10" width="4" height="4" rx="1" />
+                </svg>
+              ));
         }
 
         return (

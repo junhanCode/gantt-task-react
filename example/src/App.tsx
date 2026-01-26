@@ -4,7 +4,7 @@ import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
 import { Modal, Input, Select, Button, DatePicker, InputNumber, Form } from "antd";
-import { PlusSquareOutlined, MinusSquareOutlined } from "@ant-design/icons";
+import { CaretRightOutlined, CaretDownOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const { Option } = Select;
@@ -360,6 +360,7 @@ const App = () => {
   const [showArrows, setShowArrows] = React.useState<boolean>(true);
   const [enableTaskDrag, setEnableTaskDrag] = React.useState<boolean>(false);
   const [enableTaskResize, setEnableTaskResize] = React.useState<boolean>(true);
+  const [hideTaskName, setHideTaskName] = React.useState<boolean>(false);
   
   // 模拟当前登录用户（用于演示isTaskDraggable功能）
   // 注意：第一个mock数据的proposer是"张三"，其他是"何聪"
@@ -496,6 +497,11 @@ const App = () => {
   const handleExpanderClick = (task: Task) => {
     setTasks(tasks.map(t => (t.id === task.id ? task : t)));
     // console.log("On expander click Id:" + task.id);
+  };
+
+  // 批量展开/折叠所有任务
+  const handleBatchExpanderClick = (updatedTasks: Task[]) => {
+    setTasks(updatedTasks);
   };
 
   // 弹框状态管理
@@ -750,6 +756,12 @@ const App = () => {
           checked={enableTaskResize}
           onChange={e => setEnableTaskResize(e.target.checked)}
         />
+        <label style={{ marginLeft: 16, marginRight: 8 }}>隐藏条形图任务名：</label>
+        <input
+          type="checkbox"
+          checked={hideTaskName}
+          onChange={e => setHideTaskName(e.target.checked)}
+        />
         <label style={{ marginLeft: 16, marginRight: 8 }}>测试空数组：</label>
         <input
           type="checkbox"
@@ -770,6 +782,7 @@ const App = () => {
         onClick={handleClick}
         onSelect={handleSelect}
         onExpanderClick={handleExpanderClick}
+        onBatchExpanderClick={handleBatchExpanderClick}
         listCellWidth={isChecked ? "140px" : ""}
         nameColumnWidth="190px"  
         timeColumnLabels={{
@@ -800,13 +813,15 @@ const App = () => {
         // 拖动和拉伸控制
         enableTaskDrag={enableTaskDrag}
         enableTaskResize={enableTaskResize}
+        // 隐藏条形图任务名
+        hideTaskName={hideTaskName}
         onTaskDragEnd={handleTaskDragEnd}
         onTaskDragComplete={handleTaskDragComplete}
         // 自定义禁用规则：只有当proposer包含当前登录用户时才可以拖动
         isTaskDraggable={isTaskDraggable}
-        // 自定义展开/折叠图标：与表头保持一致
-        expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
-        collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
+        // 自定义展开/折叠图标：折叠状态显示向右▶，展开状态显示向下▼
+        expandIcon={<CaretDownOutlined style={{ fontSize: '14px' }} />}
+        collapseIcon={<CaretRightOutlined style={{ fontSize: '14px' }} />}
         // 演示自定义列渲染 + 溢出信息
         columnEllipsisMaxChars={{
           name: 12,

@@ -190,7 +190,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
                   fill="#FFFFFF"
                   fontSize="12"
                   textAnchor="middle"
-                  dominantBaseline="middle"
+                  dominantBaseline="central"
                   style={{
                     pointerEvents: "none",
                     overflow: "hidden",

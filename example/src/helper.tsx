@@ -1724,7 +1724,7 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
     displayOrder,
     status: mockTask.statusInfoVo as any, // 保留完整对象
     assignee,
-    hideChildren: false,
+    hideChildren: true, // 默认折叠
   };
   
   // 将proposer信息添加到task中（用于isTaskDraggable判断）
