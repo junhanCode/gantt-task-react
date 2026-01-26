@@ -174,6 +174,102 @@ const mockData: MockTask[] = [
         "number": 3
       },
       {
+        "id": 10005,
+        "parentId": 9999,
+        "taskNo": 202601250006,
+        "title": "【处理中】同一天任务（今天）",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 2,
+          "description": "處理中",
+          "color": "blue"
+        },
+        "levelInfo": {
+          "code": 3,
+          "description": "高",
+          "color": "#ff6a6a"
+        },
+        "createDate": "2026-01-27",
+        "deadLine": "2026-01-27",
+        "finishDate": "",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 60,
+        "children": null,
+        "number": 4
+      },
+      {
+        "id": 10006,
+        "parentId": 9999,
+        "taskNo": 202601250007,
+        "title": "【待确认】同一天任务",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 1,
+          "description": "待確認",
+          "color": "rgb(255,192,0)"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-28",
+        "deadLine": "2026-01-28",
+        "finishDate": "",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 0,
+        "children": null,
+        "number": 5
+      },
+      {
+        "id": 10007,
+        "parentId": 9999,
+        "taskNo": 202601250008,
+        "title": "【待验收】同一天任务",
+        "project": [
+          "时间测试"
+        ],
+        "statusInfoVo": {
+          "code": 3,
+          "description": "待驗收",
+          "color": "#98FB98"
+        },
+        "levelInfo": {
+          "code": 1,
+          "description": "低",
+          "color": "#9a9a9a"
+        },
+        "createDate": "2026-01-29",
+        "deadLine": "2026-01-29",
+        "finishDate": "",
+        "delayDays": 0,
+        "proposer": {
+          "employeeNo": "F1669076",
+          "name": "张三",
+          "leaveStatus": 0
+        },
+        "supervisor": [],
+        "progressPercent": 100,
+        "children": null,
+        "number": 6
+      },
+      {
         "id": 10004,
         "parentId": 9999,
         "taskNo": 202601250005,
@@ -203,7 +299,7 @@ const mockData: MockTask[] = [
         "supervisor": [],
         "progressPercent": 100,
         "children": null,
-        "number": 4
+        "number": 7
       },
       {
         "id": 10005,
@@ -1672,11 +1768,24 @@ function parseDate(dateStr: string): Date {
   return new Date(year, month - 1, day, hour || 0, minute || 0, second || 0);
 }
 
+// 规范化时间：如果开始和结束为同一天，开始时间设为00:00:00，结束时间设为23:59:59
+function normalizeTimeForSameDay(start: Date, end: Date): [Date, Date] {
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  
+  if (startDay.getTime() === endDay.getTime()) {
+    const newStart = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0);
+    const newEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
+    return [newStart, newEnd];
+  }
+  return [start, end];
+}
+
 // 将Mock数据转换为组件Task格式
 function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: string): Task {
-  const plannedStart = parseDate(mockTask.createDate);
-  const plannedEnd = parseDate(mockTask.deadLine);
-  const actualStart = parseDate(mockTask.createDate);
+  let plannedStart = parseDate(mockTask.createDate);
+  let plannedEnd = parseDate(mockTask.deadLine);
+  let actualStart = parseDate(mockTask.createDate);
   
   // 计算actualEnd：如果有finishDate则使用，否则根据delayDays和状态计算
   let actualEnd: Date;
@@ -1700,6 +1809,10 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
       actualEnd = plannedEnd;
     }
   }
+  
+  // 规范化计划时间和实际时间
+  [plannedStart, plannedEnd] = normalizeTimeForSameDay(plannedStart, plannedEnd);
+  [actualStart, actualEnd] = normalizeTimeForSameDay(actualStart, actualEnd);
   
   // 拼接项目前缀到名称：【系統開發】test 或 【a】【b】title
   const projectPrefix = mockTask.project && mockTask.project.length > 0

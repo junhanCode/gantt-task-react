@@ -173,6 +173,28 @@ const convertToBar = (
   let actualStart = task.actualStart || task.start;
   let actualEnd = task.actualEnd || task.end;
 
+  // 如果开始和结束为同一天，将开始时间设为当天第一秒，结束时间设为当天最后一秒
+  // 这样即使是同一天的任务也会有一个格子的长度显示
+  const normalizeTimeForSameDay = (start: Date, end: Date): [Date, Date] => {
+    const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    
+    // 检查是否为同一天
+    if (startDay.getTime() === endDay.getTime()) {
+      // 开始时间设为当天第一秒 (00:00:00)
+      const newStart = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0);
+      // 结束时间设为当天最后一秒 (23:59:59)
+      const newEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
+      return [newStart, newEnd];
+    }
+    return [start, end];
+  };
+
+  // 对计划时间进行规范化
+  [plannedStart, plannedEnd] = normalizeTimeForSameDay(plannedStart, plannedEnd);
+  // 对实际时间进行规范化
+  [actualStart, actualEnd] = normalizeTimeForSameDay(actualStart, actualEnd);
+
   // 如果是项目任务且有子项，自动计算时间范围
   if (task.type === "project" && allTasks) {
     const childTasks = allTasks.filter(t => t.project === task.id);

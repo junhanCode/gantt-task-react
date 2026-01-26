@@ -10,6 +10,19 @@ import dayjs from "dayjs";
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
+// 规范化时间：如果开始和结束为同一天，开始时间设为00:00:00，结束时间设为23:59:59
+const normalizeTimeForSameDay = (start: Date, end: Date): [Date, Date] => {
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  
+  if (startDay.getTime() === endDay.getTime()) {
+    const newStart = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0);
+    const newEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
+    return [newStart, newEnd];
+  }
+  return [start, end];
+};
+
 // 新增任务弹框组件
 const AddTaskModal: React.FC<{
   isOpen: boolean;
@@ -52,17 +65,27 @@ const AddTaskModal: React.FC<{
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
+      const baseStart = values.dateRange[0].toDate();
+      const baseEnd = values.dateRange[1].toDate();
+      const [normalizedBaseStart, normalizedBaseEnd] = normalizeTimeForSameDay(baseStart, baseEnd);
+
+      let plannedStart = values.plannedDateRange ? values.plannedDateRange[0].toDate() : normalizedBaseStart;
+      let plannedEnd = values.plannedDateRange ? values.plannedDateRange[1].toDate() : normalizedBaseEnd;
+      [plannedStart, plannedEnd] = normalizeTimeForSameDay(plannedStart, plannedEnd);
+
+      let actualStart = values.actualDateRange ? values.actualDateRange[0].toDate() : normalizedBaseStart;
+      let actualEnd = values.actualDateRange ? values.actualDateRange[1].toDate() : normalizedBaseEnd;
+      [actualStart, actualEnd] = normalizeTimeForSameDay(actualStart, actualEnd);
+
       const taskData: Partial<Task> = {
         name: values.name,
         type: values.type,
-        start: values.dateRange[0].toDate(),
-        end: values.dateRange[1].toDate(),
-        // 计划时间
-        plannedStart: values.plannedDateRange ? values.plannedDateRange[0].toDate() : values.dateRange[0].toDate(),
-        plannedEnd: values.plannedDateRange ? values.plannedDateRange[1].toDate() : values.dateRange[1].toDate(),
-        // 实际时间
-        actualStart: values.actualDateRange ? values.actualDateRange[0].toDate() : values.dateRange[0].toDate(),
-        actualEnd: values.actualDateRange ? values.actualDateRange[1].toDate() : values.dateRange[1].toDate(),
+        start: normalizedBaseStart,
+        end: normalizedBaseEnd,
+        plannedStart,
+        plannedEnd,
+        actualStart,
+        actualEnd,
         progress: values.progress || 0,
         project: parentTaskId,
       };
@@ -235,14 +258,33 @@ const EditTaskModal: React.FC<{
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
+      let plannedStart: Date | undefined;
+      let plannedEnd: Date | undefined;
+      let actualStart: Date | undefined;
+      let actualEnd: Date | undefined;
+
+      if (values.plannedDateRange?.[0] && values.plannedDateRange?.[1]) {
+        [plannedStart, plannedEnd] = normalizeTimeForSameDay(
+          values.plannedDateRange[0].toDate(),
+          values.plannedDateRange[1].toDate()
+        );
+      }
+
+      if (values.actualDateRange?.[0] && values.actualDateRange?.[1]) {
+        [actualStart, actualEnd] = normalizeTimeForSameDay(
+          values.actualDateRange[0].toDate(),
+          values.actualDateRange[1].toDate()
+        );
+      }
+
       const taskData: Partial<Task> = {
         id: task.id,
         name: values.name,
         type: values.type,
-        plannedStart: values.plannedDateRange?.[0]?.toDate(),
-        plannedEnd: values.plannedDateRange?.[1]?.toDate(),
-        actualStart: values.actualDateRange?.[0]?.toDate(),
-        actualEnd: values.actualDateRange?.[1]?.toDate(),
+        plannedStart,
+        plannedEnd,
+        actualStart,
+        actualEnd,
         progress: values.progress || 0,
       };
       onConfirm(taskData);
