@@ -5,6 +5,7 @@ import { Task } from "../../types/public-types";
 export const OATaskListTable: React.FC<{
   rowHeight: number;
   rowWidth: string;
+  nameColumnWidth?: string;
   fontFamily: string;
   fontSize: string;
   locale: string;
@@ -48,6 +49,7 @@ export const OATaskListTable: React.FC<{
 }> = ({
   rowHeight,
   rowWidth,
+  nameColumnWidth,
   tasks,
   allTasks,
   fontFamily,
@@ -69,7 +71,7 @@ export const OATaskListTable: React.FC<{
   onDeleteTask,
   tableStyles,
 }) => {
-  // 狀態顏色映射
+  // 狀態顏色映射 
   const statusColors: Record<string, string> = {
     "待驗收": "#A2EF4D",
     "處理中": "#0F40F5",
@@ -124,7 +126,7 @@ export const OATaskListTable: React.FC<{
       }}
     >
       <colgroup>
-        <col style={{ width: rowWidth }} />
+        <col style={{ width: nameColumnWidth || rowWidth }} />
         <col style={{ width: "100px" }} />
         <col style={{ width: "100px" }} />
         {showOperationsColumn && <col style={{ width: operationsColumnWidth ?? "120px" }} />}

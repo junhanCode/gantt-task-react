@@ -7,6 +7,7 @@ export const OATaskListHeader: React.FC<{
   fontFamily: string;
   fontSize: string;
   headerGutterRight?: number;
+  nameColumnWidth?: string;
   expandAllLeafTasks?: boolean;
   onToggleExpandAll?: () => void;
   expandIcon?: React.ReactNode;
@@ -32,7 +33,8 @@ export const OATaskListHeader: React.FC<{
   headerHeight, 
   fontFamily, 
   fontSize, 
-  rowWidth, 
+  rowWidth,
+  nameColumnWidth,
   headerGutterRight,
   expandAllLeafTasks = true,
   onToggleExpandAll,
@@ -42,7 +44,7 @@ export const OATaskListHeader: React.FC<{
   operationsColumnLabel,
   showOperationsColumn = true,
   tableStyles,
-}) => {
+}) => { 
   return (
     <div
       className={styles.ganttTable}
@@ -71,8 +73,8 @@ export const OATaskListHeader: React.FC<{
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
-            minWidth: rowWidth,
-            maxWidth: rowWidth,
+            minWidth: nameColumnWidth || rowWidth,
+            maxWidth: nameColumnWidth || rowWidth,
             ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
