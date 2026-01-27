@@ -403,6 +403,7 @@ const App = () => {
   const [enableTaskDrag, setEnableTaskDrag] = React.useState<boolean>(false);
   const [enableTaskResize, setEnableTaskResize] = React.useState<boolean>(true);
   const [hideTaskName, setHideTaskName] = React.useState<boolean>(false);
+  const [nameColumnWidth, setNameColumnWidth] = React.useState<number>(190);
   
   // 模拟当前登录用户（用于演示isTaskDraggable功能）
   // 注意：第一个mock数据的proposer是"张三"，其他是"何聪"
@@ -811,6 +812,28 @@ const App = () => {
           onChange={e => setTestEmptyArray(e.target.checked)}
         />
       </div>
+      {/* 任务名列宽控制 */}
+      <div style={{ margin: "8px 0", display: "flex", alignItems: "center", gap: "12px" }}>
+        <label>任务名列宽度：</label>
+        <InputNumber
+          size="small"
+          min={100}
+          max={500}
+          value={nameColumnWidth}
+          onChange={(value) => setNameColumnWidth(value || 190)}
+          style={{ width: '100px' }}
+          addonAfter="px"
+        />
+        <Button 
+          size="small" 
+          onClick={() => setNameColumnWidth(190)}
+        >
+          重置为默认(190px)
+        </Button>
+        <span style={{ color: '#666', fontSize: '12px' }}>
+          当前宽度: {nameColumnWidth}px（适用于OA模式的任务标题列）
+        </span>
+      </div>
       <Gantt
         // 需要依赖库版本包含 forwardRef 才可生效
         // @ts-ignore
@@ -826,7 +849,7 @@ const App = () => {
         onExpanderClick={handleExpanderClick}
         onBatchExpanderClick={handleBatchExpanderClick}
         listCellWidth={isChecked ? "140px" : ""}
-        nameColumnWidth="190px"  
+        nameColumnWidth={`${nameColumnWidth}px`}
         timeColumnLabels={{
           plannedStart: "Planned Start",
           plannedEnd: "Planned End",
