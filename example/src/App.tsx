@@ -408,6 +408,7 @@ const App = () => {
   // 多选列状态
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
   const [showRowSelection, setShowRowSelection] = React.useState<boolean>(true);
+  const [enableCascade, setEnableCascade] = React.useState<boolean>(true); // 是否启用级联选择
   
   // 模拟当前登录用户（用于演示isTaskDraggable功能）
   // 注意：第一个mock数据的proposer是"张三"，其他是"何聪"
@@ -661,11 +662,115 @@ const App = () => {
     });
   };
 
-  // 多选列变化处理
+  // 获取某个任务的所有子任务（递归）
+  const getAllChildren = (parentId: string): Task[] => {
+    const children: Task[] = [];
+    const directChildren = tasks.filter(t => t.project === parentId);
+    
+    directChildren.forEach(child => {
+      children.push(child);
+      // 递归获取子任务的子任务
+      const grandChildren = getAllChildren(child.id);
+      children.push(...grandChildren);
+    });
+    
+    return children;
+  };
+
+  // 获取某个任务的直接子任务
+  const getDirectChildren = (parentId: string): Task[] => {
+    return tasks.filter(t => t.project === parentId);
+  };
+
+  // 多选列变化处理（支持级联选择）
   const handleRowSelectionChange = (selectedKeys: string[], selectedRows: Task[]) => {
-    console.log("选中的任务 IDs:", selectedKeys);
-    console.log("选中的任务:", selectedRows);
-    setSelectedRowKeys(selectedKeys);
+    console.log("原始选中的任务 IDs:", selectedKeys);
+    console.log("原始选中的任务:", selectedRows);
+    
+    // 如果未启用级联选择，直接设置
+    if (!enableCascade) {
+      setSelectedRowKeys(selectedKeys);
+      return;
+    }
+    
+    // 计算应该添加或移除的 keys
+    const previousKeys = new Set(selectedRowKeys);
+    const newKeys = new Set(selectedKeys);
+    
+    // 找出新增的和移除的 keys
+    const addedKeys = selectedKeys.filter(key => !previousKeys.has(key));
+    const removedKeys = selectedRowKeys.filter(key => !newKeys.has(key));
+    
+    let finalKeys = [...selectedKeys];
+    
+    // 处理新增的任务 - 自动选中所有子任务
+    addedKeys.forEach(addedKey => {
+      const children = getAllChildren(addedKey);
+      const childrenKeys = children.map(c => c.id);
+      // 添加所有子任务的 keys
+      childrenKeys.forEach(childKey => {
+        if (!finalKeys.includes(childKey)) {
+          finalKeys.push(childKey);
+        }
+      });
+    });
+    
+    // 处理移除的任务 - 自动取消所有子任务
+    removedKeys.forEach(removedKey => {
+      const children = getAllChildren(removedKey);
+      const childrenKeys = children.map(c => c.id);
+      // 移除所有子任务的 keys
+      finalKeys = finalKeys.filter(key => 
+        key !== removedKey && !childrenKeys.includes(key)
+      );
+    });
+    
+    // 反向级联：检查父任务 - 如果所有子任务都被选中，自动选中父任务
+    const checkAndSelectParents = (keys: string[]): string[] => {
+      let resultKeys = [...keys];
+      const keysSet = new Set(resultKeys);
+      
+      // 获取所有可能的父任务
+      const allParentIds = new Set(
+        tasks
+          .filter(t => t.project)
+          .map(t => t.project!)
+      );
+      
+      allParentIds.forEach(parentId => {
+        // 如果父任务已经被选中，跳过
+        if (keysSet.has(parentId)) return;
+        
+        // 获取该父任务的所有直接子任务
+        const children = getDirectChildren(parentId);
+        if (children.length === 0) return;
+        
+        // 检查是否所有子任务都被选中
+        const allChildrenSelected = children.every(child => keysSet.has(child.id));
+        
+        if (allChildrenSelected) {
+          // 所有子任务都被选中，自动选中父任务
+          resultKeys.push(parentId);
+          keysSet.add(parentId);
+        }
+      });
+      
+      return resultKeys;
+    };
+    
+    // 递归检查并选中父任务（可能需要多层级联）
+    let previousLength = 0;
+    let currentKeys = finalKeys;
+    
+    // 最多递归10层，防止无限循环
+    for (let i = 0; i < 10; i++) {
+      currentKeys = checkAndSelectParents(currentKeys);
+      if (currentKeys.length === previousLength) break;
+      previousLength = currentKeys.length;
+    }
+    
+    console.log("级联后的任务 IDs:", currentKeys);
+    setSelectedRowKeys(currentKeys);
   };
 
   // 批量删除选中的任务
@@ -707,6 +812,16 @@ const App = () => {
             显示多选列
           </label>
           
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <input
+              type="checkbox"
+              checked={enableCascade}
+              onChange={e => setEnableCascade(e.target.checked)}
+              disabled={!showRowSelection}
+            />
+            启用级联选择
+          </label>
+          
           <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
             已选择：{selectedRowKeys.length} 个任务
           </span>
@@ -729,6 +844,11 @@ const App = () => {
             清空选择
           </Button>
         </div>
+        {enableCascade && (
+          <div style={{ marginTop: 8, fontSize: '12px', color: '#52c41a', fontStyle: 'italic' }}>
+            💡 级联选择已启用：选中父任务会自动选中所有子任务
+          </div>
+        )}
         {selectedRowKeys.length > 0 && (
           <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
             选中的任务 IDs: {selectedRowKeys.join(", ")}
