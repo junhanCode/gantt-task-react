@@ -46,6 +46,13 @@ export const OATaskListTable: React.FC<{
     headerBackgroundColor?: string;
     headerTextColor?: string;
   };
+  rowSelection?: {
+    selectedRowKeys?: string[];
+    onChange?: (selectedRowKeys: string[], selectedRows: Task[]) => void;
+    rowKey?: keyof Task | ((record: Task) => string);
+    columnWidth?: string;
+    getCheckboxProps?: (record: Task) => { disabled?: boolean };
+  };
 }> = ({
   rowHeight,
   rowWidth,
@@ -70,7 +77,47 @@ export const OATaskListTable: React.FC<{
   onEditTask,
   onDeleteTask,
   tableStyles,
+  rowSelection,
 }) => {
+  // 获取行的 key
+  const getRowKey = (task: Task): string => {
+    if (!rowSelection?.rowKey) return task.id;
+    if (typeof rowSelection.rowKey === 'function') {
+      return rowSelection.rowKey(task);
+    }
+    return String(task[rowSelection.rowKey]);
+  };
+
+  // 判断某行是否被选中
+  const isRowSelected = (task: Task): boolean => {
+    if (!rowSelection?.selectedRowKeys) return false;
+    const key = getRowKey(task);
+    return rowSelection.selectedRowKeys.includes(key);
+  };
+
+  // 处理单行复选框变化
+  const handleRowCheckboxChange = (task: Task, checked: boolean) => {
+    if (!rowSelection?.onChange) return;
+    
+    const key = getRowKey(task);
+    let newSelectedKeys: string[];
+    
+    if (checked) {
+      newSelectedKeys = [...(rowSelection.selectedRowKeys || []), key];
+    } else {
+      newSelectedKeys = (rowSelection.selectedRowKeys || []).filter(k => k !== key);
+    }
+    
+    const selectedRows = tasks.filter(t => newSelectedKeys.includes(getRowKey(t)));
+    rowSelection.onChange(newSelectedKeys, selectedRows);
+  };
+
+  // 获取复选框的禁用状态
+  const getCheckboxDisabled = (task: Task): boolean => {
+    if (!rowSelection?.getCheckboxProps) return false;
+    const props = rowSelection.getCheckboxProps(task);
+    return props.disabled || false;
+  };
   // 狀態顏色映射 
   const statusColors: Record<string, string> = {
     "待驗收": "#A2EF4D",
@@ -126,6 +173,7 @@ export const OATaskListTable: React.FC<{
       }}
     >
       <colgroup>
+        {rowSelection && <col style={{ width: rowSelection.columnWidth || "50px" }} />}
         <col style={{ width: nameColumnWidth || rowWidth }} />
         <col style={{ width: "100px" }} />
         <col style={{ width: "100px" }} />
@@ -173,6 +221,26 @@ export const OATaskListTable: React.FC<{
                 : tableStyles?.row || {}),
             }}
           >
+            {/* 多選列 */}
+            {rowSelection && (
+              <td
+                className={styles.taskListCell}
+                style={{
+                  textAlign: "center",
+                  ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                  ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                  ...(tableStyles?.cell || {}),
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={isRowSelected(t)}
+                  disabled={getCheckboxDisabled(t)}
+                  onChange={(e) => handleRowCheckboxChange(t, e.target.checked)}
+                  style={{ cursor: getCheckboxDisabled(t) ? 'not-allowed' : 'pointer' }}
+                />
+              </td>
+            )}
             {/* 任務標題列 */}
             {(() => {
               const meta = getEllipsisData("name", t.name);

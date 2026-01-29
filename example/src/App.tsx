@@ -405,6 +405,10 @@ const App = () => {
   const [hideTaskName, setHideTaskName] = React.useState<boolean>(false);
   const [nameColumnWidth, setNameColumnWidth] = React.useState<number>(190);
   
+  // 多选列状态
+  const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
+  const [showRowSelection, setShowRowSelection] = React.useState<boolean>(true);
+  
   // 模拟当前登录用户（用于演示isTaskDraggable功能）
   // 注意：第一个mock数据的proposer是"张三"，其他是"何聪"
   // 所以只有proposer为"何聪"的任务才能拖动计划结束时间，第一个任务（proposer为"张三"）的右侧手柄应该被禁用
@@ -657,8 +661,81 @@ const App = () => {
     });
   };
 
+  // 多选列变化处理
+  const handleRowSelectionChange = (selectedKeys: string[], selectedRows: Task[]) => {
+    console.log("选中的任务 IDs:", selectedKeys);
+    console.log("选中的任务:", selectedRows);
+    setSelectedRowKeys(selectedKeys);
+  };
+
+  // 批量删除选中的任务
+  const handleBatchDelete = () => {
+    if (selectedRowKeys.length === 0) {
+      alert("请先选择要删除的任务");
+      return;
+    }
+    
+    const conf = window.confirm(`确定要删除选中的 ${selectedRowKeys.length} 个任务吗？`);
+    if (conf) {
+      const newTasks = tasks.filter(t => !selectedRowKeys.includes(t.id));
+      setTasks(newTasks);
+      setSelectedRowKeys([]);
+      alert(`已删除 ${selectedRowKeys.length} 个任务`);
+    }
+  };
+
   return (
     <div className="Wrapper">
+      {/* 多选列演示控制面板 */}
+      <div style={{ 
+        marginBottom: 16, 
+        padding: '12px', 
+        backgroundColor: '#e6f7ff', 
+        borderRadius: '4px',
+        border: '1px solid #91d5ff'
+      }}>
+        <div style={{ marginBottom: 8, fontWeight: 'bold', fontSize: '14px' }}>
+          ✅ 多选列功能演示
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <input
+              type="checkbox"
+              checked={showRowSelection}
+              onChange={e => setShowRowSelection(e.target.checked)}
+            />
+            显示多选列
+          </label>
+          
+          <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+            已选择：{selectedRowKeys.length} 个任务
+          </span>
+          
+          <Button 
+            type="primary" 
+            danger
+            size="small" 
+            onClick={handleBatchDelete}
+            disabled={selectedRowKeys.length === 0}
+          >
+            批量删除 ({selectedRowKeys.length})
+          </Button>
+          
+          <Button 
+            size="small" 
+            onClick={() => setSelectedRowKeys([])}
+            disabled={selectedRowKeys.length === 0}
+          >
+            清空选择
+          </Button>
+        </div>
+        {selectedRowKeys.length > 0 && (
+          <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+            选中的任务 IDs: {selectedRowKeys.join(", ")}
+          </div>
+        )}
+      </div>
+      
       {/* 性能测试数据控制面板 */}
       <div style={{ 
         marginBottom: 16, 
@@ -951,6 +1028,18 @@ const App = () => {
         onOATaskViewModeChange={(mode) => {
           setOATaskViewMode(mode);
         }}
+        // 多选列配置
+        rowSelection={showRowSelection ? {
+          selectedRowKeys,
+          onChange: handleRowSelectionChange,
+          rowKey: "id",
+          columnWidth: "50px",
+          showSelectAll: true,
+          // 所有任务都可以选中，包括有子任务的项目
+          // getCheckboxProps: (record) => ({
+          //   disabled: record.type === "project", // 如需禁用项目类型，取消注释此行
+          // }),
+        } : undefined}
       />
       
       {/* 新增任务弹框 */}

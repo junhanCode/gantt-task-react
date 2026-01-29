@@ -29,6 +29,14 @@ export const OATaskListHeader: React.FC<{
     headerBackgroundColor?: string;
     headerTextColor?: string;
   };
+  rowSelection?: {
+    columnWidth?: string;
+    columnTitle?: React.ReactNode;
+    showSelectAll?: boolean;
+  };
+  allSelected?: boolean;
+  indeterminate?: boolean;
+  onSelectAll?: (checked: boolean) => void;
 }> = ({ 
   headerHeight, 
   fontFamily, 
@@ -44,6 +52,10 @@ export const OATaskListHeader: React.FC<{
   operationsColumnLabel,
   showOperationsColumn = true,
   tableStyles,
+  rowSelection,
+  allSelected = false,
+  indeterminate = false,
+  onSelectAll,
 }) => { 
   return (
     <div
@@ -69,6 +81,46 @@ export const OATaskListHeader: React.FC<{
           ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
         }}
       >
+        {/* 多選列 */}
+        {rowSelection && (
+          <React.Fragment>
+            <div
+              className={styles.ganttTable_HeaderItem}
+              style={{
+                minWidth: rowSelection.columnWidth || "50px",
+                maxWidth: rowSelection.columnWidth || "50px",
+                textAlign: 'center',
+                ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+                ...(tableStyles?.headerCell || {}),
+              }}
+            >
+              {rowSelection.showSelectAll !== false && onSelectAll ? (
+                <input
+                  type="checkbox"
+                  checked={allSelected}
+                  ref={(input) => {
+                    if (input) {
+                      input.indeterminate = indeterminate;
+                    }
+                  }}
+                  onChange={(e) => onSelectAll(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
+                />
+              ) : (
+                rowSelection.columnTitle || <span>選擇</span>
+              )}
+            </div>
+            <div
+              className={styles.ganttTable_HeaderSeparator}
+              style={{
+                height: headerHeight * 0.6,
+                marginTop: headerHeight * 0.2,
+              }}
+            />
+          </React.Fragment>
+        )}
         {/* 任務標題列 */}
         <div
           className={styles.ganttTable_HeaderItem}

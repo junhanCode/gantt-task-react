@@ -307,6 +307,23 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
    * @returns 返回true表示允许该操作，false表示禁止
    */
   isTaskDraggable?: (task: Task, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
+  /** 多选列配置 */
+  rowSelection?: {
+    /** 指定选中项的 key 数组，需要和 rowKey 配合使用 */
+    selectedRowKeys?: string[];
+    /** 选中项发生变化时的回调 */
+    onChange?: (selectedRowKeys: string[], selectedRows: Task[]) => void;
+    /** 表格行 key 的取值字段，默认为 'id' */
+    rowKey?: keyof Task | ((record: Task) => string);
+    /** 自定义列表选择框宽度，默认 "50px" */
+    columnWidth?: string;
+    /** 自定义列表选择框标题 */
+    columnTitle?: React.ReactNode;
+    /** 是否显示全选复选框，默认 true */
+    showSelectAll?: boolean;
+    /** 禁用的行，返回 true 表示禁用该行的复选框 */
+    getCheckboxProps?: (record: Task) => { disabled?: boolean };
+  };
 }
 
 export interface GanttRef {

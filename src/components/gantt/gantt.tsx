@@ -100,6 +100,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   onCellOverflow,
   tableStyles,
   isTaskDraggable,
+  rowSelection,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -138,6 +139,73 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const [selectedTask, setSelectedTask] = useState<BarTask>();
   const [failedTask, setFailedTask] = useState<BarTask | null>(null);
   const [isTaskListCollapsed, setIsTaskListCollapsed] = useState(false);
+
+  // 多选列状态管理
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>(rowSelection?.selectedRowKeys || []);
+  
+  // 同步外部传入的 selectedRowKeys
+  useEffect(() => {
+    if (rowSelection?.selectedRowKeys) {
+      setSelectedRowKeys(rowSelection.selectedRowKeys);
+    }
+  }, [rowSelection?.selectedRowKeys]);
+
+  // 获取行的 key
+  const getRowKey = (task: Task): string => {
+    if (!rowSelection?.rowKey) return task.id;
+    if (typeof rowSelection.rowKey === 'function') {
+      return rowSelection.rowKey(task);
+    }
+    return String(task[rowSelection.rowKey]);
+  };
+
+  // 处理多选变化
+  const handleRowSelectionChange = (newSelectedKeys: string[], newSelectedRows: Task[]) => {
+    setSelectedRowKeys(newSelectedKeys);
+    if (rowSelection?.onChange) {
+      rowSelection.onChange(newSelectedKeys, newSelectedRows);
+    }
+  };
+
+  // 处理全选
+  const handleSelectAll = (checked: boolean) => {
+    if (!rowSelection) return;
+    
+    const availableTasks = tasks.filter(t => {
+      if (!rowSelection.getCheckboxProps) return true;
+      const props = rowSelection.getCheckboxProps(t);
+      return !props.disabled;
+    });
+    
+    const newSelectedKeys = checked ? availableTasks.map(t => getRowKey(t)) : [];
+    const newSelectedRows = checked ? availableTasks : [];
+    
+    handleRowSelectionChange(newSelectedKeys, newSelectedRows);
+  };
+
+  // 计算全选状态
+  const allSelected = rowSelection ? (() => {
+    const availableTasks = tasks.filter(t => {
+      if (!rowSelection.getCheckboxProps) return true;
+      const props = rowSelection.getCheckboxProps(t);
+      return !props.disabled;
+    });
+    
+    if (availableTasks.length === 0) return false;
+    return availableTasks.every(t => selectedRowKeys.includes(getRowKey(t)));
+  })() : false;
+
+  const indeterminate = rowSelection ? (() => {
+    const availableTasks = tasks.filter(t => {
+      if (!rowSelection.getCheckboxProps) return true;
+      const props = rowSelection.getCheckboxProps(t);
+      return !props.disabled;
+    });
+    
+    if (availableTasks.length === 0) return false;
+    const selectedCount = availableTasks.filter(t => selectedRowKeys.includes(getRowKey(t))).length;
+    return selectedCount > 0 && selectedCount < availableTasks.length;
+  })() : false;
 
   const svgWidth = dateSetup.dates.length * columnWidth;
   const ganttFullHeight = barTasks.length * rowHeight;
@@ -756,10 +824,45 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     expandIcon,
     collapseIcon,
     TaskListHeader: viewType === "oaTask" 
-      ? (props: any) => <OATaskListHeader {...props} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} operationsColumnLabel={operationsColumnLabel} showOperationsColumn={showOperationsColumn} />
+      ? (props: any) => {
+          const headerProps = {
+            ...props,
+            expandAllLeafTasks,
+            onToggleExpandAll: handleToggleExpandAll,
+            operationsColumnWidth,
+            operationsColumnLabel,
+            showOperationsColumn,
+            rowSelection,
+            allSelected,
+            indeterminate,
+            onSelectAll: handleSelectAll,
+          };
+          return <OATaskListHeader {...headerProps} />;
+        }
       : TaskListHeader,
     TaskListTable: viewType === "oaTask" 
-      ? (props: any) => <OATaskListTable {...props} allTasks={tasks} expandAllLeafTasks={expandAllLeafTasks} onToggleExpandAll={handleToggleExpandAll} operationsColumnWidth={operationsColumnWidth} showOperationsColumn={showOperationsColumn} onAddTask={onAddTask} onEditTask={onEditTask} onDeleteTask={onDeleteTask} columnRenderers={columnRenderers} columnEllipsisMaxChars={columnEllipsisMaxChars} onCellOverflow={onCellOverflow} />
+      ? (props: any) => {
+          const tablePropsData = {
+            ...props,
+            allTasks: tasks,
+            expandAllLeafTasks,
+            onToggleExpandAll: handleToggleExpandAll,
+            operationsColumnWidth,
+            showOperationsColumn,
+            onAddTask,
+            onEditTask,
+            onDeleteTask,
+            columnRenderers,
+            columnEllipsisMaxChars,
+            onCellOverflow,
+            rowSelection: rowSelection ? {
+              ...rowSelection,
+              selectedRowKeys,
+              onChange: handleRowSelectionChange,
+            } : undefined,
+          };
+          return <OATaskListTable {...tablePropsData} />;
+        }
       : TaskListTable,
     nameColumnWidth,
     timeColumnLabels,
