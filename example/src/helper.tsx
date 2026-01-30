@@ -41,27 +41,27 @@ interface MockTask {
 // Mock数据
 const mockData: MockTask[] = [
   {
-    "id": 9999,
+    "id": 6794,
     "parentId": 0,
-    "taskNo": 202601250001,
-    "title": "实际时间测试任务",
+    "taskNo": 202507110034,
+    "title": "哈哈哈",
     "project": [
-      "时间测试"
+      "Others"
     ],
     "statusInfoVo": {
-      "code": 2,
-      "description": "處理中",
-      "color": "blue"
+      "code": 1,
+      "description": "待確認",
+      "color": "rgb(255,192,0)"
     },
     "levelInfo": {
       "code": 2,
       "description": "中",
       "color": "#3cb371"
     },
-    "createDate": "2026-01-20",
-    "deadLine": "2026-01-30",
+    "createDate": "2025-07-11",
+    "deadLine": "2025-07-21",
     "finishDate": "",
-    "delayDays": 0,
+    "delayDays": 193,
     "proposer": {
       "employeeNo": "F1669075",
       "name": "何聪",
@@ -69,149 +69,39 @@ const mockData: MockTask[] = [
     },
     "supervisor": [
       {
-        "type": "employee",
+        "type": "EMPLOYEE",
         "name": "何聪",
         "identity": "F1669075",
         "leaveStatus": 0
+      },
+      {
+        "type": "EMPLOYEE",
+        "name": "凌峰",
+        "identity": "G1659743",
+        "leaveStatus": 0
+      },
+      {
+        "type": "EMPLOYEE",
+        "name": "林俊翰",
+        "identity": "G1659987",
+        "leaveStatus": 0
+      },
+      {
+        "type": "EMPLOYEE",
+        "name": "AvelinoBuenafeIII",
+        "identity": "FSHK277",
+        "leaveStatus": 0
       }
     ],
-    "progressPercent": 50,
+    "progressPercent": 0,
     "children": [
       {
-        "id": 10001,
-        "parentId": 9999,
-        "taskNo": 202601250002,
-        "title": "同一天完成的任务1",
+        "id": 8762,
+        "parentId": 6794,
+        "taskNo": 202512120002,
+        "title": "哈哈哈",
         "project": [
-          "时间测试"
-        ],
-        "statusInfoVo": {
-          "code": 4,
-          "description": "已完成",
-          "color": "#008000"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2026-01-22",
-        "deadLine": "2026-01-22",
-        "finishDate": "2026-01-22 18:30:00",
-        "delayDays": 0,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [],
-        "progressPercent": 100,
-        "children": null,
-        "number": 1
-      },
-      {
-        "id": 10002,
-        "parentId": 9999,
-        "taskNo": 202601250003,
-        "title": "同一天完成的任务2（上午开始下午结束）",
-        "project": [
-          "时间测试"
-        ],
-        "statusInfoVo": {
-          "code": 4,
-          "description": "已完成",
-          "color": "#008000"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2026-01-23",
-        "deadLine": "2026-01-23",
-        "finishDate": "2026-01-23 17:00:00",
-        "delayDays": 0,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [],
-        "progressPercent": 100,
-        "children": null,
-        "number": 2
-      },
-      {
-        "id": 10003,
-        "parentId": 9999,
-        "taskNo": 202601250004,
-        "title": "跨两天完成的任务",
-        "project": [
-          "时间测试"
-        ],
-        "statusInfoVo": {
-          "code": 4,
-          "description": "已完成",
-          "color": "#008000"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2026-01-24",
-        "deadLine": "2026-01-25",
-        "finishDate": "2026-01-25 14:30:00",
-        "delayDays": 0,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [],
-        "progressPercent": 100,
-        "children": null,
-        "number": 3
-      },
-      {
-        "id": 10005,
-        "parentId": 9999,
-        "taskNo": 202601250006,
-        "title": "【处理中】同一天任务（今天）",
-        "project": [
-          "时间测试"
-        ],
-        "statusInfoVo": {
-          "code": 2,
-          "description": "處理中",
-          "color": "blue"
-        },
-        "levelInfo": {
-          "code": 3,
-          "description": "高",
-          "color": "#ff6a6a"
-        },
-        "createDate": "2026-01-27",
-        "deadLine": "2026-01-27",
-        "finishDate": "",
-        "delayDays": 0,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [],
-        "progressPercent": 60,
-        "children": null,
-        "number": 4
-      },
-      {
-        "id": 10006,
-        "parentId": 9999,
-        "taskNo": 202601250007,
-        "title": "【待确认】同一天任务",
-        "project": [
-          "时间测试"
+          "Others"
         ],
         "statusInfoVo": {
           "code": 1,
@@ -223,211 +113,261 @@ const mockData: MockTask[] = [
           "description": "中",
           "color": "#3cb371"
         },
-        "createDate": "2026-01-28",
-        "deadLine": "2026-01-28",
+        "createDate": "2025-12-12",
+        "deadLine": "2025-07-12",
         "finishDate": "",
-        "delayDays": 0,
+        "delayDays": 202,
         "proposer": {
           "employeeNo": "F1669075",
           "name": "何聪",
           "leaveStatus": 0
         },
-        "supervisor": [],
+        "supervisor": [
+          {
+            "type": "EMPLOYEE",
+            "name": "凌峰",
+            "identity": "G1659743",
+            "leaveStatus": 0
+          }
+        ],
+        "progressPercent": 0,
+        "children": null,
+        "number": 1
+      },
+      {
+        "id": 8763,
+        "parentId": 6794,
+        "taskNo": 202512120004,
+        "title": "哈哈哈",
+        "project": [
+          "Others"
+        ],
+        "statusInfoVo": {
+          "code": 1,
+          "description": "待確認",
+          "color": "rgb(255,192,0)"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2025-12-12",
+        "deadLine": "2025-07-12",
+        "finishDate": "",
+        "delayDays": 202,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [
+          {
+            "type": "EMPLOYEE",
+            "name": "吳凌紅",
+            "identity": "G1658684",
+            "leaveStatus": 0
+          }
+        ],
+        "progressPercent": 0,
+        "children": null,
+        "number": 2
+      },
+      {
+        "id": 8764,
+        "parentId": 6794,
+        "taskNo": 202512120006,
+        "title": "哈哈哈",
+        "project": [
+          "Others"
+        ],
+        "statusInfoVo": {
+          "code": 1,
+          "description": "待確認",
+          "color": "rgb(255,192,0)"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2025-12-12",
+        "deadLine": "2025-07-12",
+        "finishDate": "",
+        "delayDays": 202,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [
+          {
+            "type": "EMPLOYEE",
+            "name": "張占騰",
+            "identity": "G1658973",
+            "leaveStatus": 0
+          }
+        ],
+        "progressPercent": 0,
+        "children": null,
+        "number": 3
+      },
+      {
+        "id": 8765,
+        "parentId": 6794,
+        "taskNo": 202512120008,
+        "title": "哈哈哈",
+        "project": [
+          "Others"
+        ],
+        "statusInfoVo": {
+          "code": 1,
+          "description": "待確認",
+          "color": "rgb(255,192,0)"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2025-12-12",
+        "deadLine": "2025-07-12",
+        "finishDate": "",
+        "delayDays": 202,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [
+          {
+            "type": "EMPLOYEE",
+            "name": "林俊翰",
+            "identity": "G1659987",
+            "leaveStatus": 0
+          }
+        ],
+        "progressPercent": 0,
+        "children": null,
+        "number": 4
+      },
+      {
+        "id": 9286,
+        "parentId": 6794,
+        "taskNo": 202601190002,
+        "title": "大大",
+        "project": [
+          "Others"
+        ],
+        "statusInfoVo": {
+          "code": 1,
+          "description": "待確認",
+          "color": "rgb(255,192,0)"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-19",
+        "deadLine": "2026-01-20",
+        "finishDate": "",
+        "delayDays": 10,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [
+          {
+            "type": "EMPLOYEE",
+            "name": "何聪",
+            "identity": "F1669075",
+            "leaveStatus": 0
+          }
+        ],
         "progressPercent": 0,
         "children": null,
         "number": 5
-      },
+      }
+    ],
+    "number": 0
+  },
+  {
+    "id": 8745,
+    "parentId": 0,
+    "taskNo": 202512100010,
+    "title": "不想吃宣传部",
+    "project": [
+      "MW-W (MW25)"
+    ],
+    "statusInfoVo": {
+      "code": 1,
+      "description": "待確認",
+      "color": "rgb(255,192,0)"
+    },
+    "levelInfo": {
+      "code": 2,
+      "description": "中",
+      "color": "#3cb371"
+    },
+    "createDate": "2025-12-10",
+    "deadLine": "2025-12-23",
+    "finishDate": "",
+    "delayDays": 38,
+    "proposer": {
+      "employeeNo": "F1669075",
+      "name": "何聪",
+      "leaveStatus": 0
+    },
+    "supervisor": [
       {
-        "id": 10007,
-        "parentId": 9999,
-        "taskNo": 202601250008,
-        "title": "【待验收】同一天任务",
+        "type": "EMPLOYEE",
+        "name": "何聪",
+        "identity": "F1669075",
+        "leaveStatus": 0
+      }
+    ],
+    "progressPercent": 0,
+    "children": [
+      {
+        "id": 9285,
+        "parentId": 8745,
+        "taskNo": 202601170002,
+        "title": "yr",
         "project": [
-          "时间测试"
+          "MW-W (MW25)"
         ],
         "statusInfoVo": {
-          "code": 3,
-          "description": "待驗收",
-          "color": "#98FB98"
-        },
-        "levelInfo": {
           "code": 1,
-          "description": "低",
-          "color": "#9a9a9a"
-        },
-        "createDate": "2026-01-29",
-        "deadLine": "2026-01-29",
-        "finishDate": "",
-        "delayDays": 0,
-        "proposer": {
-          "employeeNo": "F1669076",
-          "name": "张三",
-          "leaveStatus": 0
-        },
-        "supervisor": [],
-        "progressPercent": 100,
-        "children": null,
-        "number": 6
-      },
-      {
-        "id": 10004,
-        "parentId": 9999,
-        "taskNo": 202601250005,
-        "title": "跨多天完成的任务（3天）",
-        "project": [
-          "时间测试"
-        ],
-        "statusInfoVo": {
-          "code": 4,
-          "description": "已完成",
-          "color": "#008000"
+          "description": "待確認",
+          "color": "rgb(255,192,0)"
         },
         "levelInfo": {
           "code": 2,
           "description": "中",
           "color": "#3cb371"
         },
-        "createDate": "2026-01-21",
-        "deadLine": "2026-01-24",
-        "finishDate": "2026-01-24 16:00:00",
-        "delayDays": 0,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [],
-        "progressPercent": 100,
-        "children": null,
-        "number": 7
-      },
-      {
-        "id": 10005,
-        "parentId": 9999,
-        "taskNo": 202601250006,
-        "title": "进行中-同一天内（今天）",
-        "project": [
-          "时间测试"
-        ],
-        "statusInfoVo": {
-          "code": 2,
-          "description": "處理中",
-          "color": "blue"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2026-01-25",
-        "deadLine": "2026-01-25",
+        "createDate": "2026-01-17",
+        "deadLine": "2026-01-18",
         "finishDate": "",
-        "delayDays": 0,
+        "delayDays": 12,
         "proposer": {
           "employeeNo": "F1669075",
           "name": "何聪",
           "leaveStatus": 0
         },
-        "supervisor": [],
-        "progressPercent": 60,
-        "children": null,
-        "number": 5
-      },
-      {
-        "id": 10006,
-        "parentId": 9999,
-        "taskNo": 202601250007,
-        "title": "进行中-跨天执行",
-        "project": [
-          "时间测试"
+        "supervisor": [
+          {
+            "type": "EMPLOYEE",
+            "name": "Anthonne Rey Araojo Castillo",
+            "identity": "FSHK280",
+            "leaveStatus": 0
+          }
         ],
-        "statusInfoVo": {
-          "code": 2,
-          "description": "處理中",
-          "color": "blue"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2026-01-23",
-        "deadLine": "2026-01-26",
-        "finishDate": "",
-        "delayDays": 0,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [],
-        "progressPercent": 45,
+        "progressPercent": 0,
         "children": null,
-        "number": 6
-      },
-      {
-        "id": 10007,
-        "parentId": 9999,
-        "taskNo": 202601250008,
-        "title": "延期任务-从昨天到今天",
-        "project": [
-          "时间测试"
-        ],
-        "statusInfoVo": {
-          "code": 2,
-          "description": "處理中",
-          "color": "blue"
-        },
-        "levelInfo": {
-          "code": 3,
-          "description": "高",
-          "color": "#ff6a6a"
-        },
-        "createDate": "2026-01-24",
-        "deadLine": "2026-01-24",
-        "finishDate": "",
-        "delayDays": 1,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [],
-        "progressPercent": 75,
-        "children": null,
-        "number": 7
-      },
-      {
-        "id": 10008,
-        "parentId": 9999,
-        "taskNo": 202601250009,
-        "title": "跨周完成的任务（7天）",
-        "project": [
-          "时间测试"
-        ],
-        "statusInfoVo": {
-          "code": 4,
-          "description": "已完成",
-          "color": "#008000"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2026-01-15",
-        "deadLine": "2026-01-22",
-        "finishDate": "2026-01-22 10:15:00",
-        "delayDays": 0,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [],
-        "progressPercent": 100,
-        "children": null,
-        "number": 8
+        "number": 1
       }
     ],
     "number": 0
@@ -451,12 +391,12 @@ const mockData: MockTask[] = [
       "color": "#3cb371"
     },
     "createDate": "2026-01-19",
-    "deadLine": "2026-01-21",
+    "deadLine": "2026-01-24",
     "finishDate": "",
-    "delayDays": 1,
+    "delayDays": 6,
     "proposer": {
       "employeeNo": "F1669075",
-      "name": "张三",
+      "name": "何聪",
       "leaveStatus": 0
     },
     "supervisor": [
@@ -490,7 +430,7 @@ const mockData: MockTask[] = [
         "createDate": "2026-01-19",
         "deadLine": "2026-01-20",
         "finishDate": "",
-        "delayDays": 2,
+        "delayDays": 10,
         "proposer": {
           "employeeNo": "F1669075",
           "name": "何聪",
@@ -522,7 +462,7 @@ const mockData: MockTask[] = [
         "createDate": "2026-01-19",
         "deadLine": "2026-01-20",
         "finishDate": "",
-        "delayDays": 2,
+        "delayDays": 10,
         "proposer": {
           "employeeNo": "F1669075",
           "name": "何聪",
@@ -532,6 +472,123 @@ const mockData: MockTask[] = [
         "progressPercent": 0,
         "children": null,
         "number": 2
+      },
+      {
+        "id": 9298,
+        "parentId": 9287,
+        "taskNo": 202601220010,
+        "title": "而5re吧",
+        "project": [
+          "系統開發"
+        ],
+        "statusInfoVo": {
+          "code": 1,
+          "description": "待確認",
+          "color": "rgb(255,192,0)"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-22",
+        "deadLine": "2026-01-23",
+        "finishDate": "",
+        "delayDays": 7,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [
+          {
+            "type": "EMPLOYEE",
+            "name": "Angelique Cahanding Nadora",
+            "identity": "FSHK374",
+            "leaveStatus": 0
+          }
+        ],
+        "progressPercent": 0,
+        "children": null,
+        "number": 3
+      },
+      {
+        "id": 9299,
+        "parentId": 9287,
+        "taskNo": 202601220012,
+        "title": "个",
+        "project": [
+          "系統開發"
+        ],
+        "statusInfoVo": {
+          "code": 1,
+          "description": "待確認",
+          "color": "rgb(255,192,0)"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-22",
+        "deadLine": "2026-01-23",
+        "finishDate": "",
+        "delayDays": 7,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [
+          {
+            "type": "EMPLOYEE",
+            "name": "Angelique Cahanding Nadora",
+            "identity": "FSHK374",
+            "leaveStatus": 0
+          }
+        ],
+        "progressPercent": 0,
+        "children": null,
+        "number": 4
+      },
+      {
+        "id": 9300,
+        "parentId": 9287,
+        "taskNo": 202601220014,
+        "title": "个",
+        "project": [
+          "系統開發"
+        ],
+        "statusInfoVo": {
+          "code": 1,
+          "description": "待確認",
+          "color": "rgb(255,192,0)"
+        },
+        "levelInfo": {
+          "code": 2,
+          "description": "中",
+          "color": "#3cb371"
+        },
+        "createDate": "2026-01-22",
+        "deadLine": "2026-01-23",
+        "finishDate": "",
+        "delayDays": 7,
+        "proposer": {
+          "employeeNo": "F1669075",
+          "name": "何聪",
+          "leaveStatus": 0
+        },
+        "supervisor": [
+          {
+            "type": "EMPLOYEE",
+            "name": "Angelique Cahanding Nadora",
+            "identity": "FSHK374",
+            "leaveStatus": 0
+          }
+        ],
+        "progressPercent": 0,
+        "children": null,
+        "number": 5
       }
     ],
     "number": 0
@@ -557,7 +614,7 @@ const mockData: MockTask[] = [
     "createDate": "2026-01-16",
     "deadLine": "2026-01-17",
     "finishDate": "",
-    "delayDays": 5,
+    "delayDays": 13,
     "proposer": {
       "employeeNo": "F1669075",
       "name": "何聪",
@@ -680,85 +737,6 @@ const mockData: MockTask[] = [
     "number": 0
   },
   {
-    "id": 8745,
-    "parentId": 0,
-    "taskNo": 202512100010,
-    "title": "不想吃宣传部",
-    "project": [
-      "MW-W (MW25)"
-    ],
-    "statusInfoVo": {
-      "code": 1,
-      "description": "待確認",
-      "color": "rgb(255,192,0)"
-    },
-    "levelInfo": {
-      "code": 2,
-      "description": "中",
-      "color": "#3cb371"
-    },
-    "createDate": "2025-12-10",
-    "deadLine": "2025-12-26",
-    "finishDate": "",
-    "delayDays": 27,
-    "proposer": {
-      "employeeNo": "F1669075",
-      "name": "何聪",
-      "leaveStatus": 0
-    },
-    "supervisor": [
-      {
-        "type": "EMPLOYEE",
-        "name": "何聪",
-        "identity": "F1669075",
-        "leaveStatus": 0
-      }
-    ],
-    "progressPercent": 0,
-    "children": [
-      {
-        "id": 9285,
-        "parentId": 8745,
-        "taskNo": 202601170002,
-        "title": "yr",
-        "project": [
-          "MW-W (MW25)"
-        ],
-        "statusInfoVo": {
-          "code": 1,
-          "description": "待確認",
-          "color": "rgb(255,192,0)"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2026-01-17",
-        "deadLine": "2026-01-18",
-        "finishDate": "",
-        "delayDays": 4,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [
-          {
-            "type": "EMPLOYEE",
-            "name": "Anthonne Rey Araojo Castillo",
-            "identity": "FSHK280",
-            "leaveStatus": 0
-          }
-        ],
-        "progressPercent": 0,
-        "children": null,
-        "number": 1
-      }
-    ],
-    "number": 0
-  },
-  {
     "id": 8798,
     "parentId": 0,
     "taskNo": 202512240004,
@@ -824,7 +802,7 @@ const mockData: MockTask[] = [
     "createDate": "2025-12-24",
     "deadLine": "2025-12-25",
     "finishDate": "2025-12-24 14:18:22",
-    "delayDays": 28,
+    "delayDays": 36,
     "proposer": {
       "employeeNo": "F1669075",
       "name": "何聪",
@@ -1272,7 +1250,7 @@ const mockData: MockTask[] = [
     "createDate": "2025-07-12",
     "deadLine": "2025-07-12",
     "finishDate": "",
-    "delayDays": 194,
+    "delayDays": 202,
     "proposer": {
       "employeeNo": "F1669075",
       "name": "何聪",
@@ -1315,7 +1293,7 @@ const mockData: MockTask[] = [
         "createDate": "2025-08-09",
         "deadLine": "2025-08-10",
         "finishDate": "2025-09-02 14:14:51",
-        "delayDays": 165,
+        "delayDays": 173,
         "proposer": {
           "employeeNo": "F1669075",
           "name": "何聪",
@@ -1495,259 +1473,6 @@ const mockData: MockTask[] = [
         "progressPercent": 0,
         "children": null,
         "number": 3
-      }
-    ],
-    "number": 0
-  },
-  {
-    "id": 6794,
-    "parentId": 0,
-    "taskNo": 202507110034,
-    "title": "哈哈哈",
-    "project": [
-      "Others"
-    ],
-    "statusInfoVo": {
-      "code": 1,
-      "description": "待確認",
-      "color": "rgb(255,192,0)"
-    },
-    "levelInfo": {
-      "code": 2,
-      "description": "中",
-      "color": "#3cb371"
-    },
-    "createDate": "2025-07-11",
-    "deadLine": "2025-07-12",
-    "finishDate": "",
-    "delayDays": 194,
-    "proposer": {
-      "employeeNo": "F1669075",
-      "name": "何聪",
-      "leaveStatus": 0
-    },
-    "supervisor": [
-      {
-        "type": "EMPLOYEE",
-        "name": "何聪",
-        "identity": "F1669075",
-        "leaveStatus": 0
-      },
-      {
-        "type": "EMPLOYEE",
-        "name": "凌峰",
-        "identity": "G1659743",
-        "leaveStatus": 0
-      },
-      {
-        "type": "EMPLOYEE",
-        "name": "林俊翰",
-        "identity": "G1659987",
-        "leaveStatus": 0
-      },
-      {
-        "type": "EMPLOYEE",
-        "name": "AvelinoBuenafeIII",
-        "identity": "FSHK277",
-        "leaveStatus": 0
-      }
-    ],
-    "progressPercent": 0,
-    "children": [
-      {
-        "id": 8762,
-        "parentId": 6794,
-        "taskNo": 202512120002,
-        "title": "哈哈哈",
-        "project": [
-          "Others"
-        ],
-        "statusInfoVo": {
-          "code": 1,
-          "description": "待確認",
-          "color": "rgb(255,192,0)"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2025-12-12",
-        "deadLine": "2025-07-12",
-        "finishDate": "",
-        "delayDays": 194,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [
-          {
-            "type": "EMPLOYEE",
-            "name": "凌峰",
-            "identity": "G1659743",
-            "leaveStatus": 0
-          }
-        ],
-        "progressPercent": 0,
-        "children": null,
-        "number": 1
-      },
-      {
-        "id": 8763,
-        "parentId": 6794,
-        "taskNo": 202512120004,
-        "title": "哈哈哈",
-        "project": [
-          "Others"
-        ],
-        "statusInfoVo": {
-          "code": 1,
-          "description": "待確認",
-          "color": "rgb(255,192,0)"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2025-12-12",
-        "deadLine": "2025-07-12",
-        "finishDate": "",
-        "delayDays": 194,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [
-          {
-            "type": "EMPLOYEE",
-            "name": "吳凌紅",
-            "identity": "G1658684",
-            "leaveStatus": 0
-          }
-        ],
-        "progressPercent": 0,
-        "children": null,
-        "number": 2
-      },
-      {
-        "id": 8764,
-        "parentId": 6794,
-        "taskNo": 202512120006,
-        "title": "哈哈哈",
-        "project": [
-          "Others"
-        ],
-        "statusInfoVo": {
-          "code": 1,
-          "description": "待確認",
-          "color": "rgb(255,192,0)"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2025-12-12",
-        "deadLine": "2025-07-12",
-        "finishDate": "",
-        "delayDays": 194,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [
-          {
-            "type": "EMPLOYEE",
-            "name": "張占騰",
-            "identity": "G1658973",
-            "leaveStatus": 0
-          }
-        ],
-        "progressPercent": 0,
-        "children": null,
-        "number": 3
-      },
-      {
-        "id": 8765,
-        "parentId": 6794,
-        "taskNo": 202512120008,
-        "title": "哈哈哈",
-        "project": [
-          "Others"
-        ],
-        "statusInfoVo": {
-          "code": 1,
-          "description": "待確認",
-          "color": "rgb(255,192,0)"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2025-12-12",
-        "deadLine": "2025-07-12",
-        "finishDate": "",
-        "delayDays": 194,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [
-          {
-            "type": "EMPLOYEE",
-            "name": "林俊翰",
-            "identity": "G1659987",
-            "leaveStatus": 0
-          }
-        ],
-        "progressPercent": 0,
-        "children": null,
-        "number": 4
-      },
-      {
-        "id": 9286,
-        "parentId": 6794,
-        "taskNo": 202601190002,
-        "title": "大大",
-        "project": [
-          "Others"
-        ],
-        "statusInfoVo": {
-          "code": 1,
-          "description": "待確認",
-          "color": "rgb(255,192,0)"
-        },
-        "levelInfo": {
-          "code": 2,
-          "description": "中",
-          "color": "#3cb371"
-        },
-        "createDate": "2026-01-19",
-        "deadLine": "2026-01-20",
-        "finishDate": "",
-        "delayDays": 2,
-        "proposer": {
-          "employeeNo": "F1669075",
-          "name": "何聪",
-          "leaveStatus": 0
-        },
-        "supervisor": [
-          {
-            "type": "EMPLOYEE",
-            "name": "何聪",
-            "identity": "F1669075",
-            "leaveStatus": 0
-          }
-        ],
-        "progressPercent": 0,
-        "children": null,
-        "number": 5
       }
     ],
     "number": 0
