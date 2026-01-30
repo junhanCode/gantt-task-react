@@ -62,6 +62,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   fontSize = "14px",
   arrowIndent = 20,
   showArrows = true,
+  showTooltip = true,
   todayColor = "rgba(252, 248, 227, 0.5)",
   viewDate,
   TooltipContent = StandardTooltipContent,
@@ -889,7 +890,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
           scrollY={scrollY}
           scrollX={scrollX}
         />
-        {ganttEvent.changedTask && (
+        {showTooltip && ganttEvent.changedTask && (
           <Tooltip
             arrowIndent={arrowIndent}
             rowHeight={rowHeight}

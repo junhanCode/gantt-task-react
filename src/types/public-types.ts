@@ -173,6 +173,8 @@ export interface StylingOption {
   arrowIndent?: number;
   /** 是否显示任务指向箭头，默认true */
   showArrows?: boolean;
+  /** 是否显示悬浮信息框（tooltip），默认true */
+  showTooltip?: boolean;
   todayColor?: string;
   /** 左侧四个时间列标题自定义 */
   timeColumnLabels?: {

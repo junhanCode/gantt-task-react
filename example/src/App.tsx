@@ -400,6 +400,7 @@ const App = () => {
   const [tasks, setTasks] = React.useState<Task[]>(initTasks(useLargeData, parentCount, childrenPerParent));
   const [isChecked, setIsChecked] = React.useState(true);
   const [showArrows, setShowArrows] = React.useState<boolean>(true);
+  const [showTooltip, setShowTooltip] = React.useState<boolean>(true);
   const [enableTaskDrag, setEnableTaskDrag] = React.useState<boolean>(false);
   const [enableTaskResize, setEnableTaskResize] = React.useState<boolean>(true);
   const [hideTaskName, setHideTaskName] = React.useState<boolean>(false);
@@ -981,6 +982,12 @@ const App = () => {
           checked={showArrows}
           onChange={e => setShowArrows(e.target.checked)}
         />
+        <label style={{ marginLeft: 16, marginRight: 8 }}>显示悬浮信息框：</label>
+        <input
+          type="checkbox"
+          checked={showTooltip}
+          onChange={e => setShowTooltip(e.target.checked)}
+        />
       </div>
       {/* 拖动和拉伸控制 */}
       <div style={{ margin: "8px 0" }}>
@@ -1072,6 +1079,8 @@ const App = () => {
         showOperationsColumn={true}
         // 演示箭头开关
         showArrows={showArrows}
+        // 显示悬浮信息框开关
+        showTooltip={showTooltip}
         // 拖动和拉伸控制
         enableTaskDrag={enableTaskDrag}
         enableTaskResize={enableTaskResize}
