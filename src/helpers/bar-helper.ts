@@ -173,21 +173,14 @@ const convertToBar = (
   let actualStart = task.actualStart || task.start;
   let actualEnd = task.actualEnd || task.end;
 
-  // 如果开始和结束为同一天，将开始时间设为当天第一秒，结束时间设为当天最后一秒
-  // 这样即使是同一天的任务也会有一个格子的长度显示
+  // 将时间规范化：开始时间设为当天第一秒，结束时间设为当天最后一秒
+  // 这样可以确保任务条形图占据完整的天数显示
   const normalizeTimeForSameDay = (start: Date, end: Date): [Date, Date] => {
-    const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-    const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-    
-    // 检查是否为同一天
-    if (startDay.getTime() === endDay.getTime()) {
-      // 开始时间设为当天第一秒 (00:00:00)
-      const newStart = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0);
-      // 结束时间设为当天最后一秒 (23:59:59)
-      const newEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
-      return [newStart, newEnd];
-    }
-    return [start, end];
+    // 开始时间设为当天第一秒 (00:00:00)
+    const newStart = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0);
+    // 结束时间设为当天最后一秒 (23:59:59)
+    const newEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
+    return [newStart, newEnd];
   };
 
   // 对计划时间进行规范化

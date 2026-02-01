@@ -102,6 +102,9 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   tableStyles,
   isTaskDraggable,
   rowSelection,
+  /** 自定义任务标题旁边的操作按钮/图标 */
+  onTaskTitleAction,
+  taskTitleActionIcon,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -149,6 +152,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     if (rowSelection?.selectedRowKeys) {
       setSelectedRowKeys(rowSelection.selectedRowKeys);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowSelection?.selectedRowKeys]);
 
   // 获取行的 key
@@ -856,6 +860,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             columnRenderers,
             columnEllipsisMaxChars,
             onCellOverflow,
+            onTaskTitleAction,
+            taskTitleActionIcon,
             rowSelection: rowSelection ? {
               ...rowSelection,
               selectedRowKeys,

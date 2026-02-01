@@ -33,6 +33,7 @@ export const OATaskListHeader: React.FC<{
     columnWidth?: string;
     columnTitle?: React.ReactNode;
     showSelectAll?: boolean;
+    checkboxBorderColor?: string;
   };
   allSelected?: boolean;
   indeterminate?: boolean;
@@ -106,7 +107,12 @@ export const OATaskListHeader: React.FC<{
                     }
                   }}
                   onChange={(e) => onSelectAll(e.target.checked)}
-                  style={{ cursor: 'pointer' }}
+                  style={{
+                    cursor: 'pointer',
+                    ...(rowSelection.checkboxBorderColor ? {
+                      accentColor: rowSelection.checkboxBorderColor,
+                    } : {}),
+                  }}
                 />
               ) : (
                 rowSelection.columnTitle || <span>選擇</span>

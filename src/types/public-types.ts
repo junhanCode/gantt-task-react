@@ -325,7 +325,13 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     showSelectAll?: boolean;
     /** 禁用的行，返回 true 表示禁用该行的复选框 */
     getCheckboxProps?: (record: Task) => { disabled?: boolean };
+    /** 自定义复选框边框颜色 */
+    checkboxBorderColor?: string;
   };
+  /** 自定义任务标题旁边的操作按钮/图标 */
+  onTaskTitleAction?: (task: Task) => void;
+  /** 自定义任务标题旁边的按钮图标 */
+  taskTitleActionIcon?: React.ReactNode;
 }
 
 export interface GanttRef {

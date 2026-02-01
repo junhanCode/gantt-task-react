@@ -46,12 +46,20 @@ export const OATaskListTable: React.FC<{
     headerBackgroundColor?: string;
     headerTextColor?: string;
   };
+  /** 自定义任务标题旁边的操作按钮/图标点击事件 */
+  onTaskTitleAction?: (task: Task) => void;
+  /** 自定义任务标题旁边的按钮图标 */
+  taskTitleActionIcon?: React.ReactNode;
+  /** 多选列配置 */
   rowSelection?: {
     selectedRowKeys?: string[];
     onChange?: (selectedRowKeys: string[], selectedRows: Task[]) => void;
     rowKey?: keyof Task | ((record: Task) => string);
     columnWidth?: string;
+    columnTitle?: React.ReactNode;
+    showSelectAll?: boolean;
     getCheckboxProps?: (record: Task) => { disabled?: boolean };
+    checkboxBorderColor?: string;
   };
 }> = ({
   rowHeight,
@@ -77,6 +85,8 @@ export const OATaskListTable: React.FC<{
   onEditTask,
   onDeleteTask,
   tableStyles,
+  onTaskTitleAction,
+  taskTitleActionIcon,
   rowSelection,
 }) => {
   // 获取行的 key
@@ -88,36 +98,24 @@ export const OATaskListTable: React.FC<{
     return String(task[rowSelection.rowKey]);
   };
 
-  // 判断某行是否被选中
-  const isRowSelected = (task: Task): boolean => {
-    if (!rowSelection?.selectedRowKeys) return false;
-    const key = getRowKey(task);
-    return rowSelection.selectedRowKeys.includes(key);
-  };
-
-  // 处理单行复选框变化
-  const handleRowCheckboxChange = (task: Task, checked: boolean) => {
+  // 处理单个复选框变化
+  const handleCheckboxChange = (task: Task, checked: boolean) => {
     if (!rowSelection?.onChange) return;
     
-    const key = getRowKey(task);
-    let newSelectedKeys: string[];
+    const rowKey = getRowKey(task);
+    const currentSelectedKeys = rowSelection.selectedRowKeys || [];
     
+    let newSelectedKeys: string[];
     if (checked) {
-      newSelectedKeys = [...(rowSelection.selectedRowKeys || []), key];
+      newSelectedKeys = [...currentSelectedKeys, rowKey];
     } else {
-      newSelectedKeys = (rowSelection.selectedRowKeys || []).filter(k => k !== key);
+      newSelectedKeys = currentSelectedKeys.filter(key => key !== rowKey);
     }
     
-    const selectedRows = tasks.filter(t => newSelectedKeys.includes(getRowKey(t)));
-    rowSelection.onChange(newSelectedKeys, selectedRows);
+    const newSelectedRows = tasks.filter(t => newSelectedKeys.includes(getRowKey(t)));
+    rowSelection.onChange(newSelectedKeys, newSelectedRows);
   };
 
-  // 获取复选框的禁用状态
-  const getCheckboxDisabled = (task: Task): boolean => {
-    if (!rowSelection?.getCheckboxProps) return false;
-    const props = rowSelection.getCheckboxProps(task);
-    return props.disabled || false;
-  };
   // 狀態顏色映射 
   const statusColors: Record<string, string> = {
     "待驗收": "#A2EF4D",
@@ -204,6 +202,11 @@ export const OATaskListTable: React.FC<{
               ));
         }
 
+        // 判断是否选中
+        const rowKey = getRowKey(t);
+        const isChecked = rowSelection?.selectedRowKeys?.includes(rowKey) || false;
+        const checkboxProps = rowSelection?.getCheckboxProps?.(t) || {};
+
         return (
           <tr 
             key={`${t.id}row`}
@@ -221,7 +224,7 @@ export const OATaskListTable: React.FC<{
                 : tableStyles?.row || {}),
             }}
           >
-            {/* 多選列 */}
+            {/* 多选框列 */}
             {rowSelection && (
               <td
                 className={styles.taskListCell}
@@ -234,10 +237,15 @@ export const OATaskListTable: React.FC<{
               >
                 <input
                   type="checkbox"
-                  checked={isRowSelected(t)}
-                  disabled={getCheckboxDisabled(t)}
-                  onChange={(e) => handleRowCheckboxChange(t, e.target.checked)}
-                  style={{ cursor: getCheckboxDisabled(t) ? 'not-allowed' : 'pointer' }}
+                  checked={isChecked}
+                  disabled={checkboxProps.disabled}
+                  onChange={(e) => handleCheckboxChange(t, e.target.checked)}
+                  style={{
+                    cursor: checkboxProps.disabled ? 'not-allowed' : 'pointer',
+                    ...(rowSelection.checkboxBorderColor ? {
+                      accentColor: rowSelection.checkboxBorderColor,
+                    } : {}),
+                  }}
                 />
               </td>
             )}
@@ -272,6 +280,28 @@ export const OATaskListTable: React.FC<{
                       {expanderContent}
                     </div>
                     <div className={styles.taskListNameText}>{content}</div>
+                    {/* 自定义按钮图标 */}
+                    {onTaskTitleAction && (
+                      <div
+                        style={{
+                          marginLeft: "8px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onTaskTitleAction(t);
+                        }}
+                      >
+                        {taskTitleActionIcon || (
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+                            <path d="M8 5 L8 9 M8 11 L8 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          </svg>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </td>
               );

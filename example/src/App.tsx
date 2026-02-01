@@ -410,6 +410,8 @@ const App = () => {
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
   const [showRowSelection, setShowRowSelection] = React.useState<boolean>(true);
   const [enableCascade, setEnableCascade] = React.useState<boolean>(true); // 是否启用级联选择
+  const [checkboxBorderColor, setCheckboxBorderColor] = React.useState<string>('#1890ff'); // 新功能1：复选框边框颜色
+  const [showTaskTitleAction, setShowTaskTitleAction] = React.useState<boolean>(true); // 新功能3：是否显示任务标题按钮
   
   // 模拟当前登录用户（用于演示isTaskDraggable功能）
   // 注意：第一个mock数据的proposer是"张三"，其他是"何聪"
@@ -801,7 +803,7 @@ const App = () => {
         border: '1px solid #91d5ff'
       }}>
         <div style={{ marginBottom: 8, fontWeight: 'bold', fontSize: '14px' }}>
-          ✅ 多选列功能演示
+          ✅ 多选列功能演示 + ✨ 新功能
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -813,6 +815,20 @@ const App = () => {
             显示多选列
           </label>
           
+          {/* 新功能1：复选框颜色自定义 */}
+          {showRowSelection && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span>复选框颜色：</span>
+              <input
+                type="color"
+                value={checkboxBorderColor}
+                onChange={e => setCheckboxBorderColor(e.target.value)}
+                style={{ width: '40px', height: '24px', cursor: 'pointer', border: '1px solid #d9d9d9', borderRadius: '4px' }}
+              />
+              <span style={{ fontSize: '12px', color: '#666' }}>{checkboxBorderColor}</span>
+            </label>
+          )}
+          
           <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <input
               type="checkbox"
@@ -821,6 +837,16 @@ const App = () => {
               disabled={!showRowSelection}
             />
             启用级联选择
+          </label>
+          
+          {/* 新功能3：任务标题按钮开关 */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <input
+              type="checkbox"
+              checked={showTaskTitleAction}
+              onChange={e => setShowTaskTitleAction(e.target.checked)}
+            />
+            显示任务标题按钮 ℹ️
           </label>
           
           <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
@@ -855,6 +881,24 @@ const App = () => {
             选中的任务 IDs: {selectedRowKeys.join(", ")}
           </div>
         )}
+      </div>
+      
+      {/* 新功能说明 */}
+      <div style={{ 
+        margin: '12px 0', 
+        padding: '12px', 
+        backgroundColor: '#f0f9ff', 
+        borderRadius: '4px',
+        border: '1px solid #91caff',
+        fontSize: '12px',
+        lineHeight: '1.8'
+      }}>
+        <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#0958d9', fontSize: '14px' }}>
+          ✨ 新功能展示说明
+        </div>
+        <div><strong>1️⃣ 复选框颜色自定义：</strong> 使用上方的颜色选择器可以自定义多选框的颜色（当前：{checkboxBorderColor}）</div>
+        <div><strong>2️⃣ 时间自动规范化：</strong> 任务的结束时间会自动设为当天23:59:59，条形图占满整格（无需配置，自动生效）</div>
+        <div><strong>3️⃣ 任务标题按钮：</strong> 勾选"显示任务标题按钮"后，点击任务名称旁的 ℹ️ 图标可查看任务详情</div>
       </div>
       
       {/* 性能测试数据控制面板 */}
@@ -1164,11 +1208,44 @@ const App = () => {
           rowKey: "id",
           columnWidth: "50px",
           showSelectAll: true,
+          checkboxBorderColor: checkboxBorderColor, // 新功能1：自定义复选框颜色
           // 所有任务都可以选中，包括有子任务的项目
           // getCheckboxProps: (record) => ({
           //   disabled: record.type === "project", // 如需禁用项目类型，取消注释此行
           // }),
         } : undefined}
+        // 新功能3：任务标题按钮
+        onTaskTitleAction={showTaskTitleAction ? (task) => {
+          Modal.info({
+            title: '任务详情',
+            width: 600,
+            content: (
+              <div style={{ lineHeight: '2' }}>
+                <div><strong>任务名称：</strong>{task.name}</div>
+                <div><strong>任务ID：</strong>{task.id}</div>
+                <div><strong>任务类型：</strong>{task.type}</div>
+                <div><strong>状态：</strong>{typeof task.status === 'string' ? task.status : (task.status as any)?.description || '-'}</div>
+                <div><strong>负责人：</strong>{task.assignee || '-'}</div>
+                <div><strong>进度：</strong>{task.progress}%</div>
+                <div><strong>开始时间：</strong>{task.start.toLocaleString()}</div>
+                <div><strong>结束时间：</strong>{task.end.toLocaleString()}</div>
+                {task.plannedStart && <div><strong>计划开始：</strong>{task.plannedStart.toLocaleString()}</div>}
+                {task.plannedEnd && <div><strong>计划结束：</strong>{task.plannedEnd.toLocaleString()}</div>}
+                {task.actualStart && <div><strong>实际开始：</strong>{task.actualStart.toLocaleString()}</div>}
+                {task.actualEnd && <div><strong>实际结束：</strong>{task.actualEnd.toLocaleString()}</div>}
+                <div style={{ marginTop: 16, padding: 12, backgroundColor: '#f0f9ff', borderRadius: 4, fontSize: 12 }}>
+                  💡 这是新功能演示：点击任务标题旁的按钮可以触发自定义操作，比如调用接口获取详情、打开编辑弹窗等
+                </div>
+              </div>
+            ),
+          });
+        } : undefined}
+        taskTitleActionIcon={
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="#1890ff" style={{ marginLeft: 4 }}>
+            <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+            <path d="M8 5 L8 9 M8 11 L8 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        }
       />
       
       {/* 新增任务弹框 */}
