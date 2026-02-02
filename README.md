@@ -2,6 +2,14 @@
 
 基于 [MaTeMaTuK/gantt-task-react](https://github.com/MaTeMaTuK/gantt-task-react) 的增强版本，实现了水平重叠双条形图设计，支持计划vs实际时间对比，延误状态可视化。
 
+## 📚 文档导航
+
+- [快速开始](#-本地打包和引入)
+- [核心功能](#-核心功能)
+- [多选功能指南](./docs/MULTI_SELECT_GUIDE.md) - 多选列、级联选择、批量操作
+- [功能指南合集](./docs/FEATURE_GUIDES.md) - 操作列、拖动事件、性能测试等
+- [更新日志](./CHANGELOG.md) - 版本更新历史
+
 ## 🚀 核心功能
 
 ### 📊 双条形图设计
