@@ -38,6 +38,11 @@ export const OATaskListHeader: React.FC<{
   allSelected?: boolean;
   indeterminate?: boolean;
   onSelectAll?: (checked: boolean) => void;
+  /** 任务标题列表头自定义渲染。入参为默认展开/折叠节点和标题文案，返回表头内容（可含图标并自行绑定 onClick） */
+  taskTitleHeaderRender?: (props: {
+    expandCollapseNode: React.ReactNode;
+    titleText: string;
+  }) => React.ReactNode;
 }> = ({ 
   headerHeight, 
   fontFamily, 
@@ -57,6 +62,7 @@ export const OATaskListHeader: React.FC<{
   allSelected = false,
   indeterminate = false,
   onSelectAll,
+  taskTitleHeaderRender,
 }) => { 
   return (
     <div
@@ -141,32 +147,63 @@ export const OATaskListHeader: React.FC<{
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            {onToggleExpandAll && (
-              <div
-                onClick={onToggleExpandAll}
-                style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
-              >
-                {/* expandAllLeafTasks=true 表示所有任务被折叠，显示折叠图标（表示当前状态） */}
-                {expandAllLeafTasks 
-                  ? (collapseIcon ?? (
-                      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                        <rect x="2" y="2" width="12" height="2" rx="1" />
-                        <rect x="2" y="7" width="12" height="2" rx="1" />
-                        <rect x="2" y="12" width="12" height="2" rx="1" />
-                      </svg>
-                    ))
-                  : (expandIcon ?? (
-                      <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                        <rect x="2" y="2" width="4" height="4" rx="1" />
-                        <rect x="10" y="2" width="4" height="4" rx="1" />
-                        <rect x="2" y="10" width="4" height="4" rx="1" />
-                        <rect x="10" y="10" width="4" height="4" rx="1" />
-                      </svg>
-                    ))
-                }
-              </div>
+            {taskTitleHeaderRender ? (
+              taskTitleHeaderRender({
+                expandCollapseNode: onToggleExpandAll ? (
+                  <div
+                    onClick={onToggleExpandAll}
+                    style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                  >
+                    {expandAllLeafTasks
+                      ? (collapseIcon ?? (
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                            <rect x="2" y="2" width="12" height="2" rx="1" />
+                            <rect x="2" y="7" width="12" height="2" rx="1" />
+                            <rect x="2" y="12" width="12" height="2" rx="1" />
+                          </svg>
+                        ))
+                      : (expandIcon ?? (
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                            <rect x="2" y="2" width="4" height="4" rx="1" />
+                            <rect x="10" y="2" width="4" height="4" rx="1" />
+                            <rect x="2" y="10" width="4" height="4" rx="1" />
+                            <rect x="10" y="10" width="4" height="4" rx="1" />
+                          </svg>
+                        ))
+                    }
+                  </div>
+                ) : null,
+                titleText: "任務標題",
+              })
+            ) : (
+              <React.Fragment>
+                {onToggleExpandAll && (
+                  <div
+                    onClick={onToggleExpandAll}
+                    style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+                  >
+                    {expandAllLeafTasks
+                      ? (collapseIcon ?? (
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                            <rect x="2" y="2" width="12" height="2" rx="1" />
+                            <rect x="2" y="7" width="12" height="2" rx="1" />
+                            <rect x="2" y="12" width="12" height="2" rx="1" />
+                          </svg>
+                        ))
+                      : (expandIcon ?? (
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                            <rect x="2" y="2" width="4" height="4" rx="1" />
+                            <rect x="10" y="2" width="4" height="4" rx="1" />
+                            <rect x="2" y="10" width="4" height="4" rx="1" />
+                            <rect x="10" y="10" width="4" height="4" rx="1" />
+                          </svg>
+                        ))
+                    }
+                  </div>
+                )}
+                <span>任務標題</span>
+              </React.Fragment>
             )}
-            <span>任務標題</span>
           </div>
         </div>
         <div

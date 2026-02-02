@@ -46,10 +46,6 @@ export const OATaskListTable: React.FC<{
     headerBackgroundColor?: string;
     headerTextColor?: string;
   };
-  /** 自定义任务标题旁边的操作按钮/图标点击事件 */
-  onTaskTitleAction?: (task: Task) => void;
-  /** 自定义任务标题旁边的按钮图标 */
-  taskTitleActionIcon?: React.ReactNode;
   /** 多选列配置 */
   rowSelection?: {
     selectedRowKeys?: string[];
@@ -85,8 +81,6 @@ export const OATaskListTable: React.FC<{
   onEditTask,
   onDeleteTask,
   tableStyles,
-  onTaskTitleAction,
-  taskTitleActionIcon,
   rowSelection,
 }) => {
   // 获取行的 key
@@ -281,28 +275,6 @@ export const OATaskListTable: React.FC<{
                       {expanderContent}
                     </div>
                     <div className={styles.taskListNameText}>{content}</div>
-                    {/* 自定义按钮图标 */}
-                    {onTaskTitleAction && (
-                      <div
-                        style={{
-                          marginLeft: "8px",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onTaskTitleAction(t);
-                        }}
-                      >
-                        {taskTitleActionIcon || (
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                            <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="1.5"/>
-                            <path d="M8 5 L8 9 M8 11 L8 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                          </svg>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </td>
               );

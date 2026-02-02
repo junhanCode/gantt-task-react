@@ -328,10 +328,14 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     /** 自定义复选框边框颜色 */
     checkboxBorderColor?: string;
   };
-  /** 自定义任务标题旁边的操作按钮/图标 */
-  onTaskTitleAction?: (task: Task) => void;
-  /** 自定义任务标题旁边的按钮图标 */
-  taskTitleActionIcon?: React.ReactNode;
+  /**
+   * 任务标题列的表头自定义渲染。传入函数，返回表头内容（可包含图标，点击时自行处理如调接口）。
+   * 入参提供默认的展开/折叠节点和标题文案，可自由排列并追加自己的图标等。
+   */
+  taskTitleHeaderRender?: (props: {
+    expandCollapseNode: React.ReactNode;
+    titleText: string;
+  }) => React.ReactNode;
 }
 
 export interface GanttRef {

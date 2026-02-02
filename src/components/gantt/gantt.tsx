@@ -102,9 +102,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   tableStyles,
   isTaskDraggable,
   rowSelection,
-  /** 自定义任务标题旁边的操作按钮/图标 */
-  onTaskTitleAction,
-  taskTitleActionIcon,
+  /** 任务标题列表头自定义渲染 */
+  taskTitleHeaderRender,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -841,6 +840,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             allSelected,
             indeterminate,
             onSelectAll: handleSelectAll,
+            taskTitleHeaderRender,
           };
           return <OATaskListHeader {...headerProps} />;
         }
@@ -860,8 +860,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             columnRenderers,
             columnEllipsisMaxChars,
             onCellOverflow,
-            onTaskTitleAction,
-            taskTitleActionIcon,
             rowSelection: rowSelection ? {
               ...rowSelection,
               selectedRowKeys,
