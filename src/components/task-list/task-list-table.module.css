@@ -27,6 +27,12 @@
   max-width: 0; /* 关键：让 table-layout: fixed 生效 */
 }
 
+/* 未读列：去掉左右边框，与任务名列视觉一体 */
+.taskListCell_unread {
+  border-left: none !important;
+  border-right: none !important;
+}
+
 /* 除了任务标题列（第一列）外，其他列内容垂直居中 */
 .taskListTableRow > .taskListCell:not(:first-child) {
   vertical-align: middle;

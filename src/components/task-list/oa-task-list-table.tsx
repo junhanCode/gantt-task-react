@@ -22,13 +22,20 @@ export const OATaskListTable: React.FC<{
   operationsColumnWidth?: string;
   showOperationsColumn?: boolean;
   columnRenderers?: Partial<{
+    unread: (task: Task, meta: { value: boolean; displayValue: React.ReactNode }) => React.ReactNode;
     name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
     status: (task: Task, meta: { value?: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
     assignee: (task: Task, meta: { value?: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
     operations: (task: Task) => React.ReactNode;
   }>;
-  columnEllipsisMaxChars?: Partial<Record<"name" | "status" | "assignee", number>>;
-  onCellOverflow?: (info: { column: "name" | "status" | "assignee"; task: Task }) => void;
+  columnEllipsisMaxChars?: Partial<Record<"name" | "status" | "assignee" | "unread", number>>;
+  onCellOverflow?: (info: { column: "name" | "status" | "assignee" | "unread"; task: Task }) => void;
+  /** 未读列配置 */
+  unreadColumn?: {
+    show?: boolean;
+    width?: string;
+    title?: string;
+  };
   onAddTask?: (task: Task) => void;
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (task: Task) => void;
@@ -82,6 +89,7 @@ export const OATaskListTable: React.FC<{
   onDeleteTask,
   tableStyles,
   rowSelection,
+  unreadColumn,
 }) => {
   // 获取行的 key
   const getRowKey = (task: Task): string => {
@@ -129,7 +137,7 @@ export const OATaskListTable: React.FC<{
     return taskList.some(t => t.project === task.id);
   };
 
-  const getEllipsisData = (column: "name" | "status" | "assignee", rawValue?: string | any) => {
+  const getEllipsisData = (column: "name" | "status" | "assignee" | "unread", rawValue?: string | any) => {
     // 处理 status 可能是 StatusInfo 对象的情况
     let value = "";
     if (typeof rawValue === "string") {
@@ -166,6 +174,7 @@ export const OATaskListTable: React.FC<{
     >
       <colgroup>
         {rowSelection && <col style={{ width: rowSelection.columnWidth || "50px" }} />}
+        {unreadColumn?.show && <col style={{ width: unreadColumn.width || "40px" }} />}
         <col style={{ width: nameColumnWidth || rowWidth }} />
         <col style={{ width: "100px" }} />
         <col style={{ width: "100px" }} />
@@ -244,6 +253,29 @@ export const OATaskListTable: React.FC<{
                 />
               </td>
             )}
+            {/* 未读列 */}
+            {unreadColumn?.show && (() => {
+              const unreadValue = (t as any).unread ?? false;
+              const defaultDisplay = unreadValue ? (
+                <span style={{ color: 'red', fontWeight: 'bold' }}>*</span>
+              ) : null;
+              const meta = { value: unreadValue, displayValue: defaultDisplay };
+              const content = columnRenderers?.unread
+                ? columnRenderers.unread(t, meta)
+                : defaultDisplay;
+              return (
+                <td
+                  className={`${styles.taskListCell} ${styles.taskListCell_unread}`}
+                  style={{
+                    textAlign: "center",
+                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                    ...(tableStyles?.cell || {}),
+                  }}
+                >
+                  {content}
+                </td>
+              );
+            })()}
             {/* 任務標題列 */}
             {(() => {
               const meta = getEllipsisData("name", t.name);

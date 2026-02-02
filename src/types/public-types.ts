@@ -52,6 +52,8 @@ export interface Task {
   status?: TaskStatus | StatusInfo;
   /** 负责人（用于oaTask模式） */
   assignee?: string;
+  /** 是否未读（用于oaTask模式） */
+  unread?: boolean;
 }
 
 export interface EventOption {
@@ -282,15 +284,25 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   showOperationsColumn?: boolean;
   /** 自定义列渲染（类似 antd columns.render） */
   columnRenderers?: Partial<{
+    unread: (task: Task, meta: { value: boolean; displayValue: React.ReactNode }) => React.ReactNode;
     name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
     status: (task: Task, meta: { value?: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
     assignee: (task: Task, meta: { value?: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
     operations: (task: Task) => React.ReactNode;
   }>;
+  /** 未读列配置 */
+  unreadColumn?: {
+    /** 是否显示未读列，默认false */
+    show?: boolean;
+    /** 未读列宽度，默认 "40px" */
+    width?: string;
+    /** 未读列标题，默认 "未读" */
+    title?: string;
+  };
   /** 每列的省略字符上限，超过则截断并省略号 */
-  columnEllipsisMaxChars?: Partial<Record<"name" | "status" | "assignee", number>>;
+  columnEllipsisMaxChars?: Partial<Record<"name" | "status" | "assignee" | "unread", number>>;
   /** 文本溢出时回调，便于调用方处理 */
-  onCellOverflow?: (info: { column: "name" | "status" | "assignee"; task: Task }) => void;
+  onCellOverflow?: (info: { column: "name" | "status" | "assignee" | "unread"; task: Task }) => void;
   // 自定义展开/折叠图标
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;

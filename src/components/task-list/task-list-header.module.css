@@ -22,6 +22,12 @@
   box-sizing: border-box;
 }
 
+/* 未读列表头：去掉左右边框，与任务名列视觉一体 */
+.ganttTable_HeaderItem_unread {
+  border-left: none !important;
+  border-right: none !important;
+}
+
 /* 除了任务标题列（Item列）外，其他列内容垂直居中 */
 .ganttTable_HeaderItem:not(:first-child) {
   vertical-align: middle;

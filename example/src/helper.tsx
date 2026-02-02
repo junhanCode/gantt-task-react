@@ -1564,7 +1564,9 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
   
   // 添加 TitleCell 需要的扩展字段
   const extendedTask = task as any;
-  extendedTask.read = Math.random() > 0.3; // 70% 已读
+  const isRead = Math.random() > 0.3; // 70% 已读
+  extendedTask.read = isRead;
+  extendedTask.unread = !isRead; // 未读状态（与 read 相反）
   extendedTask.focus = Math.random() > 0.8; // 20% 关注
   extendedTask.hidden = Math.random() > 0.9; // 10% 隐藏
   extendedTask.follow = Math.random() > 0.85; // 15% 跟进

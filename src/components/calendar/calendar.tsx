@@ -587,14 +587,14 @@ export const Calendar: React.FC<CalendarProps> = ({
           );
         }
         
-        // 子表头：日期
+        // 子表头：日期（垂直居中：子表头区域中心为 headerHeight * 0.75）
         const dayLabel = `${date.getDate()}`;
         bottomValues.push(
           <text
             key={`day-${date.getTime()}`}
-            y={headerHeight * 0.8}
+            y={headerHeight * 0.75}
             x={columnWidth * i + columnWidth * 0.5}
-            className={styles.calendarBottomText}
+            className={styles.calendarBottomTextVerticalCenter}
             fill={isSunday ? "#999" : "#000"}
           >
             {dayLabel}
@@ -748,7 +748,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           );
         }
         
-        // 子表头：英文月份（每个月的第一天显示，居中显示）
+        // 子表头：英文月份（每个月的第一天显示，垂直居中）
         if (isMonthStart) {
           const monthLabel = getLocaleMonth(date, locale);
           const monthSpan = monthInfo.endIdx - monthInfo.startIdx + 1;
@@ -756,16 +756,16 @@ export const Calendar: React.FC<CalendarProps> = ({
           bottomValues.push(
             <text
               key={`month-${monthKey}`}
-              y={headerHeight * 0.8}
+              y={headerHeight * 0.75}
               x={monthCenterX}
-              className={styles.calendarBottomText}
+              className={styles.calendarBottomTextVerticalCenter}
             >
               {monthLabel}
             </text>
           );
         }
         
-        // 母表头：年份（每年的第一个月显示，居中显示）
+        // 母表头：年份（每年的第一个月显示，垂直居中）
         if (isYearStart) {
           const yearInfo = yearMap.get(year)!;
           const yearStartX = columnWidth * yearInfo.startIdx;
@@ -782,6 +782,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                 y2Line={topDefaultHeight}
                 xText={yearCenterX}
                 yText={topDefaultHeight * 0.5}
+                verticalCenter
               />
             </g>
           );
@@ -883,7 +884,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           );
         }
         
-        // 子表头：季度（每个季度的第一天显示，居中显示）
+        // 子表头：季度（每个季度的第一天显示，垂直居中）
         if (isQuarterStart) {
           const quarterLabel = `Q${quarter}`;
           const quarterSpan = quarterInfo.endIdx - quarterInfo.startIdx + 1;
@@ -891,16 +892,16 @@ export const Calendar: React.FC<CalendarProps> = ({
           bottomValues.push(
             <text
               key={`quarter-${quarterKey}`}
-              y={headerHeight * 0.8}
+              y={headerHeight * 0.75}
               x={quarterCenterX}
-              className={styles.calendarBottomText}
+              className={styles.calendarBottomTextVerticalCenter}
             >
               {quarterLabel}
             </text>
           );
         }
         
-        // 母表头：年份（每年的第一个季度显示，居中显示）
+        // 母表头：年份（每年的第一个季度显示，垂直居中）
         if (isYearStart) {
           const yearInfo = yearMap.get(year)!;
           const yearStartX = columnWidth * yearInfo.startIdx;
@@ -917,6 +918,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                 y2Line={topDefaultHeight}
                 xText={yearCenterX}
                 yText={topDefaultHeight * 0.5}
+                verticalCenter
               />
             </g>
           );

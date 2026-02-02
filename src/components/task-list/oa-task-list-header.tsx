@@ -35,6 +35,12 @@ export const OATaskListHeader: React.FC<{
     showSelectAll?: boolean;
     checkboxBorderColor?: string;
   };
+  /** 未读列配置 */
+  unreadColumn?: {
+    show?: boolean;
+    width?: string;
+    title?: string;
+  };
   allSelected?: boolean;
   indeterminate?: boolean;
   onSelectAll?: (checked: boolean) => void;
@@ -59,6 +65,7 @@ export const OATaskListHeader: React.FC<{
   showOperationsColumn = true,
   tableStyles,
   rowSelection,
+  unreadColumn,
   allSelected = false,
   indeterminate = false,
   onSelectAll,
@@ -124,6 +131,31 @@ export const OATaskListHeader: React.FC<{
               ) : (
                 rowSelection.columnTitle || <span>選擇</span>
               )}
+            </div>
+            <div
+              className={styles.ganttTable_HeaderSeparator}
+              style={{
+                height: headerHeight * 0.6,
+                marginTop: headerHeight * 0.2,
+              }}
+            />
+          </React.Fragment>
+        )}
+        {/* 未读列 */}
+        {unreadColumn?.show && (
+          <React.Fragment>
+            <div
+              className={`${styles.ganttTable_HeaderItem} ${styles.ganttTable_HeaderItem_unread}`}
+              style={{
+                minWidth: unreadColumn.width || "40px",
+                maxWidth: unreadColumn.width || "40px",
+                textAlign: 'center',
+                ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+                ...(tableStyles?.headerCell || {}),
+              }}
+            >
+              <span>{unreadColumn.title || "未读"}</span>
             </div>
             <div
               className={styles.ganttTable_HeaderSeparator}

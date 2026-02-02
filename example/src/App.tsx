@@ -474,6 +474,9 @@ const App = () => {
   const [expandedTaskKeys, setExpandedTaskKeys] = React.useState<string[]>([]);
   const [useTitleCell, setUseTitleCell] = React.useState(true);
   
+  // 未读列状态
+  const [showUnreadColumn, setShowUnreadColumn] = React.useState(true);
+  
   // 重新加载数据
   const handleReloadData = () => {
     console.time('数据加载时间');
@@ -486,7 +489,14 @@ const App = () => {
   // TitleCell 回调函数
   const handleTaskRead = (record: any) => {
     setTasks(tasks.map(t => 
-      t.id === record.id ? { ...t, read: true } as any : t
+      t.id === record.id ? { ...t, read: true, unread: false } as any : t
+    ));
+  };
+  
+  // 未读列点击回调
+  const handleUnreadClick = (task: Task) => {
+    setTasks(tasks.map(t => 
+      t.id === task.id ? { ...t, unread: false, read: true } as any : t
     ));
   };
   
@@ -920,6 +930,16 @@ const App = () => {
             启用自定义任务名列（包含未读标记、关注、跟进、延期等功能）
           </label>
         </div>
+        <div><strong>5️⃣ 未读列功能：</strong> 
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: 8 }}>
+            <input
+              type="checkbox"
+              checked={showUnreadColumn}
+              onChange={e => setShowUnreadColumn(e.target.checked)}
+            />
+            显示未读列（在任务名左侧，用红色 * 表示未读）
+          </label>
+        </div>
       </div>
       
       {/* 性能测试数据控制面板 */}
@@ -1165,6 +1185,28 @@ const App = () => {
           assignee: 8,
         }}
         columnRenderers={{
+          unread: (task: Task, meta: { value: boolean; displayValue: React.ReactNode }) => {
+            if (!meta.value) return null;
+            return (
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUnreadClick(task);
+                }}
+                style={{ 
+                  color: 'red', 
+                  fontWeight: 'bold', 
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  display: 'inline-block',
+                  lineHeight: 1
+                }}
+                title="点击标记为已读"
+              >
+                *
+              </span>
+            );
+          },
           name: useTitleCell 
             ? (task: Task) => {
                 // 将 Task 转换为 TitleCell 需要的 record 格式
@@ -1283,6 +1325,12 @@ const App = () => {
             </span>
           </>
         )}
+        // 未读列配置
+        unreadColumn={{
+          show: showUnreadColumn,
+          width: "20px",
+          title: " ",
+        }}
       />
       
       {/* 新增任务弹框 */}

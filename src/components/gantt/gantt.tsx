@@ -102,6 +102,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   tableStyles,
   isTaskDraggable,
   rowSelection,
+  unreadColumn,
   /** 任务标题列表头自定义渲染 */
   taskTitleHeaderRender,
 }, ref) => {
@@ -837,6 +838,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             operationsColumnLabel,
             showOperationsColumn,
             rowSelection,
+            unreadColumn,
             allSelected,
             indeterminate,
             onSelectAll: handleSelectAll,
@@ -865,6 +867,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
               selectedRowKeys,
               onChange: handleRowSelectionChange,
             } : undefined,
+            unreadColumn,
           };
           return <OATaskListTable {...tablePropsData} />;
         }

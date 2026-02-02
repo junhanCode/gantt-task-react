@@ -9,12 +9,38 @@
   pointer-events: none;
 }
 
+/* 子表头文字垂直居中（日/月/季模式） */
+.calendarBottomTextVerticalCenter {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: #333;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
 .calendarTopTick {
   stroke: #e6e4e4;
 }
 
 .calendarTopText {
   text-anchor: middle;
+  fill: #555;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 母表头文字垂直居中（月/季模式） */
+.calendarTopTextVerticalCenter {
+  text-anchor: middle;
+  dominant-baseline: middle;
   fill: #555;
   -webkit-touch-callout: none;
   -webkit-user-select: none;

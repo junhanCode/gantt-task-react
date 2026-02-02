@@ -8,6 +8,8 @@ type TopPartOfCalendarProps = {
   y2Line: number;
   xText: number;
   yText: number;
+  /** 是否垂直居中（yText 为区域中心时使用） */
+  verticalCenter?: boolean;
 };
 
 export const TopPartOfCalendar: React.FC<TopPartOfCalendarProps> = ({
@@ -17,6 +19,7 @@ export const TopPartOfCalendar: React.FC<TopPartOfCalendarProps> = ({
   y2Line,
   xText,
   yText,
+  verticalCenter = false,
 }) => {
   return (
     <g className="calendarTop">
@@ -32,7 +35,8 @@ export const TopPartOfCalendar: React.FC<TopPartOfCalendarProps> = ({
         key={value + "text"}
         y={yText}
         x={xText}
-        className={styles.calendarTopText}
+        className={verticalCenter ? styles.calendarTopTextVerticalCenter : styles.calendarTopText}
+        {...(verticalCenter && { dominantBaseline: "middle" })}
       >
         {value}
       </text>
