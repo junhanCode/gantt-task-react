@@ -26,3 +26,49 @@
 .ganttTable_HeaderItem:not(:first-child) {
   vertical-align: middle;
 }
+
+/* 表头多选框自定义边框 */
+.rowSelectionCheckbox {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  position: relative;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  border: 1px solid var(--checkbox-border-color, #d9d9d9);
+  border-radius: 4px;
+  background: #fff;
+  box-sizing: border-box;
+  vertical-align: middle;
+}
+.rowSelectionCheckbox:checked {
+  background: #fff;
+  border-color: var(--checkbox-border-color, #1890ff);
+}
+.rowSelectionCheckbox:checked:not(:indeterminate)::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid #333;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.rowSelectionCheckbox:indeterminate::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 6px;
+  width: 8px;
+  height: 0;
+  border: none;
+  border-top: 2px solid #333;
+  transform: none;
+}
+.rowSelectionCheckbox:focus {
+  outline: none;
+}

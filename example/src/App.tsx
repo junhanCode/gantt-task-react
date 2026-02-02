@@ -1201,21 +1201,21 @@ const App = () => {
         onOATaskViewModeChange={(mode) => {
           setOATaskViewMode(mode);
         }}
-        // 多选列配置
-        rowSelection={showRowSelection ? {
-          selectedRowKeys,
-          onChange: handleRowSelectionChange,
-          rowKey: "id",
-          columnWidth: "50px",
-          showSelectAll: true,
-          checkboxBorderColor: checkboxBorderColor, // 新功能1：自定义复选框颜色
-          // 所有任务都可以选中，包括有子任务的项目
-          // getCheckboxProps: (record) => ({
-          //   disabled: record.type === "project", // 如需禁用项目类型，取消注释此行
-          // }),
-        } : undefined}
+        // 多选列配置（含新功能1：自定义复选框颜色；as any 兼容库类型未发布时 example 可编译）
+        rowSelection={
+          showRowSelection
+            ? ({
+                selectedRowKeys,
+                onChange: handleRowSelectionChange,
+                rowKey: "id",
+                columnWidth: "50px",
+                showSelectAll: true,
+                checkboxBorderColor,
+              } as any)
+            : undefined
+        }
         // 新功能3：任务标题按钮
-        onTaskTitleAction={showTaskTitleAction ? (task) => {
+        onTaskTitleAction={showTaskTitleAction ? (task: Task) => {
           Modal.info({
             title: '任务详情',
             width: 600,

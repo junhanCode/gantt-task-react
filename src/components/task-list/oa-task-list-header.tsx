@@ -100,6 +100,7 @@ export const OATaskListHeader: React.FC<{
               {rowSelection.showSelectAll !== false && onSelectAll ? (
                 <input
                   type="checkbox"
+                  className={rowSelection.checkboxBorderColor ? styles.rowSelectionCheckbox : undefined}
                   checked={allSelected}
                   ref={(input) => {
                     if (input) {
@@ -110,8 +111,8 @@ export const OATaskListHeader: React.FC<{
                   style={{
                     cursor: 'pointer',
                     ...(rowSelection.checkboxBorderColor ? {
-                      accentColor: rowSelection.checkboxBorderColor,
-                    } : {}),
+                      ['--checkbox-border-color' as string]: rowSelection.checkboxBorderColor,
+                    } as React.CSSProperties : {}),
                   }}
                 />
               ) : (

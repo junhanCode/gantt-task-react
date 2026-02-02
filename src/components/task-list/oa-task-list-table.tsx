@@ -237,14 +237,15 @@ export const OATaskListTable: React.FC<{
               >
                 <input
                   type="checkbox"
+                  className={rowSelection.checkboxBorderColor ? styles.rowSelectionCheckbox : undefined}
                   checked={isChecked}
                   disabled={checkboxProps.disabled}
                   onChange={(e) => handleCheckboxChange(t, e.target.checked)}
                   style={{
                     cursor: checkboxProps.disabled ? 'not-allowed' : 'pointer',
                     ...(rowSelection.checkboxBorderColor ? {
-                      accentColor: rowSelection.checkboxBorderColor,
-                    } : {}),
+                      ['--checkbox-border-color' as string]: rowSelection.checkboxBorderColor,
+                    } as React.CSSProperties : {}),
                   }}
                 />
               </td>
