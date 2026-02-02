@@ -1539,11 +1539,8 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
   [plannedStart, plannedEnd] = normalizeTimeForSameDay(plannedStart, plannedEnd);
   [actualStart, actualEnd] = normalizeTimeForSameDay(actualStart, actualEnd);
   
-  // 拼接项目前缀到名称：【系統開發】test 或 【a】【b】title
-  const projectPrefix = mockTask.project && mockTask.project.length > 0
-    ? mockTask.project.map(p => `【${p}】`).join('')
-    : '';
-  const name = `${projectPrefix}${mockTask.title}`;
+  // 不再拼接项目前缀到名称，项目标签将由 TitleCell 渲染
+  const name = mockTask.title;
   
   // 负责人取 proposer 的 name
   const assignee = mockTask.proposer.name;
@@ -1565,19 +1562,36 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
     hideChildren: true, // 默认折叠
   };
   
+  // 添加 TitleCell 需要的扩展字段
+  const extendedTask = task as any;
+  extendedTask.read = Math.random() > 0.3; // 70% 已读
+  extendedTask.focus = Math.random() > 0.8; // 20% 关注
+  extendedTask.hidden = Math.random() > 0.9; // 10% 隐藏
+  extendedTask.follow = Math.random() > 0.85; // 15% 跟进
+  extendedTask.delayDays = mockTask.delayDays;
+  extendedTask.suspend = mockTask.statusInfoVo.code === 5; // 掛起中
+  extendedTask.suspendDays = extendedTask.suspend ? Math.floor(Math.random() * 10) + 1 : 0;
+  extendedTask.hasChildren = mockTask.children && mockTask.children.length > 0;
+  extendedTask.layer = parentId ? 2 : 1; // 简单的层级判断
+  extendedTask.number = mockTask.number;
+  extendedTask.parentId = mockTask.parentId;
+  extendedTask.statusInfoVo = mockTask.statusInfoVo;
+  extendedTask.projectTags = mockTask.project; // 保留项目数组信息用于显示
+  extendedTask.category = Math.random() > 0.95 ? "6-5" : ""; // 5% 概率为会议决议
+  
   // 将proposer信息添加到task中（用于isTaskDraggable判断）
-  (task as any).proposer = mockTask.proposer;
+  extendedTask.proposer = mockTask.proposer;
   
   if (parentId) {
-    task.project = parentId;
+    extendedTask.project = parentId;
   }
   
   // 如果状态是"掛起中"，设置为禁用
   if (mockTask.statusInfoVo.code === 5) {
-    task.isDisabled = true;
+    extendedTask.isDisabled = true;
   }
   
-  return task;
+  return extendedTask;
 }
 
 // 递归转换Mock数据及其子任务

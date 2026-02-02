@@ -6,6 +6,7 @@ import "gantt-task-react/dist/index.css";
 import { Modal, Input, Select, Button, DatePicker, InputNumber, Form } from "antd";
 import { CaretRightOutlined, CaretDownOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import TitleCell from "./components/TitleCell";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -469,6 +470,10 @@ const App = () => {
   // 测试空数组功能
   const [testEmptyArray, setTestEmptyArray] = React.useState(false);
   
+  // TitleCell 相关状态
+  const [expandedTaskKeys, setExpandedTaskKeys] = React.useState<string[]>([]);
+  const [useTitleCell, setUseTitleCell] = React.useState(true);
+  
   // 重新加载数据
   const handleReloadData = () => {
     console.time('数据加载时间');
@@ -476,6 +481,23 @@ const App = () => {
     setTasks(newTasks);
     console.timeEnd('数据加载时间');
     alert(`已加载 ${newTasks.length} 个任务`);
+  };
+  
+  // TitleCell 回调函数
+  const handleTaskRead = (record: any) => {
+    setTasks(tasks.map(t => 
+      t.id === record.id ? { ...t, read: true } as any : t
+    ));
+  };
+  
+  const handleTaskExpand = (expanded: boolean, record: any) => {
+    if (expanded) {
+      setExpandedTaskKeys([...expandedTaskKeys, record.id]);
+    } else {
+      setExpandedTaskKeys(expandedTaskKeys.filter(key => key !== record.id));
+    }
+    // 同时触发甘特图的展开/折叠
+    handleExpanderClick({ ...record, hideChildren: !expanded });
   };
 
   // 为了在 demo 中方便使用最新扩展 props，这里对 Gantt 做一次 any 断言
@@ -888,6 +910,16 @@ const App = () => {
         <div><strong>1️⃣ 复选框颜色自定义：</strong> 使用上方的颜色选择器可以自定义多选框的颜色（当前：{checkboxBorderColor}）</div>
         <div><strong>2️⃣ 时间自动规范化：</strong> 任务的结束时间会自动设为当天23:59:59，条形图占满整格（无需配置，自动生效）</div>
         <div><strong>3️⃣ 任务标题列表头：</strong> 通过 taskTitleHeaderRender 自定义表头内容（可加图标），点击表头 ℹ️ 可调接口等</div>
+        <div><strong>4️⃣ TitleCell 自定义渲染：</strong> 
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: 8 }}>
+            <input
+              type="checkbox"
+              checked={useTitleCell}
+              onChange={e => setUseTitleCell(e.target.checked)}
+            />
+            启用自定义任务名列（包含未读标记、关注、跟进、延期等功能）
+          </label>
+        </div>
       </div>
       
       {/* 性能测试数据控制面板 */}
@@ -1133,21 +1165,46 @@ const App = () => {
           assignee: 8,
         }}
         columnRenderers={{
-          name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => (
-            <span
-              style={{ 
-                color: "#1677ff",
-                display: "inline-block",
-                maxWidth: "100%",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis"
-              }}
-              title={task.name}
-            >
-              {meta.displayValue}
-            </span>
-          ),
+          name: useTitleCell 
+            ? (task: Task) => {
+                // 将 Task 转换为 TitleCell 需要的 record 格式
+                const record = {
+                  ...(task as any),
+                  id: task.id,
+                };
+                return (
+                  <TitleCell
+                    value={task.name}
+                    record={record}
+                    expandedRowKeys={expandedTaskKeys}
+                    onRead={handleTaskRead}
+                    onAdd={(taskId) => {
+                      const taskToAdd = tasks.find(t => t.id === taskId);
+                      if (taskToAdd) handleAddTask(taskToAdd);
+                    }}
+                    onCheck={(rec, operate) => {
+                      console.log("查看任务:", rec, operate);
+                      handleEditTask(rec);
+                    }}
+                    onExpand={handleTaskExpand}
+                  />
+                );
+              }
+            : (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => (
+                <span
+                  style={{ 
+                    color: "#1677ff",
+                    display: "inline-block",
+                    maxWidth: "100%",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis"
+                  }}
+                  title={task.name}
+                >
+                  {meta.displayValue}
+                </span>
+              ),
           status: (task: Task) => {
             // 如果 status 是对象，渲染带颜色的文本
             if (task.status && typeof task.status === 'object') {
