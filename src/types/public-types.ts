@@ -337,7 +337,7 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     rowKey?: keyof Task | ((record: Task) => string);
     /** 自定义列表选择框宽度，默认 "50px" */
     columnWidth?: string;
-    /** 自定义多选列表头渲染，支持 ReactNode 或渲染函数（有全选复选框时显示在复选框旁） */
+    /** 自定义多选列表头，支持 React 格式如 <div>全选</div>、字符串、或渲染函数 (props) => ReactNode */
     columnTitle?: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
     /** 是否显示全选复选框，默认 true */
     showSelectAll?: boolean;

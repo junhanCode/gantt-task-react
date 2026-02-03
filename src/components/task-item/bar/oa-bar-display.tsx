@@ -16,6 +16,8 @@ type OABarDisplayProps = {
   actualStart?: Date;
   actualEnd?: Date;
   onMouseDown: (event: React.MouseEvent<SVGPolygonElement, MouseEvent>) => void;
+  /** 延期天数文案格式化，如 (days) => `延期${days}天` */
+  delayDaysFormat?: (days: number) => string;
 };
 
 export const OABarDisplay: React.FC<OABarDisplayProps> = ({
@@ -182,7 +184,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
                 rx={barCornerRadius}
                 fill={colors.delay}
               />
-              {/* 延期文字 */}
+              {/* [i18n] 延期文字：延期{delayDays}天，库内暂无 prop 可覆盖 */}
               {delayPartWidth > 30 && (
                 <text
                   x={x + safeWidth + delayPartWidth / 2}

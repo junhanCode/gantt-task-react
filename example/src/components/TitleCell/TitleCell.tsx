@@ -170,7 +170,7 @@ const TitleCell: React.FC<TitleCellProps> = memo(({
           />
         </Tooltip>
 
-        {/* 延期标记 */}
+        {/* [i18n] 延期标记：延期 X 天 */}
         <Flex style={{ display: record.delayDays > 0 ? "" : "none", flexShrink: 0 }}>
           <div
             style={{ backgroundColor: "#fff0f5", color: "#bd3124" }}
@@ -180,7 +180,7 @@ const TitleCell: React.FC<TitleCellProps> = memo(({
           </div>
         </Flex>
 
-        {/* 暂停标记 */}
+        {/* [i18n] 暂停标记：暂停 X 天 */}
         <Flex style={{ display: record.suspend ? "" : "none", flexShrink: 0 }}>
           <div
             style={{ backgroundColor: "#efefef", color: "#6c6c6c" }}

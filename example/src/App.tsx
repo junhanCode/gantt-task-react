@@ -1144,7 +1144,7 @@ const App = () => {
         onBatchExpanderClick={handleBatchExpanderClick}
         listCellWidth={isChecked ? "140px" : ""}
         nameColumnWidth={`${nameColumnWidth}px`}
-        timeColumnLabels={{
+        timeColumnLabels={{  // [i18n] 时间列标题
           plannedStart: "Planned Start",
           plannedEnd: "Planned End",
           plannedDuration: "Duration (Days)",
@@ -1165,7 +1165,7 @@ const App = () => {
         onDeleteTask={handleDeleteTask}
         // 演示操作列默认渲染，及自定义渲染能力
         operationsColumnWidth="140px"
-        operationsColumnLabel="操作"
+        operationsColumnLabel="操作"  // [i18n]
         showOperationsColumn={true}
         // 演示箭头开关
         showArrows={showArrows}
@@ -1294,7 +1294,7 @@ const App = () => {
         onOATaskViewModeChange={(mode) => {
           setOATaskViewMode(mode);
         }}
-        // 多选列配置（含 columnTitle 自定义渲染、自定义复选框颜色）
+        // [i18n] 多选列：columnTitle "全选"
         rowSelection={
           showRowSelection
             ? ({
@@ -1302,13 +1302,13 @@ const App = () => {
                 onChange: handleRowSelectionChange,
                 rowKey: "id",
                 columnWidth: "50px",
-                columnTitle: "全选",  // 自定义多选列表头，支持 ReactNode 或 (props) => ReactNode
+                columnTitle: <div>全选</div>,
                 showSelectAll: true,
                 checkboxBorderColor,
               } as any)
             : undefined
         }
-        // 表头列自定义渲染（类似 Ant Design columns[].title）
+        // [i18n] 表头：status/assignee/operations 的 defaultLabel（狀態、負責人、操作）
         columnHeaderRenderers={{
           status: ({ defaultLabel }) => (
             <span title="任务状态列">
@@ -1323,13 +1323,19 @@ const App = () => {
             <span title="操作列">{defaultLabel}</span>
           ),
         }}
-        // 时间轴标题自定义渲染（类似 Ant Design 表头）
+        // [i18n] 时间轴：日期格式 "X日"、周格式 defaultLabel "第X周"
         timelineHeaderCellRender={({ date, defaultLabel, level }) => (
-          <text x={0} y={0} dominantBaseline="middle" style={{ fontSize: 12 }}>
+          <text
+            x={0}
+            y={0}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            style={{ fontSize: 12, fill: '#333' }}
+          >
             {level === 'bottom' ? `${date.getDate()}日` : defaultLabel}
           </text>
         )}
-        // 任务标题列的表头自定义渲染：可自由排列展开节点、标题文案，并追加图标（点击时调接口等）
+        // [i18n] 任务标题列表头：titleText "任務標題"
         taskTitleHeaderRender={({ expandCollapseNode, titleText }) => (
           <>
             {expandCollapseNode}
@@ -1352,7 +1358,7 @@ const App = () => {
             </span>
           </>
         )}
-        // 未读列配置
+        // [i18n] 未读列：title
         unreadColumn={{
           show: showUnreadColumn,
           width: "20px",
