@@ -33,7 +33,8 @@ export const OATaskListHeader: React.FC<{
   };
   rowSelection?: {
     columnWidth?: string;
-    columnTitle?: React.ReactNode;
+    /** 自定义多选列表头，支持 ReactNode 或渲染函数 */
+    columnTitle?: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
     showSelectAll?: boolean;
     checkboxBorderColor?: string;
   };
@@ -51,6 +52,15 @@ export const OATaskListHeader: React.FC<{
     expandCollapseNode: React.ReactNode;
     titleText: string;
   }) => React.ReactNode;
+  /** 表头列自定义渲染（类似 Ant Design columns[].title），未指定时回退到默认或 taskTitleHeaderRender */
+  columnHeaderRenderers?: Partial<{
+    rowSelection: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+    unread: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+    name: React.ReactNode | ((props: { expandCollapseNode: React.ReactNode; defaultLabel: string }) => React.ReactNode);
+    status: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+    assignee: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+    operations: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+  }>;
 }> = ({ 
   headerHeight, 
   fontFamily, 
@@ -72,7 +82,48 @@ export const OATaskListHeader: React.FC<{
   indeterminate = false,
   onSelectAll,
   taskTitleHeaderRender,
-}) => { 
+  columnHeaderRenderers,
+}) => {
+  const renderHeader = (
+    key: keyof NonNullable<typeof columnHeaderRenderers>,
+    defaultLabel: string,
+    extra?: { expandCollapseNode?: React.ReactNode }
+  ): React.ReactNode => {
+    const renderer = columnHeaderRenderers?.[key];
+    if (!renderer) return defaultLabel;
+    if (typeof renderer === 'function') {
+      return renderer({
+        defaultLabel,
+        ...(extra?.expandCollapseNode !== undefined && { expandCollapseNode: extra.expandCollapseNode }),
+      } as any);
+    }
+    return renderer;
+  };
+
+  const expandCollapseNode = onToggleExpandAll ? (
+    <div
+      onClick={onToggleExpandAll}
+      style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+    >
+      {expandAllLeafTasks
+        ? (collapseIcon ?? (
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="2" y="2" width="12" height="2" rx="1" />
+              <rect x="2" y="7" width="12" height="2" rx="1" />
+              <rect x="2" y="12" width="12" height="2" rx="1" />
+            </svg>
+          ))
+        : (expandIcon ?? (
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="2" y="2" width="4" height="4" rx="1" />
+              <rect x="10" y="2" width="4" height="4" rx="1" />
+              <rect x="2" y="10" width="4" height="4" rx="1" />
+              <rect x="10" y="10" width="4" height="4" rx="1" />
+            </svg>
+          ))
+      }
+    </div>
+  ) : null; 
   return (
     <div
       className={styles.ganttTable}
@@ -113,25 +164,43 @@ export const OATaskListHeader: React.FC<{
               }}
             >
               {rowSelection.showSelectAll !== false && onSelectAll ? (
-                <input
-                  type="checkbox"
-                  className={rowSelection.checkboxBorderColor ? styles.rowSelectionCheckbox : undefined}
-                  checked={allSelected}
-                  ref={(input) => {
-                    if (input) {
-                      input.indeterminate = indeterminate;
-                    }
-                  }}
-                  onChange={(e) => onSelectAll(e.target.checked)}
-                  style={{
-                    cursor: 'pointer',
-                    ...(rowSelection.checkboxBorderColor ? {
-                      ['--checkbox-border-color' as string]: rowSelection.checkboxBorderColor,
-                    } as React.CSSProperties : {}),
-                  }}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                  <input
+                    type="checkbox"
+                    className={rowSelection.checkboxBorderColor ? styles.rowSelectionCheckbox : undefined}
+                    checked={allSelected}
+                    ref={(input) => {
+                      if (input) {
+                        input.indeterminate = indeterminate;
+                      }
+                    }}
+                    onChange={(e) => onSelectAll(e.target.checked)}
+                    style={{
+                      cursor: 'pointer',
+                      ...(rowSelection.checkboxBorderColor ? {
+                        ['--checkbox-border-color' as string]: rowSelection.checkboxBorderColor,
+                      } as React.CSSProperties : {}),
+                    }}
+                  />
+                  {rowSelection.columnTitle != null && (() => {
+                    const title = rowSelection.columnTitle!;
+                    const defaultLabel = '選擇';
+                    const content = typeof title === 'function' ? title({ defaultLabel }) : title;
+                    return typeof content === 'string' ? <span>{content}</span> : content;
+                  })()}
+                </div>
               ) : (
-                rowSelection.columnTitle || <span>選擇</span>
+                (() => {
+                  const renderer = columnHeaderRenderers?.rowSelection;
+                  if (renderer) {
+                    const res = typeof renderer === 'function' ? renderer({ defaultLabel: '選擇' }) : renderer;
+                    if (res != null) return res;
+                  }
+                  const title = rowSelection.columnTitle;
+                  const defaultLabel = '選擇';
+                  const content = typeof title === 'function' ? title({ defaultLabel }) : (title ?? defaultLabel);
+                  return content != null ? (typeof content === 'string' ? <span>{content}</span> : content) : <span>{defaultLabel}</span>;
+                })()
               )}
             </div>
             <div
@@ -157,7 +226,11 @@ export const OATaskListHeader: React.FC<{
                 ...(tableStyles?.headerCell || {}),
               }}
             >
-              <span>{unreadColumn.title || "未读"}</span>
+              {(() => {
+                const custom = renderHeader('unread', unreadColumn.title || "未读");
+                if (typeof custom === 'string') return <span>{custom}</span>;
+                return custom;
+              })()}
             </div>
             <div
               className={styles.ganttTable_HeaderSeparator}
@@ -181,63 +254,26 @@ export const OATaskListHeader: React.FC<{
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            {taskTitleHeaderRender ? (
-              taskTitleHeaderRender({
-                expandCollapseNode: onToggleExpandAll ? (
-                  <div
-                    onClick={onToggleExpandAll}
-                    style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
-                  >
-                    {expandAllLeafTasks
-                      ? (collapseIcon ?? (
-                          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                            <rect x="2" y="2" width="12" height="2" rx="1" />
-                            <rect x="2" y="7" width="12" height="2" rx="1" />
-                            <rect x="2" y="12" width="12" height="2" rx="1" />
-                          </svg>
-                        ))
-                      : (expandIcon ?? (
-                          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                            <rect x="2" y="2" width="4" height="4" rx="1" />
-                            <rect x="10" y="2" width="4" height="4" rx="1" />
-                            <rect x="2" y="10" width="4" height="4" rx="1" />
-                            <rect x="10" y="10" width="4" height="4" rx="1" />
-                          </svg>
-                        ))
-                    }
-                  </div>
-                ) : null,
-                titleText: "任務標題",
-              })
-            ) : (
-              <React.Fragment>
-                {onToggleExpandAll && (
-                  <div
-                    onClick={onToggleExpandAll}
-                    style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
-                  >
-                    {expandAllLeafTasks
-                      ? (collapseIcon ?? (
-                          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                            <rect x="2" y="2" width="12" height="2" rx="1" />
-                            <rect x="2" y="7" width="12" height="2" rx="1" />
-                            <rect x="2" y="12" width="12" height="2" rx="1" />
-                          </svg>
-                        ))
-                      : (expandIcon ?? (
-                          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                            <rect x="2" y="2" width="4" height="4" rx="1" />
-                            <rect x="10" y="2" width="4" height="4" rx="1" />
-                            <rect x="2" y="10" width="4" height="4" rx="1" />
-                            <rect x="10" y="10" width="4" height="4" rx="1" />
-                          </svg>
-                        ))
-                    }
-                  </div>
-                )}
-                <span>任務標題</span>
-              </React.Fragment>
-            )}
+            {(() => {
+              const nameRenderer = columnHeaderRenderers?.name ?? taskTitleHeaderRender;
+              if (nameRenderer) {
+                let content: React.ReactNode;
+                if (typeof nameRenderer === 'function') {
+                  content = columnHeaderRenderers?.name
+                    ? (nameRenderer as (p: { expandCollapseNode: React.ReactNode; defaultLabel: string }) => React.ReactNode)({ expandCollapseNode, defaultLabel: "任務標題" })
+                    : taskTitleHeaderRender!({ expandCollapseNode, titleText: "任務標題" });
+                } else {
+                  content = nameRenderer;
+                }
+                if (content) return content;
+              }
+              return (
+                <React.Fragment>
+                  {expandCollapseNode}
+                  <span>任務標題</span>
+                </React.Fragment>
+              );
+            })()}
           </div>
         </div>
         <div
@@ -261,7 +297,11 @@ export const OATaskListHeader: React.FC<{
             ...(tableStyles?.headerCell || {}),
           }}
         >
-          <span>狀態</span>
+          {(() => {
+            const custom = renderHeader('status', '狀態');
+            if (typeof custom === 'string') return <span>{custom}</span>;
+            return custom;
+          })()}
         </div>
         <div
           className={styles.ganttTable_HeaderSeparator}
@@ -284,7 +324,11 @@ export const OATaskListHeader: React.FC<{
             ...(tableStyles?.headerCell || {}),
           }}
         >
-          <span>負責人</span>
+          {(() => {
+            const custom = renderHeader('assignee', '負責人');
+            if (typeof custom === 'string') return <span>{custom}</span>;
+            return custom;
+          })()}
         </div>
         {showOperationsColumn && (
           <React.Fragment>
@@ -308,7 +352,11 @@ export const OATaskListHeader: React.FC<{
                 ...(tableStyles?.headerCell || {}),
               }}
             >
-              <span>{operationsColumnLabel ?? "操作"}</span>
+              {(() => {
+                const custom = renderHeader('operations', operationsColumnLabel ?? "操作");
+                if (typeof custom === 'string') return <span>{custom}</span>;
+                return custom;
+              })()}
             </div>
           </React.Fragment>
         )}

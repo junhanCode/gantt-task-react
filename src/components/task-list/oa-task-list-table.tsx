@@ -59,7 +59,7 @@ export const OATaskListTable: React.FC<{
     onChange?: (selectedRowKeys: string[], selectedRows: Task[]) => void;
     rowKey?: keyof Task | ((record: Task) => string);
     columnWidth?: string;
-    columnTitle?: React.ReactNode;
+    columnTitle?: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
     showSelectAll?: boolean;
     getCheckboxProps?: (record: Task) => { disabled?: boolean };
     checkboxBorderColor?: string;

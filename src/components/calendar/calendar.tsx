@@ -11,6 +11,22 @@ import {
 import { DateSetup } from "../../types/date-setup";
 import styles from "./calendar.module.css";
 
+export type TimelineHeaderCellRenderProps = {
+  date: Date;
+  index: number;
+  columnWidth: number;
+  headerHeight: number;
+  level: 'top' | 'bottom';
+  defaultLabel: string;
+  viewMode: ViewMode;
+  oaTaskViewMode?: OATaskViewMode;
+  locale: string;
+  x: number;
+  y: number;
+  isGroupStart?: boolean;
+  colSpan?: number;
+};
+
 export type CalendarProps = {
   dateSetup: DateSetup;
   locale: string;
@@ -22,6 +38,8 @@ export type CalendarProps = {
   fontSize: string;
   viewType?: ViewType;
   oaTaskViewMode?: OATaskViewMode;
+  /** 时间轴标题自定义渲染（类似 Ant Design 表头） */
+  timelineHeaderCellRender?: (props: TimelineHeaderCellRenderProps) => React.ReactNode;
 };
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -35,7 +53,43 @@ export const Calendar: React.FC<CalendarProps> = ({
   fontSize,
   viewType = "default",
   oaTaskViewMode = "日",
+  timelineHeaderCellRender,
 }) => {
+  const renderTimelineCell = (
+    date: Date,
+    index: number,
+    level: 'top' | 'bottom',
+    defaultLabel: string,
+    x: number,
+    y: number,
+    options?: { isGroupStart?: boolean; colSpan?: number }
+  ): React.ReactNode => {
+    if (!timelineHeaderCellRender) return null;
+    const custom = timelineHeaderCellRender({
+      date,
+      index,
+      columnWidth,
+      headerHeight,
+      level,
+      defaultLabel,
+      viewMode,
+      oaTaskViewMode,
+      locale,
+      x,
+      y,
+      isGroupStart: options?.isGroupStart,
+      colSpan: options?.colSpan,
+    });
+    if (custom == null) return null;
+    if (typeof custom === 'string' || typeof custom === 'number') {
+      return (
+        <text key={`custom-${date.getTime()}-${level}`} x={0} y={0} className={styles.calendarBottomText} dominantBaseline="middle">
+          {custom}
+        </text>
+      );
+    }
+    return custom;
+  };
   // 获取当前时间（用于绘制当前时间轴）
   const getCurrentTimeX = () => {
     const now = new Date();
@@ -153,16 +207,27 @@ export const Calendar: React.FC<CalendarProps> = ({
     for (let i = 0; i < dateSetup.dates.length; i++) {
       const date = dateSetup.dates[i];
       const bottomValue = getLocaleMonth(date, locale);
-      bottomValues.push(
-        <text
-          key={bottomValue + date.getFullYear()}
-          y={headerHeight * 0.8}
-          x={columnWidth * i + columnWidth * 0.5}
-          className={styles.calendarBottomText}
-        >
-          {bottomValue}
-        </text>
-      );
+      const bottomX = columnWidth * i + columnWidth * 0.5;
+      const bottomY = headerHeight * 0.8;
+      const customBottom = renderTimelineCell(date, i, 'bottom', bottomValue, bottomX, bottomY);
+      if (customBottom) {
+        bottomValues.push(
+          <g key={`month-${date.getTime()}`} transform={`translate(${bottomX}, ${bottomY})`}>
+            {customBottom}
+          </g>
+        );
+      } else {
+        bottomValues.push(
+          <text
+            key={bottomValue + date.getFullYear()}
+            y={bottomY}
+            x={bottomX}
+            className={styles.calendarBottomText}
+          >
+            {bottomValue}
+          </text>
+        );
+      }
       if (
         i === 0 ||
         date.getFullYear() !== dateSetup.dates[i - 1].getFullYear()
@@ -589,17 +654,28 @@ export const Calendar: React.FC<CalendarProps> = ({
         
         // 子表头：日期（垂直居中：子表头区域中心为 headerHeight * 0.75）
         const dayLabel = `${date.getDate()}`;
-        bottomValues.push(
-          <text
-            key={`day-${date.getTime()}`}
-            y={headerHeight * 0.75}
-            x={columnWidth * i + columnWidth * 0.5}
-            className={styles.calendarBottomTextVerticalCenter}
-            fill={isSunday ? "#999" : "#000"}
-          >
-            {dayLabel}
-          </text>
-        );
+        const dayX = columnWidth * i + columnWidth * 0.5;
+        const dayY = headerHeight * 0.75;
+        const customDay = renderTimelineCell(date, i, 'bottom', dayLabel, dayX, dayY);
+        if (customDay) {
+          bottomValues.push(
+            <g key={`day-${date.getTime()}`} transform={`translate(${dayX}, ${dayY})`}>
+              {customDay}
+            </g>
+          );
+        } else {
+          bottomValues.push(
+            <text
+              key={`day-${date.getTime()}`}
+              y={dayY}
+              x={dayX}
+              className={styles.calendarBottomTextVerticalCenter}
+              fill={isSunday ? "#999" : "#000"}
+            >
+              {dayLabel}
+            </text>
+          );
+        }
         
         // 母表头：周数（每周第一天显示）
         if (weekKey !== currentWeekKey && isSunday) {
@@ -622,17 +698,30 @@ export const Calendar: React.FC<CalendarProps> = ({
             />
           );
           
-          topValues.push(
-            <g key={`week-${weekKey}`}>
-              <text
-                y={topDefaultHeight * 0.7}
-                x={weekCenterX}
-                className={styles.calendarTopText}
-              >
-                第{weekNum}周
-              </text>
-            </g>
+          const weekLabel = `第${weekNum}周`;
+          const customWeek = renderTimelineCell(
+            sunday, i, 'top', weekLabel, weekCenterX, topDefaultHeight * 0.7,
+            { isGroupStart: true, colSpan: weekDates.length }
           );
+          if (customWeek) {
+            topValues.push(
+              <g key={`week-${weekKey}`} transform={`translate(${weekCenterX}, ${topDefaultHeight * 0.7})`}>
+                {customWeek}
+              </g>
+            );
+          } else {
+            topValues.push(
+              <g key={`week-${weekKey}`}>
+                <text
+                  y={topDefaultHeight * 0.7}
+                  x={weekCenterX}
+                  className={styles.calendarTopText}
+                >
+                  {weekLabel}
+                </text>
+              </g>
+            );
+          }
         }
         
         // 周结束处的分隔线（在周的最后一天或下一个日期是不同周时绘制）

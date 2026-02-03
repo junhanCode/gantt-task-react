@@ -494,5 +494,18 @@ export const handleTaskBySVGMouseEvent = (
       break;
   }
 
+  // 根据最新日期重新计算 delayDays，确保与条形图显示的延期天数一致
+  if (isChanged && (action === "start" || action === "end" || action === "actualStart" || action === "actualEnd" || action === "move")) {
+    const plannedEnd = changedTask.plannedEnd ?? changedTask.end;
+    const actualEnd = changedTask.actualEnd ?? changedTask.end;
+    const now = new Date();
+    const endTimeForDelay = actualEnd || now;
+    const isDelayed = endTimeForDelay > plannedEnd;
+    const delayDays = isDelayed
+      ? Math.ceil((endTimeForDelay.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24))
+      : 0;
+    (changedTask as any).delayDays = delayDays;
+  }
+
   return { isChanged, changedTask };
 };

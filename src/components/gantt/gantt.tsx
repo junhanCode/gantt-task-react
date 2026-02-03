@@ -106,6 +106,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   unreadColumn,
   /** 任务标题列表头自定义渲染 */
   taskTitleHeaderRender,
+  columnHeaderRenderers,
+  timelineHeaderCellRender,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
@@ -465,6 +467,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
         milestoneBackgroundSelectedColor
       )
     );
+    // scrollX  intentionally excluded - 水平滚动不应触发时间轴重算
   }, [
     tasks,
     viewMode,
@@ -488,7 +491,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     milestoneBackgroundColor,
     milestoneBackgroundSelectedColor,
     rtl,
-    scrollX,
     onExpanderClick,
   ]);
 
@@ -744,6 +746,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     rtl,
     viewType,
     oaTaskViewMode: currentOATaskViewMode,
+    timelineHeaderCellRender,
   };
   const barProps: TaskGanttContentProps = {
     tasks: barTasks,
@@ -845,6 +848,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             indeterminate,
             onSelectAll: handleSelectAll,
             taskTitleHeaderRender,
+            columnHeaderRenderers,
           };
           return <OATaskListHeader {...headerProps} />;
         }

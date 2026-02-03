@@ -940,6 +940,11 @@ const App = () => {
             显示未读列（在任务名左侧，用红色 * 表示未读）
           </label>
         </div>
+        <div><strong>6️⃣ 表头自定义渲染 columnHeaderRenderers：</strong> 类似 Ant Design 表格，可自定义状态/负责人/操作等列表头（如状态列带 ⓘ 图标）</div>
+        <div><strong>7️⃣ 时间轴标题自定义 timelineHeaderCellRender：</strong> 可自定义时间轴每个格子的渲染（如日期显示为「5日」）</div>
+        <div><strong>8️⃣ 多选列自定义 columnTitle：</strong> rowSelection.columnTitle 可自定义多选列表头（如「全选」）</div>
+        <div><strong>9️⃣ 水平滚动修复：</strong> 滚动水平滚动条时，起始时间轴不再跳动（内部修复）</div>
+        <div><strong>🔟 拖动后 delayDays 同步：</strong> 拖动任务条后，返回的 task.delayDays 与条形图显示的延期天数一致（内部修复）</div>
       </div>
       
       {/* 性能测试数据控制面板 */}
@@ -1289,7 +1294,7 @@ const App = () => {
         onOATaskViewModeChange={(mode) => {
           setOATaskViewMode(mode);
         }}
-        // 多选列配置（含新功能1：自定义复选框颜色；as any 兼容库类型未发布时 example 可编译）
+        // 多选列配置（含 columnTitle 自定义渲染、自定义复选框颜色）
         rowSelection={
           showRowSelection
             ? ({
@@ -1297,11 +1302,33 @@ const App = () => {
                 onChange: handleRowSelectionChange,
                 rowKey: "id",
                 columnWidth: "50px",
+                columnTitle: "全选",  // 自定义多选列表头，支持 ReactNode 或 (props) => ReactNode
                 showSelectAll: true,
                 checkboxBorderColor,
               } as any)
             : undefined
         }
+        // 表头列自定义渲染（类似 Ant Design columns[].title）
+        columnHeaderRenderers={{
+          status: ({ defaultLabel }) => (
+            <span title="任务状态列">
+              {defaultLabel}
+              <span style={{ marginLeft: 4, color: '#1890ff', cursor: 'pointer' }}>ⓘ</span>
+            </span>
+          ),
+          assignee: ({ defaultLabel }) => (
+            <span title="负责人列">{defaultLabel}</span>
+          ),
+          operations: ({ defaultLabel }) => (
+            <span title="操作列">{defaultLabel}</span>
+          ),
+        }}
+        // 时间轴标题自定义渲染（类似 Ant Design 表头）
+        timelineHeaderCellRender={({ date, defaultLabel, level }) => (
+          <text x={0} y={0} dominantBaseline="middle" style={{ fontSize: 12 }}>
+            {level === 'bottom' ? `${date.getDate()}日` : defaultLabel}
+          </text>
+        )}
         // 任务标题列的表头自定义渲染：可自由排列展开节点、标题文案，并追加图标（点击时调接口等）
         taskTitleHeaderRender={({ expandCollapseNode, titleText }) => (
           <>

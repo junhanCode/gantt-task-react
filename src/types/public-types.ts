@@ -337,8 +337,8 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     rowKey?: keyof Task | ((record: Task) => string);
     /** 自定义列表选择框宽度，默认 "50px" */
     columnWidth?: string;
-    /** 自定义列表选择框标题 */
-    columnTitle?: React.ReactNode;
+    /** 自定义多选列表头渲染，支持 ReactNode 或渲染函数（有全选复选框时显示在复选框旁） */
+    columnTitle?: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
     /** 是否显示全选复选框，默认 true */
     showSelectAll?: boolean;
     /** 禁用的行，返回 true 表示禁用该行的复选框 */
@@ -353,6 +353,48 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   taskTitleHeaderRender?: (props: {
     expandCollapseNode: React.ReactNode;
     titleText: string;
+  }) => React.ReactNode;
+  /**
+   * 表头列自定义渲染（类似 Ant Design Table columns[].title）。
+   * 支持 ReactNode 或渲染函数，未指定的列使用默认标题。
+   */
+  columnHeaderRenderers?: Partial<{
+    /** 多选列表头 */
+    rowSelection: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+    /** 未读列表头 */
+    unread: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+    /** 任务标题列表头（含展开/折叠节点） */
+    name: React.ReactNode | ((props: { expandCollapseNode: React.ReactNode; defaultLabel: string }) => React.ReactNode);
+    /** 状态列表头 */
+    status: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+    /** 负责人列表头 */
+    assignee: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+    /** 操作列表头 */
+    operations: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
+  }>;
+  /**
+   * 时间轴标题自定义渲染（类似 Ant Design 表头）。
+   * 每个时间格会调用此函数，可返回 SVG 兼容的 ReactNode（如 text、g、tspan 等）。
+   */
+  timelineHeaderCellRender?: (props: {
+    date: Date;
+    index: number;
+    columnWidth: number;
+    headerHeight: number;
+    /** 顶层/底层（多行表头时） */
+    level: 'top' | 'bottom';
+    defaultLabel: string;
+    viewMode: ViewMode;
+    oaTaskViewMode?: OATaskViewMode;
+    locale: string;
+    /** 用于定位的 x 坐标（列中心） */
+    x: number;
+    /** 用于定位的 y 坐标 */
+    y: number;
+    /** 是否为新组开始（如新周、新月的第一天） */
+    isGroupStart?: boolean;
+    /** 跨列数（合并单元格时） */
+    colSpan?: number;
   }) => React.ReactNode;
 }
 
