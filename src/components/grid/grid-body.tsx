@@ -1,6 +1,7 @@
-import React, { ReactChild } from "react";
+import React, { ReactChild, useMemo } from "react";
 import { Task, ViewType } from "../../types/public-types";
 import { addToDate } from "../../helpers/date-helper";
+import { getVirtualRange, shouldUseVirtualScroll } from "../../helpers/virtual-scroll-helper";
 import styles from "./grid.module.css";
 
 export type GridBodyProps = {
@@ -12,6 +13,8 @@ export type GridBodyProps = {
   todayColor: string;
   rtl: boolean;
   viewType?: ViewType;
+  scrollY?: number;
+  containerHeight?: number;
 };
 export const GridBody: React.FC<GridBodyProps> = ({
   tasks,
@@ -22,8 +25,21 @@ export const GridBody: React.FC<GridBodyProps> = ({
   todayColor,
   rtl,
   viewType = "default",
+  scrollY = 0,
+  containerHeight,
 }) => {
-  let y = 0;
+  const useVirtual = shouldUseVirtualScroll(tasks.length) && !!containerHeight && containerHeight > 0;
+  const virtualRange = useMemo(() => {
+    if (!useVirtual) return null;
+    return getVirtualRange(scrollY, containerHeight ?? 0, rowHeight, tasks.length);
+  }, [useVirtual, scrollY, containerHeight, rowHeight, tasks.length]);
+
+  const [startIdx, endIdx] = useMemo(() => {
+    if (!virtualRange) return [0, tasks.length - 1];
+    return [virtualRange.startIndex, virtualRange.endIndex];
+  }, [virtualRange, tasks.length]);
+
+  let y = startIdx * rowHeight;
   const gridRows: ReactChild[] = [];
   const rowLines: ReactChild[] = [
     <line
@@ -35,7 +51,8 @@ export const GridBody: React.FC<GridBodyProps> = ({
       className={styles.gridRowLine}
     />,
   ];
-  for (const task of tasks) {
+  for (let i = startIdx; i <= endIdx; i++) {
+    const task = tasks[i];
     gridRows.push(
       <rect
         key={"Row" + task.id}
@@ -94,7 +111,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
         x1={tickX}
         y1={0}
         x2={tickX}
-        y2={y}
+        y2={totalHeight}
         className={styles.gridTick}
       />
     );
@@ -117,7 +134,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
           x={tickX}
           y={0}
           width={columnWidth}
-          height={y}
+          height={totalHeight}
           fill={todayColor}
         />
       );
@@ -134,7 +151,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
           x={tickX + columnWidth}
           y={0}
           width={columnWidth}
-          height={y}
+          height={totalHeight}
           fill={todayColor}
         />
       );

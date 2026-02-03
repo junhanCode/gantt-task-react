@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useMemo } from "react";
 import styles from "./task-list-table.module.css";
 import { Task } from "../../types/public-types";
+import { getVirtualRange, shouldUseVirtualScroll } from "../../helpers/virtual-scroll-helper";
 
 export const OATaskListTable: React.FC<{
   rowHeight: number;
@@ -53,6 +54,8 @@ export const OATaskListTable: React.FC<{
     headerBackgroundColor?: string;
     headerTextColor?: string;
   };
+  scrollY?: number;
+  containerHeight?: number;
   /** 多选列配置 */
   rowSelection?: {
     selectedRowKeys?: string[];
@@ -90,6 +93,8 @@ export const OATaskListTable: React.FC<{
   tableStyles,
   rowSelection,
   unreadColumn,
+  scrollY = 0,
+  containerHeight,
 }) => {
   // 获取行的 key
   const getRowKey = (task: Task): string => {
@@ -137,6 +142,26 @@ export const OATaskListTable: React.FC<{
     return taskList.some(t => t.project === task.id);
   };
 
+  // 虛擬列表：僅渲染可見行
+  const useVirtual = shouldUseVirtualScroll(tasks.length) && !!containerHeight && containerHeight > 0;
+  const virtualRange = useMemo(() => {
+    if (!useVirtual) return null;
+    return getVirtualRange(scrollY, containerHeight, rowHeight, tasks.length);
+  }, [useVirtual, scrollY, containerHeight, rowHeight, tasks.length]);
+
+  const visibleTasks = useMemo(() => {
+    if (!virtualRange) return tasks;
+    return tasks.slice(virtualRange.startIndex, virtualRange.endIndex + 1);
+  }, [tasks, virtualRange]);
+
+  const renderTasks = virtualRange ? visibleTasks : tasks;
+  const topSpacerHeight = virtualRange ? virtualRange.startIndex * rowHeight : 0;
+  const bottomSpacerHeight = virtualRange
+    ? (tasks.length - virtualRange.endIndex - 1) * rowHeight
+    : 0;
+
+  const colCount = 6;
+
   const getEllipsisData = (column: "name" | "status" | "assignee" | "unread", rawValue?: string | any) => {
     // 处理 status 可能是 StatusInfo 对象的情况
     let value = "";
@@ -181,7 +206,13 @@ export const OATaskListTable: React.FC<{
         {showOperationsColumn && <col style={{ width: operationsColumnWidth ?? "120px" }} />}
       </colgroup>
       <tbody>
-      {tasks.map((t, index) => {
+      {topSpacerHeight > 0 && (
+        <tr aria-hidden="true" style={{ height: topSpacerHeight }}>
+          <td colSpan={colCount} style={{ padding: 0, border: "none", height: topSpacerHeight, lineHeight: 0 }} />
+        </tr>
+      )}
+      {renderTasks.map((t, idx) => {
+        const index = virtualRange ? virtualRange.startIndex + idx : idx;
         const hasChild = hasChildren(t);
         const isCollapsed = t.hideChildren ?? false;
         let expanderContent: React.ReactNode = null;
@@ -456,6 +487,11 @@ export const OATaskListTable: React.FC<{
           </tr>
         );
       })}
+      {bottomSpacerHeight > 0 && (
+        <tr aria-hidden="true" style={{ height: bottomSpacerHeight }}>
+          <td colSpan={colCount} style={{ padding: 0, border: "none", height: bottomSpacerHeight, lineHeight: 0 }} />
+        </tr>
+      )}
       </tbody>
     </table>
   );

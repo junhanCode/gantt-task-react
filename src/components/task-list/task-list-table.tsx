@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import styles from "./task-list-table.module.css";
 import { Task } from "../../types/public-types";
+import { getVirtualRange, shouldUseVirtualScroll } from "../../helpers/virtual-scroll-helper";
 
 // 统一显示为 YYYY/M/D，例如 2025/8/25
 const formatYmd = (date: Date) => {
@@ -56,6 +57,8 @@ export const TaskListTableDefault: React.FC<{
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
   onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
+  scrollY?: number;
+  containerHeight?: number;
   tableStyles?: {
     height?: number | string;
     container?: React.CSSProperties;
@@ -86,6 +89,8 @@ export const TaskListTableDefault: React.FC<{
   collapseIcon,
   onDateChange,
   tableStyles,
+  scrollY = 0,
+  containerHeight,
 }) => {
   // 右键菜单状态
   const [menuVisible, setMenuVisible] = useState(false);
@@ -182,8 +187,23 @@ export const TaskListTableDefault: React.FC<{
     };
   }, []);
 
+  // 虛擬列表：僅渲染可見行
+  const useVirtual = shouldUseVirtualScroll(tasks.length) && !!containerHeight && containerHeight > 0;
+  const virtualRange = useMemo(() => {
+    if (!useVirtual) return null;
+    return getVirtualRange(scrollY, containerHeight, rowHeight, tasks.length);
+  }, [useVirtual, scrollY, containerHeight, rowHeight, tasks.length]);
 
+  const visibleTasks = useMemo(() => {
+    if (!virtualRange) return tasks;
+    return tasks.slice(virtualRange.startIndex, virtualRange.endIndex + 1);
+  }, [tasks, virtualRange]);
 
+  const renderTasks = virtualRange ? visibleTasks : tasks;
+  const topSpacerHeight = virtualRange ? virtualRange.startIndex * rowHeight : 0;
+  const bottomSpacerHeight = virtualRange
+    ? (tasks.length - virtualRange.endIndex - 1) * rowHeight
+    : 0;
 
 
   return (
@@ -208,7 +228,13 @@ export const TaskListTableDefault: React.FC<{
           <col style={{ width: timeColumnWidths?.actualEnd ?? rowWidth }} />
         </colgroup>
         <tbody>
-        {tasks.map((t, index) => {
+        {topSpacerHeight > 0 && (
+          <tr aria-hidden="true" style={{ height: topSpacerHeight }}>
+            <td colSpan={6} style={{ padding: 0, border: "none", height: topSpacerHeight, lineHeight: 0 }} />
+          </tr>
+        )}
+        {renderTasks.map((t, idx) => {
+          const index = virtualRange ? virtualRange.startIndex + idx : idx;
           let expanderContent: React.ReactNode = null;
           if (t.hideChildren === false) {
             expanderContent = collapseIcon ?? (
@@ -350,6 +376,11 @@ export const TaskListTableDefault: React.FC<{
             </tr>
           );
         })}
+        {bottomSpacerHeight > 0 && (
+          <tr aria-hidden="true" style={{ height: bottomSpacerHeight }}>
+            <td colSpan={6} style={{ padding: 0, border: "none", height: bottomSpacerHeight, lineHeight: 0 }} />
+          </tr>
+        )}
         </tbody>
       </table>
       {/* 右键菜单 */}

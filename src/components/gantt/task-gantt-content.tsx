@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { EventOption } from "../../types/public-types";
 import { BarTask } from "../../types/bar-task";
 import { Arrow } from "../other/arrow";
 import { handleTaskBySVGMouseEvent } from "../../helpers/bar-helper";
 import { isKeyboardEvent } from "../../helpers/other-helper";
+import { getVirtualRange, shouldUseVirtualScroll } from "../../helpers/virtual-scroll-helper";
 import { TaskItem } from "../task-item/task-item";
 import {
   BarMoveAction,
@@ -36,6 +37,8 @@ export type TaskGanttContentProps = {
   setGanttEvent: (value: GanttEvent) => void;
   setFailedTask: (value: BarTask | null) => void;
   setSelectedTask: (taskId: string) => void;
+  scrollY?: number;
+  containerHeight?: number;
 } & EventOption;
 
 export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
@@ -62,6 +65,8 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   setGanttEvent,
   setFailedTask,
   setSelectedTask,
+  scrollY = 0,
+  containerHeight,
   onDateChange,
   onProgressChange,
   onDoubleClick,
@@ -338,12 +343,31 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
     }
   };
 
+  const useVirtual = shouldUseVirtualScroll(tasks.length) && !!containerHeight && containerHeight > 0;
+  const virtualRange = useMemo(() => {
+    if (!useVirtual) return null;
+    return getVirtualRange(scrollY, containerHeight, rowHeight, tasks.length);
+  }, [useVirtual, scrollY, containerHeight, rowHeight, tasks.length]);
+
+  const visibleTasks = useMemo(() => {
+    if (!virtualRange) return tasks;
+    return tasks.slice(virtualRange.startIndex, virtualRange.endIndex + 1);
+  }, [tasks, virtualRange]);
+
+  const visibleSet = useMemo(() => {
+    if (!virtualRange) return null;
+    const set = new Set<number>();
+    for (let i = virtualRange.startIndex; i <= virtualRange.endIndex; i++) set.add(i);
+    return set;
+  }, [virtualRange]);
+
   return (
     <g className="content">
       {showArrows !== false && (
         <g className="arrows" fill={arrowColor} stroke={arrowColor}>
-          {tasks.map(task => {
+          {tasks.map((task, taskIdx) => {
             return task.barChildren.map(child => {
+              if (visibleSet && (!visibleSet.has(taskIdx) || !visibleSet.has(child.index))) return null;
               return (
                 <Arrow
                   key={`Arrow from ${task.id} to ${tasks[child.index].id}`}
@@ -360,7 +384,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
         </g>
       )}
       <g className="bar" fontFamily={fontFamily} fontSize={fontSize}>
-        {tasks.map(task => {
+        {visibleTasks.map(task => {
           // 判断任务是否可以拖动/调整（基础判断）
           const canDragBase = isTaskDraggable ? isTaskDraggable(task) : true;
           const isDateChangeableForTask = (!!onDateChange || !!onTaskDragEnd) && !task.isDisabled && !task.disableDrag && canDragBase;

@@ -375,8 +375,8 @@ const App = () => {
   const [viewType] = React.useState<"default" | "oaTask">("oaTask");
   const [oaTaskViewMode, setOATaskViewMode] = React.useState<OATaskViewMode>("日");
   
-  // 性能测试相关状态
-  const [useLargeData, setUseLargeData] = React.useState(false);
+  // 性能测试相关状态（默认启用大量数据以展示虚拟列表优化）
+  const [useLargeData, setUseLargeData] = React.useState(true);
   const [parentCount, setParentCount] = React.useState(100);
   const [childrenPerParent, setChildrenPerParent] = React.useState(10);
   
@@ -957,6 +957,11 @@ const App = () => {
       }}>
         <div style={{ marginBottom: 8, fontWeight: 'bold', fontSize: '14px' }}>
           🚀 性能测试数据配置 (当前任务数: {tasks.length})
+          {tasks.length > 50 && (
+            <span style={{ marginLeft: 8, color: '#52c41a', fontSize: '12px', fontWeight: 'normal' }}>
+              ✓ 虚拟列表已启用（仅渲染可见行，提升滚动性能）
+            </span>
+          )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>

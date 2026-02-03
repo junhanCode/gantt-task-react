@@ -127,6 +127,10 @@ export type TaskListProps = {
     selectedTaskId: string;
     setSelectedTask: (taskId: string) => void;
     onExpanderClick: (task: Task) => void;
+    /** 虛擬滾動：當前滾動位置 */
+    scrollY?: number;
+    /** 虛擬滾動：可見區域高度 */
+    containerHeight?: number;
     nameColumnWidth?: string;
     timeColumnWidths?: {
       plannedStart?: string;
@@ -263,6 +267,8 @@ export const TaskList: React.FC<TaskListProps> = ({
     collapseIcon,
     onDateChange,
     tableStyles,
+    scrollY,
+    containerHeight: ganttHeight || undefined,
   };
 
   return (

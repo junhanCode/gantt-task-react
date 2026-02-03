@@ -734,6 +734,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     todayColor,
     rtl,
     viewType,
+    scrollY,
+    containerHeight: ganttHeight || undefined,
   };
   const calendarProps: CalendarProps = {
     dateSetup,
@@ -772,6 +774,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     setGanttEvent,
     setFailedTask,
     setSelectedTask: handleSelectedTask,
+    scrollY,
+    containerHeight: ganttHeight || undefined,
     onDateChange,
     onProgressChange,
     onDoubleClick,
