@@ -5,6 +5,8 @@ import { Task } from "../../types/public-types";
 export type TaskListProps = {
   headerHeight: number;
   rowWidth: string;
+  /** 左侧任务列表总宽度（如 "500px"），不传则根据列宽自动计算 */
+  listWidth?: string;
   fontFamily: string;
   fontSize: string;
   rowHeight: number;
@@ -57,12 +59,14 @@ export type TaskListProps = {
   onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
   /** 表格样式配置 */
   tableStyles?: {
+    headerHeight?: number;
     height?: number | string;
     container?: React.CSSProperties;
     row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
     cell?: React.CSSProperties;
     header?: React.CSSProperties;
     headerCell?: React.CSSProperties;
+    headerCellPadding?: string;
     borderColor?: string;
     rowBackgroundColor?: string;
     rowEvenBackgroundColor?: string;
@@ -189,6 +193,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   ganttHeight,
   taskListRef,
   horizontalContainerClass,
+  listWidth,
   nameColumnWidth,
   timeColumnLabels,
   timeColumnWidths,
@@ -261,7 +266,10 @@ export const TaskList: React.FC<TaskListProps> = ({
   };
 
   return (
-    <div ref={taskListRef}>
+    <div
+      ref={taskListRef}
+      style={listWidth ? { width: listWidth, minWidth: listWidth } : undefined}
+    >
       <TaskListHeader {...headerProps} />
       <div
         ref={horizontalContainerRef}

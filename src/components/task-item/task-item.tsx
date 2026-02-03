@@ -36,7 +36,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
     taskHeight,
     isSelected,
     rtl,
-    hideTaskName = false,
+    hideTaskName = true,
     onEventStart,
   } = {
     ...props,

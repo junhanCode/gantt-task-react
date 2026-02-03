@@ -143,6 +143,8 @@ export interface StylingOption {
   headerHeight?: number;
   columnWidth?: number;
   listCellWidth?: string;
+  /** 左侧任务列表总宽度（如 "500px"），不传则根据列宽自动计算 */
+  listWidth?: string;
   /** 独立配置名称列宽，不传则使用 listCellWidth */
   nameColumnWidth?: string;
   rowHeight?: number;
@@ -156,7 +158,7 @@ export interface StylingOption {
    * From 0 to 100
    */
   barFill?: number;
-  /** 是否隐藏条形图上的任务名文字，默认false */
+  /** 是否隐藏条形图上的任务名文字，默认true（隐藏） */
   hideTaskName?: boolean;
   barProgressColor?: string;
   barProgressSelectedColor?: string;
@@ -196,6 +198,8 @@ export interface StylingOption {
   };
   /** 表格样式配置 */
   tableStyles?: {
+    /** 左侧表头高度（数字，如 50），不传则使用全局 headerHeight */
+    headerHeight?: number;
     /** 表格容器高度（支持数字或字符串，如 500 或 "500px" 或 "100%"） */
     height?: number | string;
     /** 表格容器样式 */
@@ -216,6 +220,8 @@ export interface StylingOption {
     rowEvenBackgroundColor?: string;
     /** 单元格内边距 */
     cellPadding?: string;
+    /** 表头单元格内边距，不传则使用 cellPadding */
+    headerCellPadding?: string;
     /** 表头背景色 */
     headerBackgroundColor?: string;
     /** 表头文字颜色 */

@@ -404,7 +404,7 @@ const App = () => {
   const [showTooltip, setShowTooltip] = React.useState<boolean>(true);
   const [enableTaskDrag, setEnableTaskDrag] = React.useState<boolean>(false);
   const [enableTaskResize, setEnableTaskResize] = React.useState<boolean>(true);
-  const [hideTaskName, setHideTaskName] = React.useState<boolean>(false);
+  const [hideTaskName, setHideTaskName] = React.useState<boolean>(true);
   const [nameColumnWidth, setNameColumnWidth] = React.useState<number>(190);
   
   // 多选列状态

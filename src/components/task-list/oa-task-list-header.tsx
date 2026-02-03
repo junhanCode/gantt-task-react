@@ -16,12 +16,14 @@ export const OATaskListHeader: React.FC<{
   operationsColumnLabel?: string;
   showOperationsColumn?: boolean;
   tableStyles?: {
+    headerHeight?: number;
     height?: number | string;
     container?: React.CSSProperties;
     row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
     cell?: React.CSSProperties;
     header?: React.CSSProperties;
     headerCell?: React.CSSProperties;
+    headerCellPadding?: string;
     borderColor?: string;
     rowBackgroundColor?: string;
     rowEvenBackgroundColor?: string;
@@ -91,7 +93,7 @@ export const OATaskListHeader: React.FC<{
       <div
         className={styles.ganttTable_Header}
         style={{
-          height: headerHeight - 2,
+          height: (tableStyles?.headerHeight ?? headerHeight) - 2,
           ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
         }}
       >
@@ -104,7 +106,7 @@ export const OATaskListHeader: React.FC<{
                 minWidth: rowSelection.columnWidth || "50px",
                 maxWidth: rowSelection.columnWidth || "50px",
                 textAlign: 'center',
-                ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
                 ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
                 ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
                 ...(tableStyles?.headerCell || {}),
@@ -135,8 +137,8 @@ export const OATaskListHeader: React.FC<{
             <div
               className={styles.ganttTable_HeaderSeparator}
               style={{
-                height: headerHeight * 0.6,
-                marginTop: headerHeight * 0.2,
+                height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
               }}
             />
           </React.Fragment>
@@ -150,7 +152,7 @@ export const OATaskListHeader: React.FC<{
                 minWidth: unreadColumn.width || "40px",
                 maxWidth: unreadColumn.width || "40px",
                 textAlign: 'center',
-                ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
                 ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
                 ...(tableStyles?.headerCell || {}),
               }}
@@ -160,8 +162,8 @@ export const OATaskListHeader: React.FC<{
             <div
               className={styles.ganttTable_HeaderSeparator}
               style={{
-                height: headerHeight * 0.6,
-                marginTop: headerHeight * 0.2,
+                height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
               }}
             />
           </React.Fragment>
@@ -172,7 +174,7 @@ export const OATaskListHeader: React.FC<{
           style={{
             minWidth: nameColumnWidth || rowWidth,
             maxWidth: nameColumnWidth || rowWidth,
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),
@@ -241,8 +243,8 @@ export const OATaskListHeader: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.6,
-            marginTop: headerHeight * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
           }}
         />
         
@@ -253,7 +255,7 @@ export const OATaskListHeader: React.FC<{
             minWidth: "100px",
             maxWidth: "100px",
             textAlign: 'center',
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),
@@ -264,8 +266,8 @@ export const OATaskListHeader: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.6,
-            marginTop: headerHeight * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
           }}
         />
         
@@ -276,7 +278,7 @@ export const OATaskListHeader: React.FC<{
             minWidth: "100px",
             maxWidth: "100px",
             textAlign: 'center',
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),
@@ -289,8 +291,8 @@ export const OATaskListHeader: React.FC<{
             <div
               className={styles.ganttTable_HeaderSeparator}
               style={{
-                height: headerHeight * 0.6,
-                marginTop: headerHeight * 0.2,
+                height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
               }}
             />
             {/* 操作列 */}
@@ -300,7 +302,7 @@ export const OATaskListHeader: React.FC<{
                 minWidth: operationsColumnWidth ?? "120px",
                 maxWidth: operationsColumnWidth ?? "120px",
                 textAlign: 'center',
-                ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
                 ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
                 ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
                 ...(tableStyles?.headerCell || {}),

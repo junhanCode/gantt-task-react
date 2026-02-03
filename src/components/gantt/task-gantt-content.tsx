@@ -51,7 +51,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   arrowColor,
   arrowIndent,
   showArrows = true,
-  hideTaskName = false,
+  hideTaskName = true,
   fontFamily,
   fontSize,
   rtl,

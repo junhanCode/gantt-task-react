@@ -31,12 +31,14 @@ TaskListHeaderDefault: React.FC<{
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
   tableStyles?: {
+    headerHeight?: number;
     height?: number | string;
     container?: React.CSSProperties;
     row?: React.CSSProperties | ((rowIndex: number) => React.CSSProperties);
     cell?: React.CSSProperties;
     header?: React.CSSProperties;
     headerCell?: React.CSSProperties;
+    headerCellPadding?: string;
     borderColor?: string;
     rowBackgroundColor?: string;
     rowEvenBackgroundColor?: string;
@@ -93,7 +95,7 @@ TaskListHeaderDefault: React.FC<{
       <div
         className={styles.ganttTable_Header}
         style={{
-          height: headerHeight - 2,
+          height: (tableStyles?.headerHeight ?? headerHeight) - 2,
           ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
         }}
       >
@@ -102,7 +104,7 @@ TaskListHeaderDefault: React.FC<{
           style={{
             minWidth: width.name,
             maxWidth: width.name,
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),
@@ -113,8 +115,8 @@ TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.6,
-            marginTop: headerHeight * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
           }}
         />
         <div
@@ -123,7 +125,7 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.plannedStart,
             maxWidth: width.plannedStart,
             textAlign: 'center',
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),
@@ -134,8 +136,8 @@ TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.6,
-            marginTop: headerHeight * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
           }}
         />
         <div
@@ -144,7 +146,7 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.plannedEnd,
             maxWidth: width.plannedEnd,
             textAlign: 'center',
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),
@@ -155,8 +157,8 @@ TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.6,
-            marginTop: headerHeight * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
           }}
         />
         <div
@@ -165,7 +167,7 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.plannedDuration,
             maxWidth: width.plannedDuration,
             textAlign: 'center',
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),
@@ -176,8 +178,8 @@ TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.6,
-            marginTop: headerHeight * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
           }}
         />
         <div
@@ -186,7 +188,7 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.actualStart,
             maxWidth: width.actualStart,
             textAlign: 'center',
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),
@@ -197,8 +199,8 @@ TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.6,
-            marginTop: headerHeight * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
           }}
         />
         <div
@@ -207,7 +209,7 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.actualEnd,
             maxWidth: width.actualEnd,
             textAlign: 'center',
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),
@@ -218,8 +220,8 @@ TaskListHeaderDefault: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: headerHeight * 0.6,
-            marginTop: headerHeight * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
           }}
         />
         <div
@@ -228,7 +230,7 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.operations,
             maxWidth: width.operations,
             textAlign: 'center',
-            ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
             ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
             ...(tableStyles?.headerCell || {}),

@@ -40,7 +40,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   locale = "en-GB",
   barFill = 60,
   barCornerRadius = 3,
-  hideTaskName = false,
+  hideTaskName = true,
   barProgressColor = "#a3a3ff",
   barProgressSelectedColor = "#8282f5",
   barBackgroundColor = "#b8c2cc",
@@ -84,6 +84,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   showOperationsColumn = true,
   expandIcon,
   collapseIcon,
+  listWidth,
   nameColumnWidth,
   timeColumnLabels,
   timeColumnWidths,
@@ -566,7 +567,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     } else if (taskListRef.current) {
       setTaskListWidth(taskListRef.current.offsetWidth);
     }
-  }, [taskListRef, listCellWidth, isTaskListCollapsed]);
+  }, [taskListRef, listCellWidth, listWidth, isTaskListCollapsed]);
 
   useEffect(() => {
     if (wrapperRef.current) {
@@ -807,6 +808,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const tableProps: TaskListProps = {
     rowHeight,
     rowWidth: listCellWidth,
+    listWidth,
     fontFamily,
     fontSize,
     tasks: barTasks,
