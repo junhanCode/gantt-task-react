@@ -142,7 +142,7 @@ export const OATaskListHeader: React.FC<{
       }}
     >
       <div
-        className={styles.ganttTable_Header}
+        className={`${styles.ganttTable_Header} oa-task-list-header-row`}
         style={{
           height: (tableStyles?.headerHeight ?? headerHeight),
           ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
