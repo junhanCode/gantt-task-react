@@ -15,6 +15,8 @@ export type GridBodyProps = {
   viewType?: ViewType;
   scrollY?: number;
   containerHeight?: number;
+  gridBorderWidth?: number;
+  gridBorderColor?: string;
 };
 export const GridBody: React.FC<GridBodyProps> = ({
   tasks,
@@ -27,6 +29,8 @@ export const GridBody: React.FC<GridBodyProps> = ({
   viewType = "default",
   scrollY = 0,
   containerHeight,
+  gridBorderWidth = 1,
+  gridBorderColor = "#e6e4e4",
 }) => {
   const useVirtual = shouldUseVirtualScroll(tasks.length) && !!containerHeight && containerHeight > 0;
   const virtualRange = useMemo(() => {
@@ -113,6 +117,8 @@ export const GridBody: React.FC<GridBodyProps> = ({
         x2={tickX}
         y2={totalHeight}
         className={styles.gridTick}
+        stroke={gridBorderColor}
+        strokeWidth={gridBorderWidth}
       />
     );
     if (

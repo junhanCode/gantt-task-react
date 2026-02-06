@@ -144,7 +144,7 @@ export const OATaskListHeader: React.FC<{
       <div
         className={styles.ganttTable_Header}
         style={{
-          height: (tableStyles?.headerHeight ?? headerHeight) - 2,
+          height: (tableStyles?.headerHeight ?? headerHeight),
           ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
         }}
       >
@@ -206,8 +206,8 @@ export const OATaskListHeader: React.FC<{
             <div
               className={styles.ganttTable_HeaderSeparator}
               style={{
-                height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
-                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
+                height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
+                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
               }}
             />
           </React.Fragment>
@@ -235,8 +235,8 @@ export const OATaskListHeader: React.FC<{
             <div
               className={styles.ganttTable_HeaderSeparator}
               style={{
-                height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
-                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
+                height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
+                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
               }}
             />
           </React.Fragment>
@@ -279,8 +279,8 @@ export const OATaskListHeader: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
-            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
           }}
         />
         
@@ -306,8 +306,8 @@ export const OATaskListHeader: React.FC<{
         <div
           className={styles.ganttTable_HeaderSeparator}
           style={{
-            height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
-            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
+            height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
+            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
           }}
         />
         
@@ -335,8 +335,8 @@ export const OATaskListHeader: React.FC<{
             <div
               className={styles.ganttTable_HeaderSeparator}
               style={{
-                height: (tableStyles?.headerHeight ?? headerHeight) * 0.6,
-                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2,
+                height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
+                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
               }}
             />
             {/* 操作列 */}

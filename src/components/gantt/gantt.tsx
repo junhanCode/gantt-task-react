@@ -64,6 +64,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   showArrows = true,
   showTooltip = true,
   todayColor = "rgba(252, 248, 227, 0.5)",
+  gridBorderWidth = 1,
+  gridBorderColor = "#e6e4e4",
   viewDate,
   TooltipContent = StandardTooltipContent,
   TaskListHeader = TaskListHeaderDefault,
@@ -736,6 +738,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     viewType,
     scrollY,
     containerHeight: ganttHeight || undefined,
+    gridBorderWidth,
+    gridBorderColor,
   };
   const calendarProps: CalendarProps = {
     dateSetup,
@@ -749,6 +753,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     viewType,
     oaTaskViewMode: currentOATaskViewMode,
     timelineHeaderCellRender,
+    gridBorderWidth,
+    gridBorderColor,
   };
   const barProps: TaskGanttContentProps = {
     tasks: barTasks,

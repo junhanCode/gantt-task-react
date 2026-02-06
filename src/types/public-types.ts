@@ -180,6 +180,10 @@ export interface StylingOption {
   /** 是否显示悬浮信息框（tooltip），默认true */
   showTooltip?: boolean;
   todayColor?: string;
+  /** 时间刻度边框宽度，默认1 */
+  gridBorderWidth?: number;
+  /** 时间刻度边框颜色，默认#e6e4e4 */
+  gridBorderColor?: string;
   /** 左侧四个时间列标题自定义 */
   timeColumnLabels?: {
     plannedStart?: string;

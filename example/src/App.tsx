@@ -1149,6 +1149,9 @@ const App = () => {
         onBatchExpanderClick={handleBatchExpanderClick}
         listCellWidth={isChecked ? "140px" : ""}
         nameColumnWidth={`${nameColumnWidth}px`}
+        // 自定义时间刻度边框
+        gridBorderWidth={1}
+        gridBorderColor="#f0f0f0"
         timeColumnLabels={{  // [i18n] 时间列标题
           plannedStart: "Planned Start",
           plannedEnd: "Planned End",
@@ -1165,6 +1168,10 @@ const App = () => {
         }}
         ganttHeight={298}
         columnWidth={columnWidth}
+        // 自定义左侧表头高度：42px
+        tableStyles={{
+          headerHeight: 42,
+        }}
         onAddTask={handleAddTask}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}

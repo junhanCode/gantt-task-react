@@ -40,6 +40,8 @@ export type CalendarProps = {
   oaTaskViewMode?: OATaskViewMode;
   /** 时间轴标题自定义渲染（类似 Ant Design 表头） */
   timelineHeaderCellRender?: (props: TimelineHeaderCellRenderProps) => React.ReactNode;
+  gridBorderWidth?: number;
+  gridBorderColor?: string;
 };
 
 export const Calendar: React.FC<CalendarProps> = ({
@@ -54,6 +56,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   viewType = "default",
   oaTaskViewMode = "日",
   timelineHeaderCellRender,
+  gridBorderWidth = 1,
+  gridBorderColor = "#e6e4e4",
 }) => {
   const renderTimelineCell = (
     date: Date,
@@ -490,6 +494,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           x2={columnWidth * i}
           y2={headerHeight}
           className={styles.calendarTopTick}
+          stroke={gridBorderColor}
+          strokeWidth={gridBorderWidth}
         />
       );
       // 每天开始处（每4列）绘制贯穿三层的竖线，形成中部合并单元的边界
@@ -502,6 +508,8 @@ export const Calendar: React.FC<CalendarProps> = ({
             x2={columnWidth * i}
             y2={headerHeight}
             className={styles.calendarTopTick}
+            stroke={gridBorderColor}
+            strokeWidth={gridBorderWidth}
           />
         );
       }
@@ -526,6 +534,8 @@ export const Calendar: React.FC<CalendarProps> = ({
         x2={totalWidth}
         y2={topDefaultHeight}
         className={styles.calendarTopTick}
+        stroke={gridBorderColor}
+        strokeWidth={gridBorderWidth}
       />
     );
     bgValues.push(
@@ -536,6 +546,8 @@ export const Calendar: React.FC<CalendarProps> = ({
         x2={totalWidth}
         y2={topDefaultHeight * 2}
         className={styles.calendarTopTick}
+        stroke={gridBorderColor}
+        strokeWidth={gridBorderWidth}
       />
     );
 
@@ -635,6 +647,8 @@ export const Calendar: React.FC<CalendarProps> = ({
             x2={columnWidth * i}
             y2={headerHeight}
             className={styles.calendarTopTick}
+            stroke={gridBorderColor}
+            strokeWidth={gridBorderWidth}
           />
         );
         
@@ -695,6 +709,8 @@ export const Calendar: React.FC<CalendarProps> = ({
               x2={weekStartX}
               y2={topDefaultHeight}
               className={styles.calendarTopTick}
+              stroke={gridBorderColor}
+              strokeWidth={gridBorderWidth}
             />
           );
           
@@ -737,6 +753,8 @@ export const Calendar: React.FC<CalendarProps> = ({
               x2={weekEndX}
               y2={topDefaultHeight}
               className={styles.calendarTopTick}
+              stroke={gridBorderColor}
+              strokeWidth={gridBorderWidth}
             />
           );
         }
@@ -751,6 +769,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           x2={totalWidth}
           y2={topDefaultHeight}
           className={styles.calendarTopTick}
+          stroke={gridBorderColor}
+          strokeWidth={gridBorderWidth}
         />
       );
     } else if (oaTaskViewMode === "月") {
@@ -801,6 +821,8 @@ export const Calendar: React.FC<CalendarProps> = ({
             x2={columnWidth * i}
             y2={headerHeight}
             className={styles.calendarTopTick}
+            stroke={gridBorderColor}
+            strokeWidth={gridBorderWidth}
           />
         );
         
@@ -817,6 +839,8 @@ export const Calendar: React.FC<CalendarProps> = ({
               x2={yearStartX}
               y2={topDefaultHeight}
               className={styles.calendarTopTick}
+              stroke={gridBorderColor}
+              strokeWidth={gridBorderWidth}
             />
           );
         }
@@ -833,6 +857,8 @@ export const Calendar: React.FC<CalendarProps> = ({
               x2={yearEndX}
               y2={topDefaultHeight}
               className={styles.calendarTopTick}
+              stroke={gridBorderColor}
+              strokeWidth={gridBorderWidth}
             />
           );
         }
@@ -887,6 +913,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           x2={totalWidth}
           y2={topDefaultHeight}
           className={styles.calendarTopTick}
+          stroke={gridBorderColor}
+          strokeWidth={gridBorderWidth}
         />
       );
     } else if (oaTaskViewMode === "季") {
@@ -937,6 +965,8 @@ export const Calendar: React.FC<CalendarProps> = ({
             x2={columnWidth * i}
             y2={headerHeight}
             className={styles.calendarTopTick}
+            stroke={gridBorderColor}
+            strokeWidth={gridBorderWidth}
           />
         );
         
@@ -953,6 +983,8 @@ export const Calendar: React.FC<CalendarProps> = ({
               x2={yearStartX}
               y2={topDefaultHeight}
               className={styles.calendarTopTick}
+              stroke={gridBorderColor}
+              strokeWidth={gridBorderWidth}
             />
           );
         }
@@ -969,6 +1001,8 @@ export const Calendar: React.FC<CalendarProps> = ({
               x2={yearEndX}
               y2={topDefaultHeight}
               className={styles.calendarTopTick}
+              stroke={gridBorderColor}
+              strokeWidth={gridBorderWidth}
             />
           );
         }
@@ -1023,6 +1057,8 @@ export const Calendar: React.FC<CalendarProps> = ({
           x2={totalWidth}
           y2={topDefaultHeight}
           className={styles.calendarTopTick}
+          stroke={gridBorderColor}
+          strokeWidth={gridBorderWidth}
         />
       );
     }
