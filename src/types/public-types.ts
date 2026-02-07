@@ -18,7 +18,10 @@ export type StatusInfo = {
   color: string;
 };
 export type ViewType = "default" | "oaTask";
-export type OATaskViewMode = "日" | "月" | "季";
+// OA 视图模式：日 / 周 / 月 / 年
+export type OATaskViewMode = "日" | "周" | "月" | "季" | "年";
+// 语言类型：繁体中文 / 英文
+export type Language = 'zh-TW' | 'en';
 export interface Task {
   id: string;
   type: TaskType;
@@ -118,6 +121,11 @@ export interface EventOption {
     children: Task[],
     action: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress'
   ) => void;
+  /**
+   * Invokes when the Gantt chart has fully rendered (initial render and after data updates)
+   * Useful for post-render operations like taking screenshots, exporting, or analytics
+   */
+  onRenderComplete?: () => void;
 }
 
 export interface DisplayOption {
@@ -273,6 +281,8 @@ export interface ColumnConfig {
 
 export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   tasks: Task[];
+  /** 语言设置，支持 'zh-TW'(繁体中文) 和 'en'(英文)，默认 'zh-TW' */
+  language?: Language;
   onAddTask?: (task: Task) => void; // 修改这里：从 (parentTaskId: string) => void 改为 (task: Task) => void
   AddTaskModal?: React.FC<{
     isOpen: boolean;
@@ -319,7 +329,7 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   // 新增配置
   /** 视图类型，支持 "default" 和 "oaTask" */
   viewType?: ViewType;
-  /** oaTask模式下的视图模式（日、月、季） */
+  /** oaTask模式下的视图模式（日、周、月、年） */
   oaTaskViewMode?: OATaskViewMode;
   /** oaTask模式切换视图模式的回调 */
   onOATaskViewModeChange?: (mode: OATaskViewMode) => void;

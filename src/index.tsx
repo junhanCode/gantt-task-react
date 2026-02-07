@@ -11,4 +11,5 @@ export type {
   OATaskViewMode,
   TaskStatus,
   ColumnConfig,
+  Language,
 } from "./types/public-types";

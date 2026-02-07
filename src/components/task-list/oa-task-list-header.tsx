@@ -1,4 +1,5 @@
 import React from "react";
+import { I18nTexts } from "../../i18n";
 import styles from "./task-list-header.module.css";
 
 export const OATaskListHeader: React.FC<{
@@ -61,6 +62,7 @@ export const OATaskListHeader: React.FC<{
     assignee: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
     operations: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
   }>;
+  i18n?: I18nTexts;
 }> = ({ 
   headerHeight, 
   fontFamily, 
@@ -83,6 +85,7 @@ export const OATaskListHeader: React.FC<{
   onSelectAll,
   taskTitleHeaderRender,
   columnHeaderRenderers,
+  i18n,
 }) => {
   const renderHeader = (
     key: keyof NonNullable<typeof columnHeaderRenderers>,
@@ -259,9 +262,10 @@ export const OATaskListHeader: React.FC<{
               if (nameRenderer) {
                 let content: React.ReactNode;
                 if (typeof nameRenderer === 'function') {
+                  const taskTitle = i18n?.taskTitle || "任務標題";
                   content = columnHeaderRenderers?.name
-                    ? (nameRenderer as (p: { expandCollapseNode: React.ReactNode; defaultLabel: string }) => React.ReactNode)({ expandCollapseNode, defaultLabel: "任務標題" })
-                    : taskTitleHeaderRender!({ expandCollapseNode, titleText: "任務標題" });
+                    ? (nameRenderer as (p: { expandCollapseNode: React.ReactNode; defaultLabel: string }) => React.ReactNode)({ expandCollapseNode, defaultLabel: taskTitle })
+                    : taskTitleHeaderRender!({ expandCollapseNode, titleText: taskTitle });
                 } else {
                   content = nameRenderer;
                 }
@@ -270,7 +274,7 @@ export const OATaskListHeader: React.FC<{
               return (
                 <React.Fragment>
                   {expandCollapseNode}
-                  <span>任務標題</span>
+                  <span>{i18n?.taskTitle || "任務標題"}</span>
                 </React.Fragment>
               );
             })()}
@@ -298,7 +302,7 @@ export const OATaskListHeader: React.FC<{
           }}
         >
           {(() => {
-            const custom = renderHeader('status', '狀態');
+            const custom = renderHeader('status', i18n?.status || '狀態');
             if (typeof custom === 'string') return <span>{custom}</span>;
             return custom;
           })()}
@@ -325,7 +329,7 @@ export const OATaskListHeader: React.FC<{
           }}
         >
           {(() => {
-            const custom = renderHeader('assignee', '負責人');
+            const custom = renderHeader('assignee', i18n?.assignee || '負責人');
             if (typeof custom === 'string') return <span>{custom}</span>;
             return custom;
           })()}

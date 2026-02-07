@@ -26,6 +26,7 @@ import { GanttEvent } from "../../types/gantt-task-actions";
 import { DateSetup } from "../../types/date-setup";
 import { HorizontalScroll } from "../other/horizontal-scroll";
 import { removeHiddenTasks, sortTasks } from "../../helpers/other-helper";
+import { getI18nTexts } from "../../i18n";
 import styles from "./gantt.module.css";
 
 export const Gantt = forwardRef<GanttRef, GanttProps>(({ 
@@ -93,10 +94,12 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   viewType = "default",
   oaTaskViewMode = "日",
   onOATaskViewModeChange,
+  language = 'zh-TW',
   enableTaskDrag = false,
   enableTaskResize = true,
   onTaskDragEnd,
   onTaskDragComplete,
+  onRenderComplete,
   // @ts-expect-error - Reserved for future column configuration feature
   columns,
   columnRenderers,
@@ -118,6 +121,10 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   // @ts-expect-error - Reserved for future fullscreen state tracking
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // 获取国际化文本
+  const i18n = useMemo(() => getI18nTexts(language), [language]);
+  
   const [dateSetup, setDateSetup] = useState<DateSetup>(() => {
     const [startDate, endDate] = ganttDateRange(tasks, viewMode, preStepsCount);
     return { viewMode, dates: seedDates(startDate, endDate, viewMode) };
@@ -634,6 +641,19 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     ganttFullHeight,
   ]);
 
+  // 渲染完成回调 - 在关键状态更新后触发
+  useEffect(() => {
+    if (onRenderComplete && barTasks.length > 0 && svgContainerWidth > 0) {
+      // 使用 requestAnimationFrame 确保在浏览器完成渲染后触发
+      const timeoutId = requestAnimationFrame(() => {
+        onRenderComplete();
+      });
+      return () => cancelAnimationFrame(timeoutId);
+    }
+    // 添加空返回以满足 TypeScript 要求
+    return undefined;
+  }, [barTasks, svgContainerWidth, svgContainerHeight, scrollX, scrollY, onRenderComplete]);
+
   const handleScrollY = (event: SyntheticEvent<HTMLDivElement>) => {
     if (scrollY !== event.currentTarget.scrollTop && !ignoreScrollEvent) {
       setScrollY(event.currentTarget.scrollTop);
@@ -755,6 +775,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     timelineHeaderCellRender,
     gridBorderWidth,
     gridBorderColor,
+    i18n,
   };
   const barProps: TaskGanttContentProps = {
     tasks: barTasks,
@@ -838,7 +859,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     onEditTask,
     onDeleteTask,
     operationsColumnWidth,
-    operationsColumnLabel,
+    operationsColumnLabel: operationsColumnLabel || i18n.operations,
     isTaskListCollapsed,
     onToggleTaskList: handleToggleTaskList,
     expandIcon,
@@ -850,7 +871,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             expandAllLeafTasks,
             onToggleExpandAll: handleToggleExpandAll,
             operationsColumnWidth,
-            operationsColumnLabel,
+            operationsColumnLabel: operationsColumnLabel || i18n.operations,
             showOperationsColumn,
             rowSelection,
             unreadColumn,
@@ -859,6 +880,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             onSelectAll: handleSelectAll,
             taskTitleHeaderRender,
             columnHeaderRenderers,
+            i18n,
           };
           return <OATaskListHeader {...headerProps} />;
         }

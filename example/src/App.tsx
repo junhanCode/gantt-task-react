@@ -1,5 +1,5 @@
 import React from "react";
-import { Task, ViewMode, Gantt, OATaskViewMode } from "gantt-task-react";
+import { Task, ViewMode, Gantt } from "gantt-task-react";
 import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
@@ -373,7 +373,8 @@ const EditTaskModal: React.FC<{
 const App = () => {
   const ganttRef = React.useRef<any>(null);
   const [viewType] = React.useState<"default" | "oaTask">("oaTask");
-  const [oaTaskViewMode, setOATaskViewMode] = React.useState<OATaskViewMode>("日");
+  // 在 demo 中放宽类型，支持自定义扩展的视图模式（"日" | "周" | "月" | "年"）
+  const [oaTaskViewMode, setOATaskViewMode] = React.useState<string>("日");
   
   // 性能测试相关状态（默认启用大量数据以展示虚拟列表优化）
   const [useLargeData, setUseLargeData] = React.useState(true);
@@ -385,10 +386,16 @@ const App = () => {
     if (viewType === "oaTask") {
       switch (oaTaskViewMode) {
         case "日":
-          return ViewMode.Day; // 日模式使用Day，不是DayShift（DayShift会将一天分成4个班次）
+          // 日模式：按天显示
+          return ViewMode.Day;
+        case "周":
+          // 周模式：每列一周
+          return ViewMode.Week;
         case "月":
+          // 月模式：每列一月
           return ViewMode.Month;
-        case "季":
+        case "年":
+          // 年模式：按季度显示（Q1-Q4）
           return ViewMode.QuarterYear;
         default:
           return ViewMode.Day;
@@ -412,6 +419,36 @@ const App = () => {
   const [showRowSelection, setShowRowSelection] = React.useState<boolean>(true);
   const [enableCascade, setEnableCascade] = React.useState<boolean>(true); // 是否启用级联选择
   const [checkboxBorderColor, setCheckboxBorderColor] = React.useState<string>('#1890ff'); // 新功能1：复选框边框颜色
+  
+  // 语言切换状态
+  const [language, setLanguage] = React.useState<'zh-TW' | 'en'>('zh-TW');
+  
+  // 渲染完成事件状态
+  const [renderCount, setRenderCount] = React.useState(0);
+  const [lastRenderTime, setLastRenderTime] = React.useState<string>('');
+  const [showRenderInfo, setShowRenderInfo] = React.useState(true);
+  const [enableRenderCallback, setEnableRenderCallback] = React.useState(true);
+  const [isRendering, setIsRendering] = React.useState(false);
+  
+  // 渲染完成回调
+  const handleRenderComplete = React.useCallback(() => {
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString('zh-CN', { hour12: false });
+    
+    setRenderCount(prev => prev + 1);
+    setLastRenderTime(timestamp);
+    
+    // 触发动画效果
+    setIsRendering(true);
+    setTimeout(() => setIsRendering(false), 600);
+    
+    console.log('✅ Gantt 图表渲染完成！', {
+      timestamp: now.toISOString(),
+      taskCount: tasks.length,
+      viewMode: oaTaskViewMode,
+      renderCount: renderCount + 1,
+    });
+  }, [tasks.length, oaTaskViewMode, renderCount]);
   
   // 模拟当前登录用户（用于演示isTaskDraggable功能）
   // 注意：第一个mock数据的proposer是"张三"，其他是"何聪"
@@ -825,6 +862,117 @@ const App = () => {
 
   return (
     <div className="Wrapper">
+      {/* 渲染完成事件演示面板 */}
+      {showRenderInfo && (
+        <div style={{ 
+          marginBottom: 16, 
+          padding: '12px', 
+          backgroundColor: isRendering ? '#e6fffb' : '#f6ffed', 
+          borderRadius: '4px',
+          border: isRendering ? '2px solid #13c2c2' : '1px solid #b7eb8f',
+          position: 'relative',
+          transition: 'all 0.3s ease',
+          boxShadow: isRendering ? '0 0 12px rgba(19, 194, 194, 0.4)' : 'none'
+        }}>
+          <button
+            onClick={() => setShowRenderInfo(false)}
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              background: 'none',
+              border: 'none',
+              fontSize: '16px',
+              cursor: 'pointer',
+              color: '#52c41a',
+              padding: '0 4px',
+            }}
+            title="关闭"
+          >
+            ×
+          </button>
+          <div style={{ marginBottom: 8, fontWeight: 'bold', fontSize: '14px', color: isRendering ? '#13c2c2' : '#52c41a', transition: 'color 0.3s ease' }}>
+            {isRendering ? '⚡' : '🎯'} 渲染完成事件 (onRenderComplete) 演示
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', marginBottom: 8 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <input
+                type="checkbox"
+                checked={enableRenderCallback}
+                onChange={e => setEnableRenderCallback(e.target.checked)}
+              />
+              启用渲染完成回调
+            </label>
+            
+            <div style={{ 
+              padding: '4px 12px', 
+              backgroundColor: '#fff', 
+              borderRadius: '4px',
+              border: '1px solid #d9d9d9',
+              fontSize: '13px',
+              transition: 'transform 0.3s ease',
+              transform: isRendering ? 'scale(1.1)' : 'scale(1)'
+            }}>
+              <span style={{ color: '#666' }}>渲染次数：</span>
+              <span style={{ 
+                color: '#52c41a', 
+                fontWeight: 'bold',
+                fontSize: '16px',
+                marginLeft: '4px'
+              }}>
+                {renderCount}
+              </span>
+            </div>
+            
+            {lastRenderTime && (
+              <div style={{ 
+                padding: '4px 12px', 
+                backgroundColor: isRendering ? '#e6fffb' : '#fff', 
+                borderRadius: '4px',
+                border: isRendering ? '1px solid #13c2c2' : '1px solid #d9d9d9',
+                fontSize: '13px',
+                transition: 'all 0.3s ease'
+              }}>
+                <span style={{ color: '#666' }}>最后渲染：</span>
+                <span style={{ 
+                  color: isRendering ? '#13c2c2' : '#1890ff', 
+                  fontWeight: 'bold',
+                  marginLeft: '4px'
+                }}>
+                  {lastRenderTime}
+                </span>
+              </div>
+            )}
+            
+            {isRendering && (
+              <div style={{ 
+                padding: '4px 12px', 
+                backgroundColor: '#fff1f0', 
+                borderRadius: '4px',
+                border: '1px solid #ffccc7',
+                fontSize: '13px',
+                color: '#cf1322',
+                fontWeight: 'bold',
+                animation: 'pulse 0.6s ease'
+              }}>
+                ⚡ 正在渲染...
+              </div>
+            )}
+          </div>
+          <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.6' }}>
+            💡 提示：切换视图模式、滚动、加载数据时，会触发 <code style={{ 
+              backgroundColor: '#fff1f0', 
+              border: '1px solid #ffccc7', 
+              padding: '2px 6px', 
+              borderRadius: '3px',
+              color: '#cf1322',
+              fontFamily: 'monospace'
+            }}>onRenderComplete</code> 事件。<br/>
+            可在控制台查看详细日志信息。
+          </div>
+        </div>
+      )}
+      
       {/* 多选列演示控制面板 */}
       <div style={{ 
         marginBottom: 16, 
@@ -945,6 +1093,7 @@ const App = () => {
         <div><strong>8️⃣ 多选列自定义 columnTitle：</strong> rowSelection.columnTitle 可自定义多选列表头（如「全选」）</div>
         <div><strong>9️⃣ 水平滚动修复：</strong> 滚动水平滚动条时，起始时间轴不再跳动（内部修复）</div>
         <div><strong>🔟 拖动后 delayDays 同步：</strong> 拖动任务条后，返回的 task.delayDays 与条形图显示的延期天数一致（内部修复）</div>
+        <div><strong>1️⃣1️⃣ 渲染完成事件：</strong> onRenderComplete 回调，在图表完全渲染后触发（可用于截图、导出、性能监控等）</div>
       </div>
       
       {/* 性能测试数据控制面板 */}
@@ -1020,30 +1169,38 @@ const App = () => {
         <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() - 24*3600*1000), { align: "start" })}>滚到昨天(开始)</Button>
         <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() + 24*3600*1000), { align: "end" })}>滚到明天(末尾)</Button>
         {viewType === "oaTask" && (
-          <>
+        <>
             <Button 
-              size="small" 
-              style={{ marginLeft: 8 }} 
-              type={oaTaskViewMode === "日" ? "primary" : "default"}
-              onClick={() => setOATaskViewMode("日")}
+            size="small" 
+            style={{ marginLeft: 8 }} 
+            type={oaTaskViewMode === "日" ? "primary" : "default"}
+            onClick={() => setOATaskViewMode("日")}
             >
-              日
+            日
             </Button>
             <Button 
-              size="small" 
-              style={{ marginLeft: 8 }} 
-              type={oaTaskViewMode === "月" ? "primary" : "default"}
-              onClick={() => setOATaskViewMode("月")}
+            size="small" 
+            style={{ marginLeft: 8 }} 
+            type={oaTaskViewMode === "周" ? "primary" : "default"}
+            onClick={() => setOATaskViewMode("周")}
             >
-              月
+            周
             </Button>
             <Button 
-              size="small" 
-              style={{ marginLeft: 8 }} 
-              type={oaTaskViewMode === "季" ? "primary" : "default"}
-              onClick={() => setOATaskViewMode("季")}
+            size="small" 
+            style={{ marginLeft: 8 }} 
+            type={oaTaskViewMode === "月" ? "primary" : "default"}
+            onClick={() => setOATaskViewMode("月")}
             >
-              季
+            月
+            </Button>
+            <Button 
+            size="small" 
+            style={{ marginLeft: 8 }} 
+            type={oaTaskViewMode === "年" ? "primary" : "default"}
+            onClick={() => setOATaskViewMode("年")}
+            >
+            年
             </Button>
             <Button 
               size="small" 
@@ -1058,6 +1215,22 @@ const App = () => {
               onClick={() => ganttRef.current?.exportImage?.("gantt-chart.png")}
             >
               导出PNG
+            </Button>
+            <Button 
+              size="small" 
+              style={{ marginLeft: 16 }} 
+              type={language === 'zh-TW' ? "primary" : "default"}
+              onClick={() => setLanguage('zh-TW')}
+            >
+              繁體中文
+            </Button>
+            <Button 
+              size="small" 
+              style={{ marginLeft: 8 }} 
+              type={language === 'en' ? "primary" : "default"}
+              onClick={() => setLanguage('en')}
+            >
+              English
             </Button>
           </>
         )}
@@ -1152,6 +1325,8 @@ const App = () => {
         // 自定义时间刻度边框
         gridBorderWidth={1}
         gridBorderColor="#f0f0f0"
+        // 语言设置
+        language={language}
         timeColumnLabels={{  // [i18n] 时间列标题
           plannedStart: "Planned Start",
           plannedEnd: "Planned End",
@@ -1190,6 +1365,8 @@ const App = () => {
         hideTaskName={hideTaskName}
         onTaskDragEnd={handleTaskDragEnd}
         onTaskDragComplete={handleTaskDragComplete}
+        // 渲染完成回调（根据开关控制是否启用）
+        onRenderComplete={enableRenderCallback ? handleRenderComplete : undefined}
         // 自定义禁用规则：只有当proposer包含当前登录用户时才可以拖动
         isTaskDraggable={isTaskDraggable}
         // 自定义展开/折叠图标：折叠状态显示向右▶，展开状态显示向下▼
@@ -1302,9 +1479,9 @@ const App = () => {
         //   console.log("列内容溢出:", column, "任务:", task.name);
         // }}
         viewType={viewType}
-        oaTaskViewMode={oaTaskViewMode}
+        oaTaskViewMode={oaTaskViewMode as any}
         onOATaskViewModeChange={(mode) => {
-          setOATaskViewMode(mode);
+          setOATaskViewMode(mode as any);
         }}
         // [i18n] 多选列：columnTitle "全选"
         rowSelection={
@@ -1336,17 +1513,28 @@ const App = () => {
           ),
         }}
         // [i18n] 时间轴：日期格式 "X日"、周格式 defaultLabel "第X周"
-        timelineHeaderCellRender={({ date, defaultLabel, level }) => (
-          <text
-            x={0}
-            y={0}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            style={{ fontSize: 12, fill: '#333' }}
-          >
-            {level === 'bottom' ? `${date.getDate()}日` : defaultLabel}
-          </text>
-        )}
+        // 日模式下，悬浮底部日期刻度时，显示完整日期，如“2026年2月3日”
+        timelineHeaderCellRender={({ date, defaultLabel, level, oaTaskViewMode }) => {
+          const fullDateLabel = dayjs(date).format("YYYY/M/D");
+          const displayLabel = level === "bottom" && oaTaskViewMode === "日" 
+            ? `${date.getDate()}` 
+            : defaultLabel;
+          return (
+            <text
+              x={0}
+              y={0}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              style={{ fontSize: 12, fill: "#333" }}
+            >
+              {/* 仅在日视图底部刻度上添加悬浮提示 */}
+              {oaTaskViewMode === "日" && level === "bottom" && (
+                <title>{fullDateLabel}</title>
+              )}
+              {displayLabel}
+            </text>
+          );
+        }}
         // [i18n] 任务标题列表头：titleText "任務標題"
         taskTitleHeaderRender={({ expandCollapseNode, titleText }) => (
           <>
