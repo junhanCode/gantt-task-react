@@ -1,0 +1,188 @@
+.ganttContainer {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.ganttContainer :global(.gantt-container) {
+  min-width: fit-content;
+  width: 100%;
+}
+
+.ganttContainer :global(.gantt-task-list-container),
+.ganttContainer :global(.gantt-horizontal-container) {
+  min-width: 100%;
+}
+
+.wrapper :global(.footerbutton) {
+  display: flex;
+  gap: 20px;
+  margin-right: 20px;
+  justify-content: flex-end;
+}
+
+.wrapper :global(.taskGantte) {
+  flex: 1;
+  background-color: white;
+  overflow: auto;
+}
+
+.wrapper :global(.taskGantte) div {
+  border-color: #F0F0F0 !important;
+  scrollbar-color: #F0F0F0 #FFFFFF !important; 
+  scrollbar-width: auto;    
+}
+
+.wrapper :global(.taskGantte) div[tabindex="0"] > div:nth-child(2) > svg {
+  height: 42px !important;
+}
+
+.wrapper :global(.taskGantte):fullscreen {
+  padding: 20px;
+  background-color: white;
+}
+
+.wrapper :global(.taskGantte):fullscreen .index-box_rightBottom_content {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.wrapper :global(.taskGantte) > div > div > div:first-child > div:first-child {
+  border-left: 0 !important;
+  background: #fafafa;
+}
+
+.wrapper :global(.taskGantte) > div > div:first-child > div:first-child > div:nth-child(2) > div:first-child {
+  border-left: 0;
+}
+
+.wrapper :global(.taskGantte) > div > div:first-child > div:first-child > div:nth-child(2) > div:first-child > div {
+  border-right: 1px solid #f0f0f0 !important; 
+}
+
+.wrapper :global(.taskGantte) > div > div > div:first-child > div:first-child span {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.wrapper :global(.taskGantte) > div > div > div:first-child > div:first-child {
+  border-top: 0;
+}
+
+.wrapper :global(.taskGantte) table {
+  border-left: 0;
+}
+
+.wrapper :global(.taskGantte) > div > div:first-child > div:first-child > div:first-child > div:first-child > div {
+  border-right: 0px solid #f0f0f0; 
+}
+
+.wrapper :global(.taskGantte) tbody td {
+  border-right: 0px solid #f0f0f0; 
+}
+
+.wrapper :global(.taskGantte) tbody tr {
+  background-color: white;
+}
+
+.wrapper :global(.taskGantte) tbody input[type="checkbox"] {
+  margin-right: 6px !important;
+}
+
+.wrapper :global(.taskGantte) input[type="checkbox"] {
+  scale: 0.8;
+  margin-top: 4px !important;
+  margin-left: 3px !important;
+}
+
+.wrapper :global(.taskGantte) input[type="checkbox"]:checked {
+  background: #1677ff !important; 
+}
+
+.wrapper :global(.taskGantte) input[type="checkbox"]:checked::after {
+  border-color: #F0F0F0 !important;
+}
+
+.wrapper :global(.taskGantte) input[type="checkbox"]:indeterminate {
+  background-color: #1677ff !important;
+  border-color: #1677ff !important;
+}
+
+.wrapper :global(.taskGantte) input[type="checkbox"]:indeterminate::after {
+  border-color: white !important; 
+}
+
+.wrapper :global(.taskGantte) div.unReadIcon {
+  transform: translateY(6px) !important;
+}
+
+.wrapper :global(.taskGantte) :global(.gridBody) :global(.rows) rect {
+  fill: white;
+}
+
+.wrapper :global(.taskGantte) tbody > tr > td:first-child {
+  border-right: 0;
+}
+
+.wrapper :global(.taskGantte) rect {
+  stroke: rgba(240, 240, 240);
+  stroke-width: 0px; 
+}
+
+.wrapper :global(.taskGantte) td {
+  border-bottom: 1px solid rgba(240, 240, 240) !important;
+}
+
+.wrapper :global(.taskGantte) tbody > tr > td:nth-child(3) {
+  position: relative;
+  left: -3px;
+  top: -1px;
+}
+
+.unRead {
+  position: relative;
+  width: 10px;
+  font-size: 20px;
+  color: red;
+  text-align: right;
+  transform: translateY(5px);
+}
+
+.taskTitleText {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.checkboxCtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.checkboxCtn .DownIcon {
+  font-size: 10px;
+  margin-left: 2px;
+  color: rgb(102, 102, 102);
+  position: absolute;
+  left: -7px;
+  top: -8px;
+  width: 10px;
+}
+
+.expandCollapseNode svg {
+  margin-bottom: 2px;
+}
+
+.cleanIcon button {
+  padding-left: 12px !important;
+  padding-bottom: 2px !important;
+}
+
+.taskTitle {
+  padding-top: 2px;
+}

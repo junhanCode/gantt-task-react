@@ -1,4 +1,5 @@
 import React from "react";
+import GanttChartDemo from "./GanttChartDemo";
 import { Task, ViewMode, Gantt } from "gantt-task-react";
 import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
@@ -867,9 +868,46 @@ const App = () => {
     }
   };
 
+  // 添加演示模式切换
+  const [demoMode, setDemoMode] = React.useState<'original' | 'new'>('new');
+
   return (
     <div className="Wrapper">
-      {/* 渲染完成事件演示面板 */}
+      {/* 演示模式切换 */}
+      <div style={{ 
+        marginBottom: 16, 
+        padding: '12px', 
+        backgroundColor: '#fff7e6', 
+        borderRadius: '4px',
+        border: '1px solid #ffd591'
+      }}>
+        <div style={{ marginBottom: 8, fontWeight: 'bold', fontSize: '14px', color: '#d46b08' }}>
+          🎯 演示模式切换
+        </div>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <Button 
+            type={demoMode === 'new' ? 'primary' : 'default'}
+            onClick={() => setDemoMode('new')}
+          >
+            新版 OA 任务模式（推荐）
+          </Button>
+          <Button 
+            type={demoMode === 'original' ? 'primary' : 'default'}
+            onClick={() => setDemoMode('original')}
+          >
+            原始完整演示
+          </Button>
+          <span style={{ color: '#666', fontSize: '12px' }}>
+            当前模式：{demoMode === 'new' ? '新版 OA 任务模式（带周视图）' : '原始完整演示'}
+          </span>
+        </div>
+      </div>
+
+      {demoMode === 'new' ? (
+        <GanttChartDemo />
+      ) : (
+        <>
+          {/* 渲染完成事件演示面板 */}
       {showRenderInfo && (
         <div style={{ 
           marginBottom: 16, 
@@ -1723,6 +1761,8 @@ const App = () => {
           task={selectedEditTask}
           onConfirm={handleEditModalConfirm}
         />
+      )}
+        </>
       )}
     </div>
   );
