@@ -372,6 +372,7 @@ const GanttChart: React.FC = () => {
           }}
           timelineHeaderCellRender={({ date, defaultLabel, level, oaTaskViewMode }: any) => {
             let displayLabel = defaultLabel;
+            let tooltipText = '';
             
             // 日模式：顶部显示周标签 "WK 01"，底部显示日期数字
             if (oaTaskViewMode === "日") {
@@ -383,6 +384,8 @@ const GanttChart: React.FC = () => {
               } else {
                 // 底部：日期数字
                 displayLabel = `${date.getDate()}`;
+                // 添加悬浮提示：完整日期
+                tooltipText = dayjs(date).format('YYYY/M/D');
               }
             }
             
@@ -398,6 +401,10 @@ const GanttChart: React.FC = () => {
                 const weekNum = dayjs(date).week();
                 const weekStr = weekNum.toString().padStart(2, '0');
                 displayLabel = `WK${weekStr}`;
+                // 添加悬浮提示：周的起止日期
+                const weekStart = dayjs(date).startOf('week');
+                const weekEnd = dayjs(date).endOf('week');
+                tooltipText = `${weekStart.format('YYYY/M/D')} - ${weekEnd.format('YYYY/M/D')}`;
               }
             }
             
@@ -405,6 +412,8 @@ const GanttChart: React.FC = () => {
             if (oaTaskViewMode === "月" && level === "bottom") {
               const month = date.getMonth() + 1;
               displayLabel = `M${month}`;
+              // 添加悬浮提示：完整年月
+              tooltipText = dayjs(date).format('YYYY年M月');
             }
             
             return (
@@ -418,6 +427,7 @@ const GanttChart: React.FC = () => {
                   fill: "#333"
                 }}
               >
+                {tooltipText && <title>{tooltipText}</title>}
                 {displayLabel}
               </text>
             );
