@@ -257,17 +257,27 @@ export const Calendar: React.FC<CalendarProps> = ({
       }
       // bottom
       const bottomValue = `W${getWeekNumberISO8601(date)}`;
-
-      bottomValues.push(
-        <text
-          key={date.getTime()}
-          y={headerHeight * 0.8}
-          x={columnWidth * (i + +rtl)}
-          className={styles.calendarBottomText}
-        >
-          {bottomValue}
-        </text>
-      );
+      const bottomX = columnWidth * (i + +rtl);
+      const bottomY = headerHeight * 0.8;
+      const customBottom = renderTimelineCell(date, i, 'bottom', bottomValue, bottomX, bottomY);
+      if (customBottom) {
+        bottomValues.push(
+          <g key={`week-${date.getTime()}`} transform={`translate(${bottomX}, ${bottomY})`}>
+            {customBottom}
+          </g>
+        );
+      } else {
+        bottomValues.push(
+          <text
+            key={date.getTime()}
+            y={bottomY}
+            x={bottomX}
+            className={styles.calendarBottomText}
+          >
+            {bottomValue}
+          </text>
+        );
+      }
 
       if (topValue) {
         // if last day is new month
@@ -301,17 +311,27 @@ export const Calendar: React.FC<CalendarProps> = ({
       const bottomValue = `${getLocalDayOfWeek(date, locale, "short")}, ${date
         .getDate()
         .toString()}`;
-
-      bottomValues.push(
-        <text
-          key={date.getTime()}
-          y={headerHeight * 0.8}
-          x={columnWidth * i + columnWidth * 0.5}
-          className={styles.calendarBottomText}
-        >
-          {bottomValue}
-        </text>
-      );
+      const bottomX = columnWidth * i + columnWidth * 0.5;
+      const bottomY = headerHeight * 0.8;
+      const customBottom = renderTimelineCell(date, i, 'bottom', bottomValue, bottomX, bottomY);
+      if (customBottom) {
+        bottomValues.push(
+          <g key={`day-${date.getTime()}`} transform={`translate(${bottomX}, ${bottomY})`}>
+            {customBottom}
+          </g>
+        );
+      } else {
+        bottomValues.push(
+          <text
+            key={date.getTime()}
+            y={bottomY}
+            x={bottomX}
+            className={styles.calendarBottomText}
+          >
+            {bottomValue}
+          </text>
+        );
+      }
       if (
         i + 1 !== dates.length &&
         date.getMonth() !== dates[i + 1].getMonth()
@@ -871,16 +891,28 @@ export const Calendar: React.FC<CalendarProps> = ({
           const monthCenterX = columnWidth * monthInfo.startIdx + (columnWidth * monthSpan) / 2;
           // 计算子表头区域的垂直中心位置
           const monthCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;
-          bottomValues.push(
-            <text
-              key={`month-${monthKey}`}
-              y={monthCenterY}
-              x={monthCenterX}
-              className={styles.calendarMonthLabel}
-            >
-              {monthLabel}
-            </text>
+          const customMonth = renderTimelineCell(
+            date, monthInfo.startIdx, 'bottom', monthLabel, monthCenterX, monthCenterY,
+            { isGroupStart: true, colSpan: monthSpan }
           );
+          if (customMonth) {
+            bottomValues.push(
+              <g key={`month-${monthKey}`} transform={`translate(${monthCenterX}, ${monthCenterY})`}>
+                {customMonth}
+              </g>
+            );
+          } else {
+            bottomValues.push(
+              <text
+                key={`month-${monthKey}`}
+                y={monthCenterY}
+                x={monthCenterX}
+                className={styles.calendarMonthLabel}
+              >
+                {monthLabel}
+              </text>
+            );
+          }
         }
         
         // 母表头：年份（每年的第一个月显示，垂直居中）
@@ -889,21 +921,35 @@ export const Calendar: React.FC<CalendarProps> = ({
           const yearStartX = columnWidth * yearInfo.startIdx;
           const yearEndX = columnWidth * (yearInfo.endIdx + 1);
           const yearCenterX = (yearStartX + yearEndX) / 2;
+          const yearCenterY = topDefaultHeight * 0.5;
           const yearLabel = `${year}`;
+          const yearSpan = yearInfo.endIdx - yearInfo.startIdx + 1;
           
-          topValues.push(
-            <g key={`year-${year}`}>
-              <TopPartOfCalendar
-                value={yearLabel}
-                x1Line={yearStartX}
-                y1Line={0}
-                y2Line={topDefaultHeight}
-                xText={yearCenterX}
-                yText={topDefaultHeight * 0.5}
-                verticalCenter
-              />
-            </g>
+          const customYear = renderTimelineCell(
+            date, yearInfo.startIdx, 'top', yearLabel, yearCenterX, yearCenterY,
+            { isGroupStart: true, colSpan: yearSpan }
           );
+          if (customYear) {
+            topValues.push(
+              <g key={`year-${year}`} transform={`translate(${yearCenterX}, ${yearCenterY})`}>
+                {customYear}
+              </g>
+            );
+          } else {
+            topValues.push(
+              <g key={`year-${year}`}>
+                <TopPartOfCalendar
+                  value={yearLabel}
+                  x1Line={yearStartX}
+                  y1Line={0}
+                  y2Line={topDefaultHeight}
+                  xText={yearCenterX}
+                  yText={yearCenterY}
+                  verticalCenter
+                />
+              </g>
+            );
+          }
         }
       });
       
@@ -1017,16 +1063,28 @@ export const Calendar: React.FC<CalendarProps> = ({
           const quarterCenterX = columnWidth * quarterInfo.startIdx + (columnWidth * quarterSpan) / 2;
           // 计算子表头区域的垂直中心位置
           const quarterCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;
-          bottomValues.push(
-            <text
-              key={`quarter-${quarterKey}`}
-              y={quarterCenterY}
-              x={quarterCenterX}
-              className={styles.calendarQuarterLabel}
-            >
-              {quarterLabel}
-            </text>
+          const customQuarter = renderTimelineCell(
+            date, quarterInfo.startIdx, 'bottom', quarterLabel, quarterCenterX, quarterCenterY,
+            { isGroupStart: true, colSpan: quarterSpan }
           );
+          if (customQuarter) {
+            bottomValues.push(
+              <g key={`quarter-${quarterKey}`} transform={`translate(${quarterCenterX}, ${quarterCenterY})`}>
+                {customQuarter}
+              </g>
+            );
+          } else {
+            bottomValues.push(
+              <text
+                key={`quarter-${quarterKey}`}
+                y={quarterCenterY}
+                x={quarterCenterX}
+                className={styles.calendarQuarterLabel}
+              >
+                {quarterLabel}
+              </text>
+            );
+          }
         }
         
         // 母表头：年份（每年的第一个季度显示，垂直居中）
@@ -1035,21 +1093,35 @@ export const Calendar: React.FC<CalendarProps> = ({
           const yearStartX = columnWidth * yearInfo.startIdx;
           const yearEndX = columnWidth * (yearInfo.endIdx + 1);
           const yearCenterX = (yearStartX + yearEndX) / 2;
+          const yearCenterY = topDefaultHeight * 0.5;
           const yearLabel = `${year}`;
+          const yearSpan = yearInfo.endIdx - yearInfo.startIdx + 1;
           
-          topValues.push(
-            <g key={`year-${year}`}>
-              <TopPartOfCalendar
-                value={yearLabel}
-                x1Line={yearStartX}
-                y1Line={0}
-                y2Line={topDefaultHeight}
-                xText={yearCenterX}
-                yText={topDefaultHeight * 0.5}
-                verticalCenter
-              />
-            </g>
+          const customYear = renderTimelineCell(
+            date, yearInfo.startIdx, 'top', yearLabel, yearCenterX, yearCenterY,
+            { isGroupStart: true, colSpan: yearSpan }
           );
+          if (customYear) {
+            topValues.push(
+              <g key={`year-${year}`} transform={`translate(${yearCenterX}, ${yearCenterY})`}>
+                {customYear}
+              </g>
+            );
+          } else {
+            topValues.push(
+              <g key={`year-${year}`}>
+                <TopPartOfCalendar
+                  value={yearLabel}
+                  x1Line={yearStartX}
+                  y1Line={0}
+                  y2Line={topDefaultHeight}
+                  xText={yearCenterX}
+                  yText={yearCenterY}
+                  verticalCenter
+                />
+              </g>
+            );
+          }
         }
       });
       
@@ -1111,16 +1183,25 @@ export const Calendar: React.FC<CalendarProps> = ({
         const weekCenterX = columnWidth * i + columnWidth * 0.5;
         // 计算子表头区域的垂直中心位置
         const weekCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;
-        bottomValues.push(
-          <text
-            key={`week-${year}-${weekNum}-${i}`}
-            y={weekCenterY}
-            x={weekCenterX}
-            className={styles.calendarWeekLabel}
-          >
-            {weekLabel}
-          </text>
-        );
+        const customWeek = renderTimelineCell(date, i, 'bottom', weekLabel, weekCenterX, weekCenterY);
+        if (customWeek) {
+          bottomValues.push(
+            <g key={`week-${year}-${weekNum}-${i}`} transform={`translate(${weekCenterX}, ${weekCenterY})`}>
+              {customWeek}
+            </g>
+          );
+        } else {
+          bottomValues.push(
+            <text
+              key={`week-${year}-${weekNum}-${i}`}
+              y={weekCenterY}
+              x={weekCenterX}
+              className={styles.calendarWeekLabel}
+            >
+              {weekLabel}
+            </text>
+          );
+        }
         
         // 母表头区域的竖向分隔线（只在年月边界处）
         if (isYearMonthStart) {
@@ -1163,6 +1244,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           const yearMonthStartX = columnWidth * yearMonthInfo.startIdx;
           const yearMonthEndX = columnWidth * (yearMonthInfo.endIdx + 1);
           const yearMonthCenterX = (yearMonthStartX + yearMonthEndX) / 2;
+          const yearMonthCenterY = topDefaultHeight * 0.5;
           // 使用国际化年月标签函数
           let yearMonthLabel: string;
           if (i18n?.yearMonthLabel) {
@@ -1171,20 +1253,33 @@ export const Calendar: React.FC<CalendarProps> = ({
             const monthName = i18n ? i18n.monthNames[month] : getLocaleMonth(date, locale);
             yearMonthLabel = `${year} ${monthName}`;
           }
+          const yearMonthSpan = yearMonthInfo.endIdx - yearMonthInfo.startIdx + 1;
           
-          topValues.push(
-            <g key={`year-month-${yearMonthKey}`}>
-              <TopPartOfCalendar
-                value={yearMonthLabel}
-                x1Line={yearMonthStartX}
-                y1Line={0}
-                y2Line={topDefaultHeight}
-                xText={yearMonthCenterX}
-                yText={topDefaultHeight * 0.5}
-                verticalCenter
-              />
-            </g>
+          const customYearMonth = renderTimelineCell(
+            date, yearMonthInfo.startIdx, 'top', yearMonthLabel, yearMonthCenterX, yearMonthCenterY,
+            { isGroupStart: true, colSpan: yearMonthSpan }
           );
+          if (customYearMonth) {
+            topValues.push(
+              <g key={`year-month-${yearMonthKey}`} transform={`translate(${yearMonthCenterX}, ${yearMonthCenterY})`}>
+                {customYearMonth}
+              </g>
+            );
+          } else {
+            topValues.push(
+              <g key={`year-month-${yearMonthKey}`}>
+                <TopPartOfCalendar
+                  value={yearMonthLabel}
+                  x1Line={yearMonthStartX}
+                  y1Line={0}
+                  y2Line={topDefaultHeight}
+                  xText={yearMonthCenterX}
+                  yText={yearMonthCenterY}
+                  verticalCenter
+                />
+              </g>
+            );
+          }
         }
       });
       

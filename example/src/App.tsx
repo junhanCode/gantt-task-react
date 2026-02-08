@@ -1184,7 +1184,7 @@ const App = () => {
           </label>
         </div>
         <div><strong>6️⃣ 表头自定义渲染 columnHeaderRenderers：</strong> 类似 Ant Design 表格，可自定义状态/负责人/操作等列表头（如状态列带 ⓘ 图标）</div>
-        <div><strong>7️⃣ 时间轴标题自定义 timelineHeaderCellRender：</strong> 可自定义时间轴每个格子的渲染（如日期显示为「5日」）</div>
+        <div><strong>7️⃣ 时间轴标题自定义 timelineHeaderCellRender：</strong> 可自定义时间轴每个格子的渲染（支持日/周/月模式，通过 level 参数区分上下层）</div>
         <div><strong>8️⃣ 多选列自定义 columnTitle：</strong> rowSelection.columnTitle 可自定义多选列表头（如「全选」）</div>
         <div><strong>9️⃣ 水平滚动修复：</strong> 滚动水平滚动条时，起始时间轴不再跳动（内部修复）</div>
         <div><strong>🔟 拖动后 delayDays 同步：</strong> 拖动任务条后，返回的 task.delayDays 与条形图显示的延期天数一致（内部修复）</div>
@@ -1618,18 +1618,53 @@ const App = () => {
         }}
         // [i18n] 时间轴：日期格式 "X日"、周格式 defaultLabel "第X周"
         // 日模式下，悬浮底部日期刻度时，显示完整日期，如“2026年2月3日”
+        // [i18n] 时间轴：日期格式 "X日"、周格式 defaultLabel "第X周"
+        // 日模式下，悬浮底部日期刻度时，显示完整日期，如"2026年2月3日"
+        // 通过 level 参数区分上层(top)和下层(bottom)，支持日/周/月所有模式
         timelineHeaderCellRender={({ date, defaultLabel, level, oaTaskViewMode }) => {
           const fullDateLabel = dayjs(date).format("YYYY/M/D");
-          const displayLabel = level === "bottom" && oaTaskViewMode === "日" 
-            ? `${date.getDate()}` 
-            : defaultLabel;
+          let displayLabel = defaultLabel;
+          let customStyle: React.CSSProperties = { fontSize: 12, fill: "#333", fontWeight: 400 };
+          
+          // 根据模式和层级自定义显示内容
+          if (oaTaskViewMode === "日") {
+            if (level === "bottom") {
+              // 日模式底部：仅显示日期数字
+              displayLabel = `${date.getDate()}`;
+            } else {
+              // 日模式顶部：周标签，自定义格式为 "WK23"
+              // defaultLabel 格式为 "Week 23" 或 "第23周"，提取数字部分
+              const weekNum = defaultLabel.match(/\d+/)?.[0] || "01";
+              displayLabel = `WK${weekNum.padStart(2, '0')}`;
+            }
+          } else if (oaTaskViewMode === "周") {
+            if (level === "bottom") {
+              // 周模式底部：周标签，自定义格式为 "WK01"
+              // defaultLabel 格式为 "Week 01" 或 "第01周"，提取数字部分
+              const weekNum = defaultLabel.match(/\d+/)?.[0] || "01";
+              displayLabel = `WK${weekNum.padStart(2, '0')}`;
+            } else {
+              // 周模式顶部：年月标签，自定义格式为 "2025 06M"
+              // defaultLabel 格式为 "2025 06Mon"，将 "Mon" 替换为 "M"
+              displayLabel = defaultLabel.replace(/Mon$/, 'M');
+            }
+          } else if (oaTaskViewMode === "月") {
+            if (level === "bottom") {
+              // 月模式底部：月份标签，可以自定义格式
+              displayLabel = defaultLabel; // 默认是 "M1"，可改为 "1月" 等
+            } else {
+              // 月模式顶部：年份标签
+              displayLabel = defaultLabel; // 默认是年份数字
+            }
+          }
+          
           return (
             <text
               x={0}
               y={0}
               textAnchor="middle"
               dominantBaseline="middle"
-              style={{ fontSize: 12, fill: "#333" }}
+              style={customStyle}
             >
               {/* 仅在日视图底部刻度上添加悬浮提示 */}
               {oaTaskViewMode === "日" && level === "bottom" && (
