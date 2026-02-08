@@ -97,27 +97,7 @@ export const Calendar: React.FC<CalendarProps> = ({
     }
     return custom;
   };
-  // 获取当前时间（用于绘制当前时间轴）
-  const getCurrentTimeX = () => {
-    const now = new Date();
-    const dates = dateSetup.dates;
-    if (!dates || dates.length < 2) return -1;
-    
-    const idx = dates.findIndex((d, i) => 
-      now.valueOf() >= d.valueOf() && 
-      i + 1 < dates.length && 
-      now.valueOf() < dates[i + 1].valueOf()
-    );
-    
-    if (idx < 0) return -1;
-    
-    const start = dates[idx].valueOf();
-    const end = dates[idx + 1].valueOf();
-    const ratio = (now.valueOf() - start) / (end - start);
-    return (idx + ratio) * columnWidth;
-  };
 
-  const currentTimeX = getCurrentTimeX();
   const getCalendarValuesForYear = () => {
     const topValues: ReactChild[] = [];
     const bottomValues: ReactChild[] = [];
@@ -1272,17 +1252,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         className={styles.calendarHeader}
       />
       {bottomValues} {topValues}
-      {/* 当前时间轴（oaTask模式） */}
-      {viewType === "oaTask" && currentTimeX >= 0 && (
-        <line
-          x1={currentTimeX}
-          y1={0}
-          x2={currentTimeX}
-          y2={headerHeight}
-          stroke="#FFB592"
-          strokeWidth={2}
-        />
-      )}
+      {/* 当前时间轴已移至 Grid 组件，避免穿过表头 */}
     </g>
   );
 };

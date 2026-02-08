@@ -11,6 +11,7 @@ export type GridBodyProps = {
   rowHeight: number;
   columnWidth: number;
   todayColor: string;
+  todayLineWidth?: number;
   rtl: boolean;
   viewType?: ViewType;
   scrollY?: number;
@@ -25,6 +26,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
   svgWidth,
   columnWidth,
   todayColor,
+  todayLineWidth = 1,
   rtl,
   viewType = "default",
   scrollY = 0,
@@ -164,7 +166,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
     }
     tickX += columnWidth;
   }
-  // oaTask模式的当前时间轴
+  // oaTask模式的当前时间轴（从任务区域顶部开始，不穿过表头）
   if (viewType === "oaTask" && currentTimeX >= 0) {
     currentTimeLine = (
       <line
@@ -174,7 +176,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
         x2={currentTimeX}
         y2={totalHeight}
         stroke="#FFB592"
-        strokeWidth={2}
+        strokeWidth={todayLineWidth}
       />
     );
   }

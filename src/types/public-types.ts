@@ -188,6 +188,8 @@ export interface StylingOption {
   /** 是否显示悬浮信息框（tooltip），默认true */
   showTooltip?: boolean;
   todayColor?: string;
+  /** 今天的纵轴线宽度，默认1 */
+  todayLineWidth?: number;
   /** 时间刻度边框宽度，默认1 */
   gridBorderWidth?: number;
   /** 时间刻度边框颜色，默认#e6e4e4 */
