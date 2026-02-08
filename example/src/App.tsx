@@ -450,6 +450,13 @@ const App = () => {
     });
   }, [tasks.length, oaTaskViewMode, renderCount]);
   
+  // 时间轴格式演示（当前配置的格式）
+  const timelineFormatDemo = React.useMemo(() => ({
+    monthFormat: 'M7',      // M7 | Mon 7 | 7月
+    weekFormat: 'Week 01',  // Week 01 | W01 | 第1周
+    yearMonthFormat: '2026 11Mon',  // 2026 11Mon | 2026 11M | 2026-11
+  }), []);
+  
   // 模拟当前登录用户（用于演示isTaskDraggable功能）
   // 注意：第一个mock数据的proposer是"张三"，其他是"何聪"
   // 所以只有proposer为"何聪"的任务才能拖动计划结束时间，第一个任务（proposer为"张三"）的右侧手柄应该被禁用
@@ -973,6 +980,94 @@ const App = () => {
         </div>
       )}
       
+      {/* 时间轴格式演示面板 */}
+      <div style={{ 
+        marginBottom: 16, 
+        padding: '12px', 
+        backgroundColor: '#fff7e6', 
+        borderRadius: '4px',
+        border: '1px solid #ffd591'
+      }}>
+        <div style={{ marginBottom: 8, fontWeight: 'bold', fontSize: '14px', color: '#d46b08' }}>
+          🎨 时间轴格式演示（可配置）
+        </div>
+        <div style={{ fontSize: '12px', color: '#666', marginBottom: 12, lineHeight: '1.6' }}>
+          💡 提示：切换不同视图模式查看效果。格式可在 <code style={{ 
+            backgroundColor: '#fff1f0', 
+            border: '1px solid #ffccc7', 
+            padding: '2px 6px', 
+            borderRadius: '3px',
+            color: '#cf1322'
+          }}>src/i18n/index.ts</code> 中自定义。
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '12px' }}>
+          {/* 月份格式 */}
+          <div style={{ 
+            padding: '8px', 
+            backgroundColor: '#fff', 
+            borderRadius: '4px',
+            border: '1px solid #ffd591'
+          }}>
+            <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#d46b08' }}>
+              📅 月模式 - 月份格式
+            </div>
+            <div style={{ fontSize: '11px', color: '#999', marginBottom: 6 }}>
+              当前：<span style={{ color: '#fa8c16', fontWeight: 'bold' }}>{timelineFormatDemo.monthFormat}</span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#666' }}>
+              示例：M1, M2, M7, M12<br/>
+              配置：<code>monthLabel: (m) =&gt; `M${'{'}m+1{'}'}`</code>
+            </div>
+          </div>
+          
+          {/* 周标签格式 */}
+          <div style={{ 
+            padding: '8px', 
+            backgroundColor: '#fff', 
+            borderRadius: '4px',
+            border: '1px solid #ffd591'
+          }}>
+            <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#d46b08' }}>
+              📆 日/周模式 - 周标签格式
+            </div>
+            <div style={{ fontSize: '11px', color: '#999', marginBottom: 6 }}>
+              当前：<span style={{ color: '#fa8c16', fontWeight: 'bold' }}>{timelineFormatDemo.weekFormat}</span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#666' }}>
+              示例：Week 01, Week 02, Week 52<br/>
+              配置：<code>weekLabel: (w) =&gt; `Week ${'{'}w.padStart(2,'0'){'}'}`</code>
+            </div>
+          </div>
+          
+          {/* 年月格式 */}
+          <div style={{ 
+            padding: '8px', 
+            backgroundColor: '#fff', 
+            borderRadius: '4px',
+            border: '1px solid #ffd591'
+          }}>
+            <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#d46b08' }}>
+              🗓️ 周模式 - 年月格式
+            </div>
+            <div style={{ fontSize: '11px', color: '#999', marginBottom: 6 }}>
+              当前：<span style={{ color: '#fa8c16', fontWeight: 'bold' }}>{timelineFormatDemo.yearMonthFormat}</span>
+            </div>
+            <div style={{ fontSize: '11px', color: '#666' }}>
+              示例：2026 01Mon, 2026 11Mon<br/>
+              配置：<code>yearMonthLabel: (y,m) =&gt; `${'{'}y{'}'} ${'{'}m+1{'}'}Mon`</code>
+            </div>
+          </div>
+        </div>
+        
+        <div style={{ marginTop: 12, padding: '8px', backgroundColor: '#fffbe6', borderRadius: '4px', fontSize: '11px' }}>
+          <strong>其他可用格式：</strong><br/>
+          • 月份：Mon 7, 7月, 07<br/>
+          • 周：W01, 第1周, #01<br/>
+          • 年月：2026 11M, 2026-11, 2026/11
+        </div>
+      </div>
+      
       {/* 多选列演示控制面板 */}
       <div style={{ 
         marginBottom: 16, 
@@ -1094,6 +1189,15 @@ const App = () => {
         <div><strong>9️⃣ 水平滚动修复：</strong> 滚动水平滚动条时，起始时间轴不再跳动（内部修复）</div>
         <div><strong>🔟 拖动后 delayDays 同步：</strong> 拖动任务条后，返回的 task.delayDays 与条形图显示的延期天数一致（内部修复）</div>
         <div><strong>1️⃣1️⃣ 渲染完成事件：</strong> onRenderComplete 回调，在图表完全渲染后触发（可用于截图、导出、性能监控等）</div>
+        <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed #91caff' }}>
+          <strong>🎨 时间轴格式自定义（最新）：</strong>
+          <div style={{ marginLeft: '16px', marginTop: '4px' }}>
+            • <strong>月份格式：</strong>月模式下显示 M1, M2, M7（可配置为 Mon 7, 7月等）<br/>
+            • <strong>周标签格式：</strong>日/周模式下显示 Week 01, Week 02（可配置为 W01, 第1周等）<br/>
+            • <strong>年月格式：</strong>周模式母表头显示 2026 11Mon（可配置为 2026 11M, 2026-11等）<br/>
+            • <strong>垂直居中：</strong>所有时间轴标签完美垂直居中，并暴露独立CSS类可自定义样式
+          </div>
+        </div>
       </div>
       
       {/* 性能测试数据控制面板 */}

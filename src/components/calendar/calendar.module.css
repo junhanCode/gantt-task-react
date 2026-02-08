@@ -22,6 +22,81 @@
   pointer-events: none;
 }
 
+/* 月模式下的月份标签样式（可自定义垂直居中） */
+.calendarMonthLabel {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: #333;
+  font-size: 12px;
+  font-weight: 400;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 季度模式下的季度标签样式（可自定义垂直居中） */
+.calendarQuarterLabel {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: #333;
+  font-size: 12px;
+  font-weight: 400;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 周模式下的周标签样式（可自定义垂直居中） */
+.calendarWeekLabel {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: #333;
+  font-size: 12px;
+  font-weight: 400;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 日模式下的日期标签样式（可自定义垂直居中） */
+.calendarDayLabel {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: #333;
+  font-size: 12px;
+  font-weight: 400;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 日模式母表头的周标签样式（Week 01, Week 02...，可自定义垂直居中） */
+.calendarWeekLabelTop {
+  text-anchor: middle;
+  dominant-baseline: middle;
+  fill: #555;
+  font-size: 12px;
+  font-weight: 400;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
+
 .calendarTopTick {
   stroke: #e6e4e4;
 }

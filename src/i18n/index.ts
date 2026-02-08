@@ -45,13 +45,19 @@ export interface I18nTexts {
   monthNames: string[]; // ["一月", "二月", ...] / ["January", "February", ...]
   monthNamesShort: string[]; // ["1月", "2月", ...] / ["Jan", "Feb", ...]
   
+  // 月份标签函数（可自定义格式）
+  monthLabel?: (monthIndex: number) => string; // monthIndex: 0-11, 如 (month) => `M${month + 1}`
+  
+  // 周模式母表头的年月标签函数（可自定义格式）
+  yearMonthLabel?: (year: number, monthIndex: number) => string; // 如 (year, month) => `${year} ${month + 1}Mon`
+  
   // 季度标签
   quarterLabel: (quarter: number) => string; // "Q1" / "Q1"
 }
 
 const zhTW: I18nTexts = {
   week: '周',
-  weekLabel: (weekNum: string) => `第${weekNum}周`,
+  weekLabel: (weekNum: string) => `Week ${weekNum.padStart(2, '0')}`,  // Week 01, Week 02
   
   dayView: '日',
   weekView: '周',
@@ -81,6 +87,12 @@ const zhTW: I18nTexts = {
   
   monthNames: ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'],
   monthNamesShort: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+  
+  // 月份标签：M1, M2, ..., M7, M12 格式（可自定义）
+  monthLabel: (monthIndex: number) => `M${monthIndex + 1}`,
+  
+  // 周模式母表头年月标签：2026 11Mon（可自定义）
+  yearMonthLabel: (year: number, monthIndex: number) => `${year} ${String(monthIndex + 1).padStart(2, '0')}Mon`,
   
   quarterLabel: (quarter: number) => `Q${quarter}`,
 };
@@ -117,6 +129,15 @@ const en: I18nTexts = {
   
   monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
   monthNamesShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+  
+  // 月份标签：默认使用短名称，如需要可改成 (monthIndex) => `M${monthIndex + 1}`
+  monthLabel: (monthIndex: number) => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monthIndex],
+  
+  // 周模式母表头年月标签：2026 11Mon（可自定义）
+  yearMonthLabel: (year: number, monthIndex: number) => {
+    const monthShort = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monthIndex];
+    return `${year} ${String(monthIndex + 1).padStart(2, '0')}${monthShort}`;
+  },
   
   quarterLabel: (quarter: number) => `Q${quarter}`,
 };

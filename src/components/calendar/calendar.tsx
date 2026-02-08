@@ -681,14 +681,15 @@ export const Calendar: React.FC<CalendarProps> = ({
           );
         }
         
-        // 子表头：日期（垂直居中：子表头区域中心为 headerHeight * 0.75）
+        // 子表头：日期（垂直居中：子表头区域中心位置）
         const dayLabel = `${date.getDate()}`;
         const dayX = columnWidth * i + columnWidth * 0.5;
-        const dayY = headerHeight * 0.75;
-        const customDay = renderTimelineCell(date, i, 'bottom', dayLabel, dayX, dayY);
+        // 计算子表头区域的垂直中心位置
+        const dayCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;
+        const customDay = renderTimelineCell(date, i, 'bottom', dayLabel, dayX, dayCenterY);
         if (customDay) {
           bottomValues.push(
-            <g key={`day-${date.getTime()}`} transform={`translate(${dayX}, ${dayY})`}>
+            <g key={`day-${date.getTime()}`} transform={`translate(${dayX}, ${dayCenterY})`}>
               {customDay}
             </g>
           );
@@ -696,9 +697,9 @@ export const Calendar: React.FC<CalendarProps> = ({
           bottomValues.push(
             <text
               key={`day-${date.getTime()}`}
-              y={dayY}
+              y={dayCenterY}
               x={dayX}
-              className={styles.calendarBottomTextVerticalCenter}
+              className={styles.calendarDayLabel}
               fill={isSunday ? "#999" : "#000"}
             >
               {dayLabel}
@@ -729,14 +730,16 @@ export const Calendar: React.FC<CalendarProps> = ({
             />
           );
           
-          const weekLabel = i18n ? i18n.weekLabel(weekNum) : `第${weekNum}周`;
+          const weekLabel = i18n ? i18n.weekLabel(weekNum) : `Week ${weekNum.padStart(2, '0')}`;
+          // 计算母表头区域的垂直中心位置
+          const weekCenterY = topDefaultHeight * 0.5;
           const customWeek = renderTimelineCell(
-            sunday, i, 'top', weekLabel, weekCenterX, topDefaultHeight * 0.7,
+            sunday, i, 'top', weekLabel, weekCenterX, weekCenterY,
             { isGroupStart: true, colSpan: weekDates.length }
           );
           if (customWeek) {
             topValues.push(
-              <g key={`week-${weekKey}`} transform={`translate(${weekCenterX}, ${topDefaultHeight * 0.7})`}>
+              <g key={`week-${weekKey}`} transform={`translate(${weekCenterX}, ${weekCenterY})`}>
                 {customWeek}
               </g>
             );
@@ -744,9 +747,9 @@ export const Calendar: React.FC<CalendarProps> = ({
             topValues.push(
               <g key={`week-${weekKey}`}>
                 <text
-                  y={topDefaultHeight * 0.7}
+                  y={weekCenterY}
                   x={weekCenterX}
-                  className={styles.calendarTopText}
+                  className={styles.calendarWeekLabelTop}
                 >
                   {weekLabel}
                 </text>
@@ -880,15 +883,20 @@ export const Calendar: React.FC<CalendarProps> = ({
         
         // 子表头：月份（每个月的第一天显示，垂直居中），使用国际化文本
         if (isMonthStart) {
-          const monthLabel = i18n ? i18n.monthNamesShort[month] : getLocaleMonth(date, locale);
+          // 优先使用 monthLabel 函数，否则使用 monthNamesShort 数组
+          const monthLabel = i18n?.monthLabel 
+            ? i18n.monthLabel(month) 
+            : (i18n ? i18n.monthNamesShort[month] : getLocaleMonth(date, locale));
           const monthSpan = monthInfo.endIdx - monthInfo.startIdx + 1;
           const monthCenterX = columnWidth * monthInfo.startIdx + (columnWidth * monthSpan) / 2;
+          // 计算子表头区域的垂直中心位置
+          const monthCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;
           bottomValues.push(
             <text
               key={`month-${monthKey}`}
-              y={headerHeight * 0.75}
+              y={monthCenterY}
               x={monthCenterX}
-              className={styles.calendarBottomTextVerticalCenter}
+              className={styles.calendarMonthLabel}
             >
               {monthLabel}
             </text>
@@ -1027,12 +1035,14 @@ export const Calendar: React.FC<CalendarProps> = ({
           const quarterLabel = i18n ? i18n.quarterLabel(quarter) : `Q${quarter}`;
           const quarterSpan = quarterInfo.endIdx - quarterInfo.startIdx + 1;
           const quarterCenterX = columnWidth * quarterInfo.startIdx + (columnWidth * quarterSpan) / 2;
+          // 计算子表头区域的垂直中心位置
+          const quarterCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;
           bottomValues.push(
             <text
               key={`quarter-${quarterKey}`}
-              y={headerHeight * 0.75}
+              y={quarterCenterY}
               x={quarterCenterX}
-              className={styles.calendarBottomTextVerticalCenter}
+              className={styles.calendarQuarterLabel}
             >
               {quarterLabel}
             </text>
@@ -1119,13 +1129,14 @@ export const Calendar: React.FC<CalendarProps> = ({
         // 子表头：周（每个刻度一周），使用国际化文本
         const weekLabel = i18n ? i18n.weekLabel(weekNum) : `第${weekNum}周`;
         const weekCenterX = columnWidth * i + columnWidth * 0.5;
-        const weekY = headerHeight * 0.75;
+        // 计算子表头区域的垂直中心位置
+        const weekCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;
         bottomValues.push(
           <text
             key={`week-${year}-${weekNum}-${i}`}
-            y={weekY}
+            y={weekCenterY}
             x={weekCenterX}
-            className={styles.calendarBottomTextVerticalCenter}
+            className={styles.calendarWeekLabel}
           >
             {weekLabel}
           </text>
@@ -1172,9 +1183,14 @@ export const Calendar: React.FC<CalendarProps> = ({
           const yearMonthStartX = columnWidth * yearMonthInfo.startIdx;
           const yearMonthEndX = columnWidth * (yearMonthInfo.endIdx + 1);
           const yearMonthCenterX = (yearMonthStartX + yearMonthEndX) / 2;
-          // 使用国际化月份名称
-          const monthName = i18n ? i18n.monthNames[month] : getLocaleMonth(date, locale);
-          const yearMonthLabel = `${year} ${monthName}`;
+          // 使用国际化年月标签函数
+          let yearMonthLabel: string;
+          if (i18n?.yearMonthLabel) {
+            yearMonthLabel = i18n.yearMonthLabel(year, month);
+          } else {
+            const monthName = i18n ? i18n.monthNames[month] : getLocaleMonth(date, locale);
+            yearMonthLabel = `${year} ${monthName}`;
+          }
           
           topValues.push(
             <g key={`year-month-${yearMonthKey}`}>
