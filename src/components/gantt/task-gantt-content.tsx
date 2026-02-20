@@ -113,15 +113,9 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
         columnWidth
       );
       if (isChanged) {
+        // 仅更新 ganttEvent.changedTask，由 gantt 的 effect 同步到 barTasks，实现拖动过程可见
+        // 不在此处调用 onDateChange，保持「仅结束拖动时才调接口」的特性
         setGanttEvent({ action: ganttEvent.action, changedTask });
-        // 拖动过程中实时更新视觉效果
-        if (onDateChange) {
-          try {
-            await onDateChange(changedTask, changedTask.barChildren);
-          } catch (error) {
-            console.error("Error updating task during drag:", error);
-          }
-        }
       }
     };
 

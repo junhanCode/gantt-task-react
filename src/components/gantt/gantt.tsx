@@ -606,7 +606,10 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
         } else if (newScrollX > svgWidth) {
           newScrollX = svgWidth;
         }
-        setScrollX(newScrollX);
+        if (newScrollX !== scrollX) {
+          setScrollX(newScrollX);
+          setIgnoreScrollEvent(true);
+        }
         event.preventDefault();
       } else if (ganttHeight) {
         let newScrollY = scrollY + event.deltaY;
@@ -617,11 +620,10 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
         }
         if (newScrollY !== scrollY) {
           setScrollY(newScrollY);
+          setIgnoreScrollEvent(true);
           event.preventDefault();
         }
       }
-
-      setIgnoreScrollEvent(true);
     };
 
     // subscribe if scroll is necessary
@@ -641,6 +643,17 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     rtl,
     ganttFullHeight,
   ]);
+
+  // 当滚动位置更新后，重置 ignoreScrollEvent 标志
+  useEffect(() => {
+    if (ignoreScrollEvent) {
+      // 使用 setTimeout 确保 DOM 滚动已同步
+      const timeoutId = setTimeout(() => {
+        setIgnoreScrollEvent(false);
+      }, 0);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [scrollX, scrollY, ignoreScrollEvent]);
 
   // 渲染完成回调 - 在关键状态更新后触发
   useEffect(() => {
