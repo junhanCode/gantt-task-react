@@ -113,6 +113,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   /** 任务标题列表头自定义渲染 */
   taskTitleHeaderRender,
   columnHeaderRenderers,
+  timelineUnitLabels,
   timelineHeaderCellRender,
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -230,7 +231,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
 
   const [scrollY, setScrollY] = useState(0);
   const [scrollX, setScrollX] = useState(-1);
-  const [ignoreScrollEvent, setIgnoreScrollEvent] = useState(false);
 
   // 暴露方法：滚动到指定日期、切换视图模式、全屏、导出图片
   useImperativeHandle(ref, () => ({
@@ -261,7 +261,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       }
       if (target > svgWidth) target = svgWidth;
       setScrollX(target);
-      setIgnoreScrollEvent(true);
     },
     switchViewMode: (mode: OATaskViewMode) => {
       if (viewType === "oaTask") {
@@ -608,7 +607,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
         }
         if (newScrollX !== scrollX) {
           setScrollX(newScrollX);
-          setIgnoreScrollEvent(true);
         }
         event.preventDefault();
       } else if (ganttHeight) {
@@ -620,7 +618,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
         }
         if (newScrollY !== scrollY) {
           setScrollY(newScrollY);
-          setIgnoreScrollEvent(true);
           event.preventDefault();
         }
       }
@@ -644,17 +641,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     ganttFullHeight,
   ]);
 
-  // 当滚动位置更新后，重置 ignoreScrollEvent 标志
-  useEffect(() => {
-    if (ignoreScrollEvent) {
-      // 使用 setTimeout 确保 DOM 滚动已同步
-      const timeoutId = setTimeout(() => {
-        setIgnoreScrollEvent(false);
-      }, 0);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [scrollX, scrollY, ignoreScrollEvent]);
-
   // 渲染完成回调 - 在关键状态更新后触发
   useEffect(() => {
     if (onRenderComplete && barTasks.length > 0 && svgContainerWidth > 0) {
@@ -669,21 +655,11 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   }, [barTasks, svgContainerWidth, svgContainerHeight, scrollX, scrollY, onRenderComplete]);
 
   const handleScrollY = (event: SyntheticEvent<HTMLDivElement>) => {
-    if (scrollY !== event.currentTarget.scrollTop && !ignoreScrollEvent) {
-      setScrollY(event.currentTarget.scrollTop);
-      setIgnoreScrollEvent(true);
-    } else {
-      setIgnoreScrollEvent(false);
-    }
+    setScrollY(event.currentTarget.scrollTop);
   };
 
   const handleScrollX = (event: SyntheticEvent<HTMLDivElement>) => {
-    if (scrollX !== event.currentTarget.scrollLeft && !ignoreScrollEvent) {
-      setScrollX(event.currentTarget.scrollLeft);
-      setIgnoreScrollEvent(true);
-    } else {
-      setIgnoreScrollEvent(false);
-    }
+    setScrollX(event.currentTarget.scrollLeft);
   };
 
   /**
@@ -729,7 +705,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       }
       setScrollY(newScrollY);
     }
-    setIgnoreScrollEvent(true);
   };
 
   /**
@@ -787,6 +762,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     rtl,
     viewType,
     oaTaskViewMode: currentOATaskViewMode,
+    timelineUnitLabels,
     timelineHeaderCellRender,
     gridBorderWidth,
     gridBorderColor,

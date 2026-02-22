@@ -20,6 +20,23 @@ export type StatusInfo = {
 export type ViewType = "default" | "oaTask";
 // OA 视图模式：日 / 周 / 月 / 年
 export type OATaskViewMode = "日" | "周" | "月" | "季" | "年";
+
+/**
+ * 时间轴单位标签（直接配置周/月/季等显示单位，无需走 i18n 或 timelineHeaderCellRender）。
+ * 例如：周显示为 "WK 01"、"Week 01"、"W 01"；月显示为 "M1"、"MON1"。
+ */
+export interface TimelineUnitLabels {
+  /** 周：如 "周" | "Week" | "WK" | "W"，显示为 "{week} 01" */
+  week?: string;
+  /** 月：如 "月" | "Month" | "M" | "MON"，显示为 "M1"、"MON1" 等 */
+  month?: string;
+  /** 季：如 "季" | "Q"，显示为 "Q1"、"Q2" */
+  quarter?: string;
+  /** 日：如 "日" | "Day" | "D"（日模式子表头日期后的单位后缀，若需 "5日" 可设为 "日"） */
+  day?: string;
+  /** 年：如 "年" | "Year" | "Y"（当前年仅显示数字，此字段预留） */
+  year?: string;
+}
 // 语言类型：繁体中文 / 英文
 export type Language = 'zh-TW' | 'en';
 export interface Task {
@@ -388,6 +405,11 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     /** 操作列表头 */
     operations: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
   }>;
+  /**
+   * 时间轴单位标签（直接配置周/月/季等，如 week: "WK", month: "M"）。
+   * 与 timelineHeaderCellRender 二选一即可；若同时提供，先按单位生成 defaultLabel，再交给 timelineHeaderCellRender。
+   */
+  timelineUnitLabels?: TimelineUnitLabels;
   /**
    * 时间轴标题自定义渲染（类似 Ant Design 表头）。
    * 每个时间格会调用此函数，可返回 SVG 兼容的 ReactNode（如 text、g、tspan 等）。

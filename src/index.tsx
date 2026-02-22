@@ -10,6 +10,7 @@ export type {
   GanttRef,
   ViewType,
   OATaskViewMode,
+  TimelineUnitLabels,
   TaskStatus,
   ColumnConfig,
   Language,

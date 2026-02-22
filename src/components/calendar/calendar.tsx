@@ -1,5 +1,5 @@
 import React, { ReactChild } from "react";
-import { ViewMode, ViewType, OATaskViewMode } from "../../types/public-types";
+import { ViewMode, ViewType, OATaskViewMode, TimelineUnitLabels } from "../../types/public-types";
 import { TopPartOfCalendar } from "./top-part-of-calendar";
 import {
   getCachedDateTimeFormat,
@@ -39,6 +39,8 @@ export type CalendarProps = {
   fontSize: string;
   viewType?: ViewType;
   oaTaskViewMode?: OATaskViewMode;
+  /** 时间轴单位标签（直接配置周/月/季等，如 week: "WK", month: "M"） */
+  timelineUnitLabels?: TimelineUnitLabels;
   /** 时间轴标题自定义渲染（类似 Ant Design 表头） */
   timelineHeaderCellRender?: (props: TimelineHeaderCellRenderProps) => React.ReactNode;
   gridBorderWidth?: number;
@@ -57,6 +59,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   fontSize,
   viewType = "default",
   oaTaskViewMode = "日",
+  timelineUnitLabels,
   timelineHeaderCellRender,
   gridBorderWidth = 1,
   gridBorderColor = "#e6e4e4",
@@ -149,7 +152,10 @@ export const Calendar: React.FC<CalendarProps> = ({
     for (let i = 0; i < dateSetup.dates.length; i++) {
       const date = dateSetup.dates[i];
       // const bottomValue = getLocaleMonth(date, locale);
-      const quarter = "Q" + Math.floor((date.getMonth() + 3) / 3);
+      const q = Math.floor((date.getMonth() + 3) / 3);
+      const quarter = timelineUnitLabels?.quarter != null
+        ? `${timelineUnitLabels.quarter}${q}`
+        : "Q" + q;
       bottomValues.push(
         <text
           key={date.getTime()}
@@ -255,8 +261,11 @@ export const Calendar: React.FC<CalendarProps> = ({
         // top
         topValue = `${getLocaleMonth(date, locale)}, ${date.getFullYear()}`;
       }
-      // bottom
-      const bottomValue = `W${getWeekNumberISO8601(date)}`;
+      // bottom：周数，优先使用 timelineUnitLabels.week（如 "WK 01"）
+      const weekNum = getWeekNumberISO8601(date);
+      const bottomValue = timelineUnitLabels?.week != null
+        ? `${timelineUnitLabels.week} ${weekNum.padStart(2, '0')}`
+        : `W${weekNum}`;
       const bottomX = columnWidth * (i + +rtl);
       const bottomY = headerHeight * 0.8;
       const customBottom = renderTimelineCell(date, i, 'bottom', bottomValue, bottomX, bottomY);
@@ -681,8 +690,10 @@ export const Calendar: React.FC<CalendarProps> = ({
           );
         }
         
-        // 子表头：日期（垂直居中：子表头区域中心位置）
-        const dayLabel = `${date.getDate()}`;
+        // 子表头：日期（垂直居中），可选单位后缀 timelineUnitLabels.day（如 "日" → "5日"）
+        const dayLabel = timelineUnitLabels?.day != null
+          ? `${date.getDate()}${timelineUnitLabels.day}`
+          : `${date.getDate()}`;
         const dayX = columnWidth * i + columnWidth * 0.5;
         // 计算子表头区域的垂直中心位置
         const dayCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;
@@ -730,7 +741,9 @@ export const Calendar: React.FC<CalendarProps> = ({
             />
           );
           
-          const weekLabel = i18n ? i18n.weekLabel(weekNum) : `Week ${weekNum.padStart(2, '0')}`;
+          const weekLabel = timelineUnitLabels?.week != null
+            ? `${timelineUnitLabels.week} ${weekNum.padStart(2, '0')}`
+            : (i18n ? i18n.weekLabel(weekNum) : `Week ${weekNum.padStart(2, '0')}`);
           // 计算母表头区域的垂直中心位置
           const weekCenterY = topDefaultHeight * 0.5;
           const customWeek = renderTimelineCell(
@@ -881,12 +894,13 @@ export const Calendar: React.FC<CalendarProps> = ({
           );
         }
         
-        // 子表头：月份（每个月的第一天显示，垂直居中），使用国际化文本
+        // 子表头：月份（每个月的第一天显示，垂直居中），优先使用 timelineUnitLabels.month
         if (isMonthStart) {
-          // 优先使用 monthLabel 函数，否则使用 monthNamesShort 数组
-          const monthLabel = i18n?.monthLabel 
-            ? i18n.monthLabel(month) 
-            : (i18n ? i18n.monthNamesShort[month] : getLocaleMonth(date, locale));
+          const monthLabel = timelineUnitLabels?.month != null
+            ? `${timelineUnitLabels.month}${month + 1}`
+            : (i18n?.monthLabel
+              ? i18n.monthLabel(month)
+              : (i18n ? i18n.monthNamesShort[month] : getLocaleMonth(date, locale)));
           const monthSpan = monthInfo.endIdx - monthInfo.startIdx + 1;
           const monthCenterX = columnWidth * monthInfo.startIdx + (columnWidth * monthSpan) / 2;
           // 计算子表头区域的垂直中心位置
@@ -1056,9 +1070,11 @@ export const Calendar: React.FC<CalendarProps> = ({
           );
         }
         
-        // 子表头：季度（每个季度的第一天显示，垂直居中），使用国际化文本
+        // 子表头：季度（每个季度的第一天显示，垂直居中），优先使用 timelineUnitLabels.quarter
         if (isQuarterStart) {
-          const quarterLabel = i18n ? i18n.quarterLabel(quarter) : `Q${quarter}`;
+          const quarterLabel = timelineUnitLabels?.quarter != null
+            ? `${timelineUnitLabels.quarter}${quarter}`
+            : (i18n ? i18n.quarterLabel(quarter) : `Q${quarter}`);
           const quarterSpan = quarterInfo.endIdx - quarterInfo.startIdx + 1;
           const quarterCenterX = columnWidth * quarterInfo.startIdx + (columnWidth * quarterSpan) / 2;
           // 计算子表头区域的垂直中心位置
@@ -1178,8 +1194,10 @@ export const Calendar: React.FC<CalendarProps> = ({
           />
         );
         
-        // 子表头：周（每个刻度一周），使用国际化文本
-        const weekLabel = i18n ? i18n.weekLabel(weekNum) : `第${weekNum}周`;
+        // 子表头：周（每个刻度一周），优先使用 timelineUnitLabels.week
+        const weekLabel = timelineUnitLabels?.week != null
+          ? `${timelineUnitLabels.week} ${weekNum.padStart(2, '0')}`
+          : (i18n ? i18n.weekLabel(weekNum) : `第${weekNum}周`);
         const weekCenterX = columnWidth * i + columnWidth * 0.5;
         // 计算子表头区域的垂直中心位置
         const weekCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;

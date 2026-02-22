@@ -376,6 +376,14 @@ const App = () => {
   const [viewType] = React.useState<"default" | "oaTask">("oaTask");
   // 在 demo 中放宽类型，支持自定义扩展的视图模式（"日" | "周" | "月" | "年"）
   const [oaTaskViewMode, setOATaskViewMode] = React.useState<string>("日");
+  // 时间轴单位预设：默认(走 i18n) / 短标签(WK,M) / 英文(Week,MON) / 极简(W,M)
+  const [timelineUnitPreset, setTimelineUnitPreset] = React.useState<"default" | "short" | "en" | "minimal">("default"); // eslint-disable-line @typescript-eslint/no-unused-vars
+  const timelineUnitLabelsPresets = React.useMemo(() => ({ // eslint-disable-line @typescript-eslint/no-unused-vars
+    default: undefined as any,
+    short: { week: "WK", month: "M", quarter: "Q", day: "日" },
+    en: { week: "Week", month: "MON", quarter: "Q", day: "Day" },
+    minimal: { week: "W", month: "M", quarter: "Q", day: "日" },
+  }), []);
   
   // 性能测试相关状态（默认启用大量数据以展示虚拟列表优化）
   const [useLargeData, setUseLargeData] = React.useState(true);
@@ -1358,6 +1366,11 @@ const App = () => {
             >
               导出PNG
             </Button>
+            <span style={{ marginLeft: 16, marginRight: 6 }}>时间轴单位：</span>
+            <Button size="small" type={timelineUnitPreset === "default" ? "primary" : "default"} onClick={() => setTimelineUnitPreset("default")}>默认</Button>
+            <Button size="small" style={{ marginLeft: 4 }} type={timelineUnitPreset === "short" ? "primary" : "default"} onClick={() => setTimelineUnitPreset("short")}>WK / M</Button>
+            <Button size="small" style={{ marginLeft: 4 }} type={timelineUnitPreset === "en" ? "primary" : "default"} onClick={() => setTimelineUnitPreset("en")}>Week / MON</Button>
+            <Button size="small" style={{ marginLeft: 4 }} type={timelineUnitPreset === "minimal" ? "primary" : "default"} onClick={() => setTimelineUnitPreset("minimal")}>W / M</Button>
             <Button 
               size="small" 
               style={{ marginLeft: 16 }} 
@@ -1622,6 +1635,9 @@ const App = () => {
         // }}
         viewType={viewType}
         oaTaskViewMode={oaTaskViewMode as any}
+        {...(timelineUnitLabelsPresets[timelineUnitPreset] && {
+          timelineUnitLabels: timelineUnitLabelsPresets[timelineUnitPreset],
+        } as any)}
         onOATaskViewModeChange={(mode) => {
           setOATaskViewMode(mode as any);
         }}
@@ -1657,14 +1673,21 @@ const App = () => {
         // [i18n] 时间轴：日期格式 "X日"、周格式 defaultLabel "第X周"
         // 日模式下，悬浮底部日期刻度时，显示完整日期，如“2026年2月3日”
         // [i18n] 时间轴：日期格式 "X日"、周格式 defaultLabel "第X周"
-        // 日模式下，悬浮底部日期刻度时，显示完整日期，如"2026年2月3日"
-        // 通过 level 参数区分上层(top)和下层(bottom)，支持日/周/月所有模式
+        // 当选择了「时间轴单位」预设(非默认)时，直接显示 defaultLabel，便于查看 timelineUnitLabels 效果
         timelineHeaderCellRender={({ date, defaultLabel, level, oaTaskViewMode }) => {
           const fullDateLabel = dayjs(date).format("YYYY/M/D");
           let displayLabel = defaultLabel;
-          let customStyle: React.CSSProperties = { fontSize: 12, fill: "#333", fontWeight: 400 };
-          
-          // 根据模式和层级自定义显示内容
+          const customStyle: React.CSSProperties = { fontSize: 12, fill: "#333", fontWeight: 400 };
+          // 使用时间轴单位预设时，直接显示 defaultLabel（已由 timelineUnitLabels 生成）
+          if (timelineUnitPreset !== "default") {
+            return (
+              <text x={0} y={0} textAnchor="middle" dominantBaseline="middle" style={customStyle}>
+                {oaTaskViewMode === "日" && level === "bottom" && <title>{fullDateLabel}</title>}
+                {defaultLabel}
+              </text>
+            );
+          }
+          // 根据模式和层级自定义显示内容（默认预设）
           if (oaTaskViewMode === "日") {
             if (level === "bottom") {
               // 日模式底部：仅显示日期数字
