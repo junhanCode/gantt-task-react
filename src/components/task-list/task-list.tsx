@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BarTask } from "../../types/bar-task";
 import { Task } from "../../types/public-types";
 
@@ -102,6 +102,8 @@ export type TaskListProps = {
     onToggleTaskList?: () => void;
     expandIcon?: React.ReactNode;
     collapseIcon?: React.ReactNode;
+    /** 列宽拖拽回调，列 key + 新宽度(px) */
+    onColumnResize?: (colKey: string, newWidthPx: number) => void;
     tableStyles?: {
       height?: number | string;
       container?: React.CSSProperties;
@@ -182,6 +184,13 @@ export type TaskListProps = {
   }>;
 };
 
+/** 将 CSS 宽度字符串解析为像素数值（如 "155px" → 155） */
+const parseWidthPx = (w: string | undefined, fallback: number): number => {
+  if (!w) return fallback;
+  const n = parseFloat(w);
+  return isNaN(n) ? fallback : n;
+};
+
 export const TaskList: React.FC<TaskListProps> = ({
   headerHeight,
   fontFamily,
@@ -222,6 +231,32 @@ export const TaskList: React.FC<TaskListProps> = ({
     }
   }, [scrollY]);
 
+  // 列宽状态（由 props 初始化，之后由拖拽更新）
+  const defaultPx = parseWidthPx(rowWidth, 155);
+  const [colWidths, setColWidths] = useState(() => ({
+    name: parseWidthPx(nameColumnWidth ?? rowWidth, defaultPx),
+    plannedStart: parseWidthPx(timeColumnWidths?.plannedStart ?? rowWidth, defaultPx),
+    plannedEnd: parseWidthPx(timeColumnWidths?.plannedEnd ?? rowWidth, defaultPx),
+    plannedDuration: parseWidthPx(timeColumnWidths?.plannedDuration, 100),
+    actualStart: parseWidthPx(timeColumnWidths?.actualStart ?? rowWidth, defaultPx),
+    actualEnd: parseWidthPx(timeColumnWidths?.actualEnd ?? rowWidth, defaultPx),
+    operations: parseWidthPx(operationsColumnWidth, 120),
+  }));
+
+  const handleColumnResize = (colKey: string, newWidthPx: number) => {
+    setColWidths(prev => ({ ...prev, [colKey]: Math.max(50, newWidthPx) }));
+  };
+
+  const resolvedNameWidth = `${colWidths.name}px`;
+  const resolvedTimeWidths = {
+    plannedStart: `${colWidths.plannedStart}px`,
+    plannedEnd: `${colWidths.plannedEnd}px`,
+    plannedDuration: `${colWidths.plannedDuration}px`,
+    actualStart: `${colWidths.actualStart}px`,
+    actualEnd: `${colWidths.actualEnd}px`,
+  };
+  const resolvedOperationsWidth = `${colWidths.operations}px`;
+
   const headerProps = {
     headerHeight,
     fontFamily,
@@ -234,15 +269,16 @@ export const TaskList: React.FC<TaskListProps> = ({
       // 近似的滚动条宽度（Windows 常见为 16px，macOS 叠加滚动条通常为 0）
       return needScrollbar ? 16 : 0;
     })(),
-    nameColumnWidth,
+    nameColumnWidth: resolvedNameWidth,
     timeColumnLabels,
-    timeColumnWidths,
-    operationsColumnWidth,
+    timeColumnWidths: resolvedTimeWidths,
+    operationsColumnWidth: resolvedOperationsWidth,
     operationsColumnLabel,
     isTaskListCollapsed,
     onToggleTaskList,
     expandIcon,
     collapseIcon,
+    onColumnResize: handleColumnResize,
     tableStyles,
   };
   const selectedTaskId = selectedTask ? selectedTask.id : "";
@@ -256,10 +292,10 @@ export const TaskList: React.FC<TaskListProps> = ({
     selectedTaskId: selectedTaskId,
     setSelectedTask,
     onExpanderClick,
-    nameColumnWidth,
-    timeColumnWidths,
+    nameColumnWidth: resolvedNameWidth,
+    timeColumnWidths: resolvedTimeWidths,
     timeColumnLabels,
-    operationsColumnWidth,
+    operationsColumnWidth: resolvedOperationsWidth,
     onAddTask,
     onEditTask,
     onDeleteTask,

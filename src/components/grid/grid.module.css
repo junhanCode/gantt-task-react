@@ -8,8 +8,10 @@
 
 .gridRowLine {
   stroke: #ebeff2;
+  stroke-width: 0.5;
 }
 
 .gridTick {
   stroke: #e6e4e4;
+  stroke-width: 0.5;
 }

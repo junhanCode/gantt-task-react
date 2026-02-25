@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Gantt, Task, ViewMode, OATaskViewMode } from "gantt-task-react";
-import { initTasks } from "./helper";
+import { initTasks, generateScrollTestTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
 import {
   Button,
@@ -377,14 +377,16 @@ const GanttChart: React.FC = () => {
             // 日模式：顶部显示周标签 "WK 01"，底部显示日期数字
             if (oaTaskViewMode === "日") {
               if (level === "top") {
-                // 顶部：周标签
+                // 顶部：周标签，悬浮提示显示该周起止日期
                 const weekNum = dayjs(date).week();
                 const weekStr = weekNum.toString().padStart(2, '0');
                 displayLabel = `WK ${weekStr}`;
+                const weekStart = dayjs(date).startOf('week');
+                const weekEnd = dayjs(date).endOf('week');
+                tooltipText = `${weekStart.format('YYYY/M/D')} ~ ${weekEnd.format('YYYY/M/D')}`;
               } else {
-                // 底部：日期数字
+                // 底部：日期数字，悬浮提示显示完整日期
                 displayLabel = `${date.getDate()}`;
-                // 添加悬浮提示：完整日期
                 tooltipText = dayjs(date).format('YYYY/M/D');
               }
             }
@@ -397,14 +399,13 @@ const GanttChart: React.FC = () => {
                 const month = (date.getMonth() + 1).toString().padStart(2, '0');
                 displayLabel = `${year} ${month}M`;
               } else {
-                // 底部：周标签
+                // 底部：周标签，悬浮提示显示该周起止日期
                 const weekNum = dayjs(date).week();
                 const weekStr = weekNum.toString().padStart(2, '0');
                 displayLabel = `WK${weekStr}`;
-                // 添加悬浮提示：周的起止日期
                 const weekStart = dayjs(date).startOf('week');
                 const weekEnd = dayjs(date).endOf('week');
-                tooltipText = `${weekStart.format('YYYY/M/D')} - ${weekEnd.format('YYYY/M/D')}`;
+                tooltipText = `${weekStart.format('YYYY/M/D')} ~ ${weekEnd.format('YYYY/M/D')}`;
               }
             }
             
@@ -614,6 +615,20 @@ const GanttChart: React.FC = () => {
             }
           >
             定位到今天
+          </Button>
+
+          <Button
+            size="small"
+            type="dashed"
+            onClick={() => {
+              setTasks(generateScrollTestTasks());
+              // 稍等数据渲染完毕后滚动到今天，便于观察点击空白行的跳转效果
+              setTimeout(() => {
+                ganttRef.current?.scrollToDate(new Date(), { align: "center" });
+              }, 300);
+            }}
+          >
+            加载滚动测试数据
           </Button>
         </div>
       </div>

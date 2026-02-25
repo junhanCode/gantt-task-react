@@ -20,6 +20,24 @@
   padding: 6px 4px; /* 与内容区保持一致 */
   border-right: 1px solid rgb(196, 196, 196);
   box-sizing: border-box;
+  position: relative;
+}
+
+/* 列宽拖拽手柄 */
+.resizeHandle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 2;
+  border-radius: 0 2px 2px 0;
+  transition: background 0.15s;
+}
+.resizeHandle:hover,
+.resizeHandle:active {
+  background: rgba(0, 0, 0, 0.12);
 }
 
 /* 未读列表头：去掉左右边框，与任务名列视觉一体 */

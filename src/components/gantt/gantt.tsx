@@ -553,7 +553,11 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             prevStateTask.end.getTime() !== changedTask.end.getTime() ||
             prevStateTask.progress !== changedTask.progress ||
             prevStateTask.actualX1 !== changedTask.actualX1 ||
-            prevStateTask.actualX2 !== changedTask.actualX2)
+            prevStateTask.actualX2 !== changedTask.actualX2 ||
+            // 拖拽时 handleTaskBySVGMouseEvent 更新的是 x1/x2/plannedStart/plannedEnd
+            // 必须检测像素坐标变化才能实时刷新条形图位置
+            prevStateTask.x1 !== changedTask.x1 ||
+            prevStateTask.x2 !== changedTask.x2)
         ) {
           // actions for change
           const newTaskList = barTasks.map(t =>
@@ -575,9 +579,23 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   useEffect(() => {
     if (!listCellWidth || isTaskListCollapsed) {
       setTaskListWidth(0);
-    } else if (taskListRef.current) {
-      setTaskListWidth(taskListRef.current.offsetWidth);
+      return;
     }
+    const el = taskListRef.current;
+    if (!el) return;
+    // 使用 ResizeObserver 监听任务列表宽度，以响应列宽拖拽
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const RO: any = (window as any).ResizeObserver;
+    if (!RO) {
+      setTaskListWidth(el.offsetWidth);
+      return;
+    }
+    const observer = new RO(() => {
+      setTaskListWidth(el.offsetWidth);
+    });
+    observer.observe(el);
+    setTaskListWidth(el.offsetWidth);
+    return () => observer.disconnect();
   }, [taskListRef, listCellWidth, listWidth, isTaskListCollapsed]);
 
   useEffect(() => {
@@ -707,8 +725,15 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     }
   };
 
+  /** 将水平滚动定位到任务开始处（左侧留出约 2 列宽的空间） */
+  const scrollToTaskStart = (task: { x1: number }) => {
+    const padding = columnWidth * 2;
+    const target = Math.max(0, task.x1 - padding);
+    setScrollX(target);
+  };
+
   /**
-   * Task select event
+   * Task select event — 同时将时间轴滚动到该任务的开始位置
    */
   const handleSelectedTask = (taskId: string) => {
     const newSelectedTask = barTasks.find(t => t.id === taskId);
@@ -724,6 +749,19 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       }
     }
     setSelectedTask(newSelectedTask);
+    // 点击行时定位到任务开始位置
+    if (newSelectedTask) {
+      scrollToTaskStart(newSelectedTask);
+    }
+  };
+
+  /** 点击甘特条时：定位到任务开始处，然后触发外部 onClick */
+  const handleTaskClick = (task: Task) => {
+    const barTask = barTasks.find(t => t.id === task.id);
+    if (barTask) {
+      scrollToTaskStart(barTask);
+    }
+    onClick?.(task);
   };
   const handleExpanderClick = (task: Task) => {
     // 默认未设置 hideChildren 时视为展开态
@@ -736,10 +774,19 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const handleToggleTaskList = () => {
     setIsTaskListCollapsed(!isTaskListCollapsed);
   };
+  /** 点击时间轴行空白处时，滚动到该任务的计划开始位置（gridProps.tasks = barTasks，直接使用 x1） */
+  const handleGridRowClick = (task: Task) => {
+    // barTasks 中的元素含有 x1，Task 类型不含，需强转
+    const barTask = task as import("../../types/bar-task").BarTask;
+    if (barTask.x1 !== undefined) {
+      scrollToTaskStart(barTask);
+    }
+  };
+
   const gridProps: GridProps = {
     columnWidth,
     svgWidth,
-    tasks: tasks,
+    tasks: barTasks,
     rowHeight,
     dates: dateSetup.dates,
     todayColor,
@@ -750,6 +797,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     containerHeight: ganttHeight || undefined,
     gridBorderWidth,
     gridBorderColor,
+    onRowClick: handleGridRowClick,
   };
   const calendarProps: CalendarProps = {
     dateSetup,
@@ -797,7 +845,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     onDateChange,
     onProgressChange,
     onDoubleClick,
-    onClick,
+    onClick: handleTaskClick,
     onDelete,
     onTaskDragEnd,
     onTaskDragComplete,

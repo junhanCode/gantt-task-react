@@ -2,12 +2,16 @@ import React, { ReactChild } from "react";
 import { ViewMode, ViewType, OATaskViewMode, TimelineUnitLabels } from "../../types/public-types";
 import { TopPartOfCalendar } from "./top-part-of-calendar";
 import {
+  addToDate,
   getCachedDateTimeFormat,
   getDaysInMonth,
   getLocalDayOfWeek,
   getLocaleMonth,
   getWeekNumberISO8601,
 } from "../../helpers/date-helper";
+
+/** 格式化日期为 YYYY/M/D */
+const fmtDate = (d: Date) => `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 import { DateSetup } from "../../types/date-setup";
 import styles from "./calendar.module.css";
 import { I18nTexts } from "../../i18n";
@@ -268,6 +272,7 @@ export const Calendar: React.FC<CalendarProps> = ({
         : `W${weekNum}`;
       const bottomX = columnWidth * (i + +rtl);
       const bottomY = headerHeight * 0.8;
+      const weekTooltip = `${fmtDate(date)} ~ ${fmtDate(addToDate(date, 6, "day"))}`;
       const customBottom = renderTimelineCell(date, i, 'bottom', bottomValue, bottomX, bottomY);
       if (customBottom) {
         bottomValues.push(
@@ -277,14 +282,21 @@ export const Calendar: React.FC<CalendarProps> = ({
         );
       } else {
         bottomValues.push(
-          <text
-            key={date.getTime()}
-            y={bottomY}
-            x={bottomX}
-            className={styles.calendarBottomText}
-          >
-            {bottomValue}
-          </text>
+          <g key={date.getTime()}>
+            {/* 透明命中区域，提供悬浮提示 */}
+            <rect
+              x={bottomX - columnWidth * 0.5}
+              y={topDefaultHeight}
+              width={columnWidth}
+              height={headerHeight - topDefaultHeight}
+              fill="transparent"
+            >
+              <title>{weekTooltip}</title>
+            </rect>
+            <text y={bottomY} x={bottomX} className={styles.calendarBottomText}>
+              {bottomValue}
+            </text>
+          </g>
         );
       }
 
@@ -750,6 +762,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             sunday, i, 'top', weekLabel, weekCenterX, weekCenterY,
             { isGroupStart: true, colSpan: weekDates.length }
           );
+          const oaDayWeekTooltip = `${fmtDate(sunday)} ~ ${fmtDate(addToDate(sunday, 6, "day"))}`;
           if (customWeek) {
             topValues.push(
               <g key={`week-${weekKey}`} transform={`translate(${weekCenterX}, ${weekCenterY})`}>
@@ -759,6 +772,16 @@ export const Calendar: React.FC<CalendarProps> = ({
           } else {
             topValues.push(
               <g key={`week-${weekKey}`}>
+                {/* 透明命中区域，提供悬浮提示 */}
+                <rect
+                  x={weekStartX}
+                  y={0}
+                  width={weekEndX - weekStartX}
+                  height={topDefaultHeight}
+                  fill="transparent"
+                >
+                  <title>{oaDayWeekTooltip}</title>
+                </rect>
                 <text
                   y={weekCenterY}
                   x={weekCenterX}
@@ -1201,6 +1224,8 @@ export const Calendar: React.FC<CalendarProps> = ({
         const weekCenterX = columnWidth * i + columnWidth * 0.5;
         // 计算子表头区域的垂直中心位置
         const weekCenterY = topDefaultHeight + (headerHeight - topDefaultHeight) / 2;
+        // 周模式每列代表一整周，date 是该周的周一
+        const oaWeekTooltip = `${fmtDate(date)} ~ ${fmtDate(addToDate(date, 6, "day"))}`;
         const customWeek = renderTimelineCell(date, i, 'bottom', weekLabel, weekCenterX, weekCenterY);
         if (customWeek) {
           bottomValues.push(
@@ -1210,14 +1235,25 @@ export const Calendar: React.FC<CalendarProps> = ({
           );
         } else {
           bottomValues.push(
-            <text
-              key={`week-${year}-${weekNum}-${i}`}
-              y={weekCenterY}
-              x={weekCenterX}
-              className={styles.calendarWeekLabel}
-            >
-              {weekLabel}
-            </text>
+            <g key={`week-${year}-${weekNum}-${i}`}>
+              {/* 透明命中区域，提供悬浮提示 */}
+              <rect
+                x={columnWidth * i}
+                y={topDefaultHeight}
+                width={columnWidth}
+                height={headerHeight - topDefaultHeight}
+                fill="transparent"
+              >
+                <title>{oaWeekTooltip}</title>
+              </rect>
+              <text
+                y={weekCenterY}
+                x={weekCenterX}
+                className={styles.calendarWeekLabel}
+              >
+                {weekLabel}
+              </text>
+            </g>
           );
         }
         
@@ -1356,7 +1392,7 @@ export const Calendar: React.FC<CalendarProps> = ({
   }
   
   return (
-    <g className="calendar" fontSize={fontSize} fontFamily={fontFamily}>
+    <g className="calendar" fontSize={fontSize} fontFamily={fontFamily} style={{ cursor: "pointer" }}>
       <rect
         x={0}
         y={0}

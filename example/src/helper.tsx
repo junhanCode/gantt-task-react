@@ -1970,6 +1970,53 @@ export function initTasksOld() {
   return tasks;
 }
 
+/**
+ * 生成用于验证"点击空白行滚动到计划开始时间"功能的测试数据。
+ * 每条任务的 plannedStart 间隔约 3 个月，差异明显，点击对应行时视图应跳转到对应月份。
+ */
+export function generateScrollTestTasks(): Task[] {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+
+  // helper: 构造某年某月第N天 00:00:00
+  const d = (year: number, month: number, day: number) =>
+    new Date(year, month, day, 0, 0, 0);
+
+  // 5 条任务，起止日期分别在 -6月、-3月、当月、+3月、+6月
+  const offsets = [-6, -3, 0, 3, 6];
+  const labels = [
+    "半年前开始的任务（-6月）",
+    "三个月前开始的任务（-3月）",
+    "本月开始的任务（当月）",
+    "三个月后开始的任务（+3月）",
+    "半年后开始的任务（+6月）",
+  ];
+
+  return offsets.map((offset, idx) => {
+    const startMonth = m + offset;
+    const startYear = y + Math.floor(startMonth / 12);
+    const normMonth = ((startMonth % 12) + 12) % 12;
+    const start = d(startYear, normMonth, 1);
+    const end = d(startYear, normMonth, 15);
+    return {
+      id: `scroll_test_${idx}`,
+      name: labels[idx],
+      type: "task" as const,
+      start,
+      end,
+      plannedStart: start,
+      plannedEnd: end,
+      actualStart: start,
+      actualEnd: end,
+      progress: 30 + idx * 10,
+      displayOrder: idx + 1,
+      status: { code: 1, description: "待確認", color: "rgb(255,192,0)" } as any,
+      assignee: "测试员",
+    };
+  });
+}
+
 export function getStartEndDateForProject(tasks: Task[], projectId: string) {
   const projectTasks = tasks.filter(t => t.project === projectId);
   let start = projectTasks[0].start;

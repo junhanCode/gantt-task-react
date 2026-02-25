@@ -18,6 +18,8 @@ export type GridBodyProps = {
   containerHeight?: number;
   gridBorderWidth?: number;
   gridBorderColor?: string;
+  /** 点击某行空白区域时触发，参数为该行对应的任务 */
+  onRowClick?: (task: Task) => void;
 };
 export const GridBody: React.FC<GridBodyProps> = ({
   tasks,
@@ -33,6 +35,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
   containerHeight,
   gridBorderWidth = 1,
   gridBorderColor = "#e6e4e4",
+  onRowClick,
 }) => {
   const useVirtual = shouldUseVirtualScroll(tasks.length) && !!containerHeight && containerHeight > 0;
   const virtualRange = useMemo(() => {
@@ -67,6 +70,8 @@ export const GridBody: React.FC<GridBodyProps> = ({
         width={svgWidth}
         height={rowHeight}
         className={styles.gridRow}
+        onClick={onRowClick ? () => onRowClick(task) : undefined}
+        style={onRowClick ? { cursor: "pointer" } : undefined}
       />
     );
     rowLines.push(

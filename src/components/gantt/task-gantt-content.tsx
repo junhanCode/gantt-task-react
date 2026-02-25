@@ -162,8 +162,8 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
         (action === "move" || action === "end" || action === "start" || action === "actualStart" || action === "actualEnd") &&
         isNotLikeOriginal
       ) {
-        // 调用 onTaskDragEnd 进行API验证（如果提供的话）
         if (onTaskDragEnd) {
+          // 提供了 onTaskDragEnd：由调用方做 API 校验，返回 false 则回滚
           try {
             const result = await onTaskDragEnd(
               newChangedTask,
@@ -174,19 +174,26 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
             console.error("onTaskDragEnd 调用失败:", error);
             operationSuccess = false;
           }
-        }
-        
-        // 如果没有 onTaskDragEnd 或者 API 验证成功，确保状态已更新
-        // （如果拖动过程中已经调用了 onDateChange，这里就不需要再调用了）
-        // 但如果 onTaskDragEnd 返回 false，我们需要恢复原始状态
-        if (!operationSuccess) {
-          // 恢复到原始状态
-          if (onDateChange) {
-            try {
-              await onDateChange(originalSelectedTask, originalSelectedTask.barChildren);
-            } catch (error) {
-              console.error("恢复原始状态失败:", error);
+          if (!operationSuccess) {
+            // 回滚：用原始任务调用 onDateChange 让父组件恢复状态
+            if (onDateChange) {
+              try {
+                await onDateChange(originalSelectedTask, originalSelectedTask.barChildren);
+              } catch (error) {
+                console.error("恢复原始状态失败:", error);
+              }
             }
+          }
+        } else if (onDateChange) {
+          // 未提供 onTaskDragEnd：鼠标松开时直接调用 onDateChange 提交变更
+          try {
+            const result = await onDateChange(newChangedTask, newChangedTask.barChildren);
+            if (result !== undefined) {
+              operationSuccess = Boolean(result);
+            }
+          } catch (error) {
+            console.error("onDateChange 调用失败:", error);
+            operationSuccess = false;
           }
         }
       } else if (onProgressChange && isNotLikeOriginal) {
