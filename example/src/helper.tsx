@@ -1512,27 +1512,15 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
   let plannedEnd = parseDate(mockTask.deadLine);
   let actualStart = parseDate(mockTask.createDate);
   
-  // 计算actualEnd：如果有finishDate则使用，否则根据delayDays和状态计算
+  // 计算actualEnd：如果有finishDate则使用，否则检查是否已过截止日期
   let actualEnd: Date;
   if (mockTask.finishDate) {
-    // 已完成的任务，使用finishDate
+    // 有实际完成时间，直接使用
     actualEnd = parseDate(mockTask.finishDate);
   } else {
-    // 未完成的任务
-    const statusCode = mockTask.statusInfoVo?.code;
-    const isProcessing = statusCode === 2; // 处理中/處理中
-    
-    if (isProcessing && mockTask.delayDays > 0) {
-      // 处理中状态且有延期天数，计算actualEnd = plannedEnd + delayDays
-      actualEnd = new Date(plannedEnd.getTime() + mockTask.delayDays * 24 * 60 * 60 * 1000);
-    } else if (isProcessing) {
-      // 处理中状态但没有延期天数，使用当前时间（确保延期条形区能显示）
-      const now = new Date();
-      actualEnd = now > plannedEnd ? now : plannedEnd;
-    } else {
-      // 其他状态，使用plannedEnd
-      actualEnd = plannedEnd;
-    }
+    // 没有finishDate：已过截止日期则延期到今天，否则使用plannedEnd
+    const now = new Date();
+    actualEnd = now > plannedEnd ? now : plannedEnd;
   }
   
   // 规范化计划时间和实际时间

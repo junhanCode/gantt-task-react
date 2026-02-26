@@ -74,24 +74,29 @@ export const ganttDateRange = (
   viewMode: ViewMode,
   _preStepsCount?: number
 ) => {
+  const now = new Date();
+
   // 处理空数组情况
   if (!tasks || tasks.length === 0) {
-    const now = new Date();
-    const defaultStart = addToDate(now, -7, "day");
-    const defaultEnd = addToDate(now, 30, "day");
+    const defaultStart = addToDate(now, -10, "day");
+    const defaultEnd = addToDate(now, 10, "day");
     return [defaultStart, defaultEnd];
   }
-  
-  let newStartDate: Date = tasks[0].start;
-  let newEndDate: Date = tasks[0].start;
+
+  // 遍历所有任务，取最早计划开始时间和最晚实际/计划结束时间
+  let newStartDate: Date = tasks[0].plannedStart || tasks[0].start;
+  let newEndDate: Date = tasks[0].actualEnd || tasks[0].plannedEnd || tasks[0].end;
   for (const task of tasks) {
-    if (task.start < newStartDate) {
-      newStartDate = task.start;
+    const taskStart = task.plannedStart || task.start;
+    const taskEnd = task.actualEnd || task.plannedEnd || task.end;
+    if (taskStart < newStartDate) {
+      newStartDate = taskStart;
     }
-    if (task.end > newEndDate) {
-      newEndDate = task.end;
+    if (taskEnd > newEndDate) {
+      newEndDate = taskEnd;
     }
   }
+
   switch (viewMode) {
     case ViewMode.Year:
       newStartDate = addToDate(newStartDate, -1, "year");
@@ -119,40 +124,46 @@ export const ganttDateRange = (
       break;
     case ViewMode.Day:
       newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -1, "day");
+      newStartDate = addToDate(newStartDate, -10, "day");
       newEndDate = startOfDate(newEndDate, "day");
       newEndDate = addToDate(newEndDate, 10, "day");
       break;
     case ViewMode.DayShift:
       newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -1, "day");
+      newStartDate = addToDate(newStartDate, -10, "day");
       newEndDate = startOfDate(newEndDate, "day");
       newEndDate = addToDate(newEndDate, 10, "day");
       break;
     case ViewMode.QuarterDay:
       newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -1, "day");
+      newStartDate = addToDate(newStartDate, -10, "day");
       newEndDate = startOfDate(newEndDate, "day");
       newEndDate = addToDate(newEndDate, 10, "day");
       break;
     case ViewMode.HalfDay:
       newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -1, "day");
+      newStartDate = addToDate(newStartDate, -10, "day");
       newEndDate = startOfDate(newEndDate, "day");
       newEndDate = addToDate(newEndDate, 10, "day");
       break;
     case ViewMode.Hour:
       newStartDate = startOfDate(newStartDate, "hour");
-      newStartDate = addToDate(newStartDate, -1, "hour");
+      newStartDate = addToDate(newStartDate, -10, "hour");
       newEndDate = startOfDate(newEndDate, "day");
       newEndDate = addToDate(newEndDate, 10, "day");
       break;
   }
-  // 确保时间轴至少延伸到今日之后两天，以保证"跳转到今日"功能正常工作
-  const todayPlusTwoDays = addToDate(new Date(), 2, "day");
-  if (newEndDate < todayPlusTwoDays) {
-    newEndDate = todayPlusTwoDays;
+
+  // 如果今天晚于时间轴右边界，则将右边界延伸至今天后十天
+  const today = startOfDate(now, "day");
+  if (today > newEndDate) {
+    newEndDate = addToDate(today, 10, "day");
   }
+  // 如果今天早于时间轴左边界，则将左边界提前至今天前十天
+  if (today < newStartDate) {
+    newStartDate = addToDate(today, -10, "day");
+  }
+
   return [newStartDate, newEndDate];
 };
 
