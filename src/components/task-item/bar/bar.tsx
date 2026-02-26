@@ -35,6 +35,7 @@ export const Bar: React.FC<TaskItemProps> = ({
           plannedEnd={plannedEnd}
           actualStart={actualStart}
           actualEnd={task.actualEnd}
+          actualEndX={task.actualX2}
           isSelected={isSelected}
           onMouseDown={e => {
             isDateChangeable && enableTaskDrag && onEventStart("move", task, e);

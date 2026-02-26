@@ -171,21 +171,27 @@ const convertToBar = (
   let plannedStart = task.plannedStart || task.start;
   let plannedEnd = task.plannedEnd || task.end;
   let actualStart = task.actualStart || task.start;
-  let actualEnd = task.actualEnd || task.end;
 
-  // 将时间规范化：开始时间设为当天第一秒，结束时间设为当天最后一秒
-  // 这样可以确保任务条形图占据完整的天数显示
+  // actualEnd 处理：
+  //   有 finishDate → 用 finishDate
+  //   无 finishDate 且已过 deadLine → 用今天（延期到今日）
+  //   无 finishDate 且未过 deadLine → 用 plannedEnd
+  let actualEnd: Date;
+  if (task.actualEnd) {
+    actualEnd = task.actualEnd;
+  } else {
+    const now = new Date();
+    const pe = task.plannedEnd || task.end;
+    actualEnd = now > pe ? now : pe;
+  }
+
   const normalizeTimeForSameDay = (start: Date, end: Date): [Date, Date] => {
-    // 开始时间设为当天第一秒 (00:00:00)
     const newStart = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0);
-    // 结束时间设为当天最后一秒 (23:59:59)
     const newEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
     return [newStart, newEnd];
   };
 
-  // 对计划时间进行规范化
   [plannedStart, plannedEnd] = normalizeTimeForSameDay(plannedStart, plannedEnd);
-  // 对实际时间进行规范化
   [actualStart, actualEnd] = normalizeTimeForSameDay(actualStart, actualEnd);
 
   // 如果是项目任务且有子项，自动计算时间范围
@@ -298,7 +304,7 @@ const convertToMilestone = (
     progressSelectedColor: backgroundSelectedColor,
     actualColor: backgroundColor,
     actualSelectedColor: backgroundSelectedColor,
-    delayColor: "#FF9800",
+    delayColor: "#C3314C",
   };
 
   return {

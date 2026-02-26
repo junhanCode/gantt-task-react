@@ -1512,20 +1512,19 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
   let plannedEnd = parseDate(mockTask.deadLine);
   let actualStart = parseDate(mockTask.createDate);
   
-  // 计算actualEnd：如果有finishDate则使用，否则检查是否已过截止日期
-  let actualEnd: Date;
-  if (mockTask.finishDate) {
-    // 有实际完成时间，直接使用
-    actualEnd = parseDate(mockTask.finishDate);
-  } else {
-    // 没有finishDate：已过截止日期则延期到今天，否则使用plannedEnd
-    const now = new Date();
-    actualEnd = now > plannedEnd ? now : plannedEnd;
-  }
-  
-  // 规范化计划时间和实际时间
+  // finishDate 有值 → 使用实际完成时间；为空 → undefined（由 OABarDisplay 判断延期）
+  const actualEnd = mockTask.finishDate
+    ? parseDate(mockTask.finishDate)
+    : undefined;
+
+  // 规范化计划时间
   [plannedStart, plannedEnd] = normalizeTimeForSameDay(plannedStart, plannedEnd);
-  [actualStart, actualEnd] = normalizeTimeForSameDay(actualStart, actualEnd);
+  // 实际时间：actualEnd 可能为 undefined
+  let normalizedActualStart = actualStart;
+  let normalizedActualEnd = actualEnd;
+  if (actualEnd) {
+    [normalizedActualStart, normalizedActualEnd] = normalizeTimeForSameDay(actualStart, actualEnd);
+  }
   
   // 不再拼接项目前缀到名称，项目标签将由 TitleCell 渲染
   const name = mockTask.title;
@@ -1541,8 +1540,8 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
     end: plannedEnd,
     plannedStart,
     plannedEnd,
-    actualStart,
-    actualEnd,
+    actualStart: normalizedActualStart,
+    actualEnd: normalizedActualEnd,
     progress: mockTask.progressPercent,
     displayOrder,
     status: mockTask.statusInfoVo as any, // 保留完整对象

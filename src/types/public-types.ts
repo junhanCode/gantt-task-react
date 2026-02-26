@@ -74,6 +74,12 @@ export interface Task {
   assignee?: string;
   /** 是否未读（用于oaTask模式） */
   unread?: boolean;
+  /** 優先級（用於oaTask模式）：高 / 中 / 低 或自定義字串 */
+  priority?: "高" | "中" | "低" | string;
+  /** 創建時間（用於oaTask模式） */
+  createdAt?: Date | string;
+  /** 發起人（用於oaTask模式） */
+  creator?: string;
 }
 
 export interface EventOption {

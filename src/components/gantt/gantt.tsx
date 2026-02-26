@@ -16,7 +16,7 @@ import { TaskListHeaderDefault } from "../task-list/task-list-header";
 import { TaskListTableDefault } from "../task-list/task-list-table";
 import { OATaskListHeader } from "../task-list/oa-task-list-header";
 import { OATaskListTable } from "../task-list/oa-task-list-table";
-import { StandardTooltipContent, Tooltip } from "../other/tooltip";
+import { StandardTooltipContent, OATooltipContent, Tooltip } from "../other/tooltip";
 import { VerticalScroll } from "../other/vertical-scroll";
 import { TaskListProps, TaskList } from "../task-list/task-list";
 import { TaskGantt } from "./task-gantt";
@@ -69,7 +69,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   gridBorderWidth = 1,
   gridBorderColor = "#e6e4e4",
   viewDate,
-  TooltipContent = StandardTooltipContent,
+  TooltipContent,
   TaskListHeader = TaskListHeaderDefault,
   TaskListTable = TaskListTableDefault,
   onDateChange,
@@ -124,6 +124,10 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isFullscreen, setIsFullscreen] = useState(false);
   
+  // 根据 viewType 选择默认 tooltip 内容组件
+  const resolvedTooltipContent =
+    TooltipContent ?? (viewType === "oaTask" ? OATooltipContent : StandardTooltipContent);
+
   // 获取国际化文本
   const i18n = useMemo(() => getI18nTexts(language), [language]);
   
@@ -733,7 +737,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   };
 
   /**
-   * Task select event — 同时将时间轴滚动到该任务的开始位置
+   * Task select event
    */
   const handleSelectedTask = (taskId: string) => {
     const newSelectedTask = barTasks.find(t => t.id === taskId);
@@ -749,19 +753,20 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       }
     }
     setSelectedTask(newSelectedTask);
-    // 点击行时定位到任务开始位置
-    if (newSelectedTask) {
-      scrollToTaskStart(newSelectedTask);
-    }
   };
 
-  /** 点击甘特条时：定位到任务开始处，然后触发外部 onClick */
+  /** 点击甘特条时：触发外部 onClick */
   const handleTaskClick = (task: Task) => {
+    onClick?.(task);
+  };
+
+  /** 双击甘特条时：定位到任务开始处，然后触发外部 onDoubleClick */
+  const handleTaskDoubleClick = (task: Task) => {
     const barTask = barTasks.find(t => t.id === task.id);
     if (barTask) {
       scrollToTaskStart(barTask);
     }
-    onClick?.(task);
+    onDoubleClick?.(task);
   };
   const handleExpanderClick = (task: Task) => {
     // 默认未设置 hideChildren 时视为展开态
@@ -844,7 +849,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     containerHeight: ganttHeight || undefined,
     onDateChange,
     onProgressChange,
-    onDoubleClick,
+    onDoubleClick: handleTaskDoubleClick,
     onClick: handleTaskClick,
     onDelete,
     onTaskDragEnd,
@@ -987,7 +992,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             task={ganttEvent.changedTask}
             headerHeight={headerHeight}
             taskListWidth={taskListWidth}
-            TooltipContent={TooltipContent}
+            TooltipContent={resolvedTooltipContent}
             rtl={rtl}
             svgWidth={svgWidth}
           />
