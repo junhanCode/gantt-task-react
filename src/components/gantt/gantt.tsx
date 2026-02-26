@@ -978,7 +978,58 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
           ganttHeight={ganttHeight}
           scrollY={scrollY}
           scrollX={scrollX}
+          ganttEvent={ganttEvent}
         />
+        {ganttEvent.changedTask && ["end", "start", "actualEnd", "actualStart", "move"].includes(ganttEvent.action) && (() => {
+          const task = ganttEvent.changedTask!;
+          const fmt = (d: Date) => `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+          const indicators: Array<{ label: string }> = [];
+          const act = ganttEvent.action;
+          if (act === "end") {
+            indicators.push({ label: fmt(task.plannedEnd || task.end) });
+          } else if (act === "start") {
+            indicators.push({ label: fmt(task.plannedStart || task.start) });
+          } else if (act === "actualEnd" && task.actualEnd) {
+            indicators.push({ label: fmt(task.actualEnd) });
+          } else if (act === "actualStart" && task.actualStart) {
+            indicators.push({ label: fmt(task.actualStart) });
+          } else if (act === "move") {
+            indicators.push({ label: fmt(task.plannedStart || task.start) });
+            indicators.push({ label: fmt(task.plannedEnd || task.end) });
+          }
+          const topY = headerHeight + task.y + task.height / 2 - scrollY;
+          const visibleBottom = headerHeight + (ganttHeight || svgContainerHeight);
+          if (topY < headerHeight || topY > visibleBottom) return null;
+          return indicators.map((ind, i) => (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: taskListWidth > 0 ? taskListWidth - 2 : 0,
+                top: topY,
+                zIndex: 20,
+                pointerEvents: "none",
+                transform: "translateY(-50%)",
+              }}
+            >
+              <div
+                style={{
+                  background: "#4a90e2",
+                  color: "#fff",
+                  borderRadius: 11,
+                  padding: "2px 9px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                  fontFamily,
+                }}
+              >
+                {ind.label}
+              </div>
+            </div>
+          ));
+        })()}
         {showTooltip && ganttEvent.changedTask && (
           <Tooltip
             arrowIndent={arrowIndent}
