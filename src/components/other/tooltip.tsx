@@ -198,12 +198,22 @@ export const OATooltipContent: React.FC<{
 
       <div className={styles.oaTooltipRow}>
         <span className={styles.oaTooltipLabel}>發起人</span>
-        <span className={styles.oaTooltipValue}>{task.creator || "-"}</span>
+        <span
+          className={styles.oaTooltipValueEllipsis}
+          title={task.creator || undefined}
+        >
+          {task.creator || "-"}
+        </span>
       </div>
 
       <div className={styles.oaTooltipRow}>
         <span className={styles.oaTooltipLabel}>責任人</span>
-        <span className={styles.oaTooltipValue}>{task.assignee || "-"}</span>
+        <span
+          className={styles.oaTooltipValueEllipsis}
+          title={task.assignee || undefined}
+        >
+          {task.assignee || "-"}
+        </span>
       </div>
 
       <div className={styles.oaTooltipDivider} />

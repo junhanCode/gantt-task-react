@@ -1531,6 +1531,12 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
   
   // 负责人取 supervisor 数组的 name 拼接
   const assignee = mockTask.supervisor.map(s => s.name).join(", ");
+
+  // 发起人：兼容 proposer 为对象或数组两种情况
+  const proposerData = mockTask.proposer as any;
+  const creator = Array.isArray(proposerData)
+    ? proposerData.map((p: any) => p.name).filter(Boolean).join(", ")
+    : proposerData?.name || "";
   
   const task: Task = {
     id: `Task_${mockTask.id}`,
@@ -1551,6 +1557,9 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
   
   // 添加 TitleCell 需要的扩展字段
   const extendedTask = task as any;
+  extendedTask.priority = mockTask.levelInfo?.description;
+  extendedTask.createdAt = mockTask.createDate;
+  extendedTask.creator = creator;
   const isRead = Math.random() > 0.3; // 70% 已读
   extendedTask.read = isRead;
   extendedTask.unread = !isRead; // 未读状态（与 read 相反）

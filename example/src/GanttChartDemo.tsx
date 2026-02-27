@@ -516,7 +516,7 @@ const GanttChart: React.FC = () => {
             }
             setOATaskViewMode(mode);
           }}
-          showTooltip={false}
+          showTooltip={true}
           onDateChange={handleTaskChange}
           onTaskDragEnd={handleTaskDragEnd}
           rowSelection={{
