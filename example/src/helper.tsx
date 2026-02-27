@@ -1529,8 +1529,8 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
   // 不再拼接项目前缀到名称，项目标签将由 TitleCell 渲染
   const name = mockTask.title;
   
-  // 负责人取 proposer 的 name
-  const assignee = mockTask.proposer.name;
+  // 负责人取 supervisor 数组的 name 拼接
+  const assignee = mockTask.supervisor.map(s => s.name).join(", ");
   
   const task: Task = {
     id: `Task_${mockTask.id}`,
