@@ -500,6 +500,51 @@ export const handleTaskBySVGMouseEvent = (
       break;
   }
 
+  // 约束：计划开始时间不能早于创建时间（createdAt）
+  if (isChanged && changedTask.createdAt && (action === "move" || action === "start")) {
+    const minDate = changedTask.createdAt instanceof Date
+      ? changedTask.createdAt
+      : new Date(changedTask.createdAt as string);
+    const plannedStart = changedTask.plannedStart;
+    if (plannedStart && plannedStart < minDate) {
+      if (action === "move") {
+        const duration = changedTask.x2 - changedTask.x1;
+        const clampedX1 = taskXCoordinate(minDate, dates, columnWidth);
+        const clampedX2 = clampedX1 + duration;
+        changedTask = {
+          ...changedTask,
+          x1: clampedX1,
+          x2: clampedX2,
+          plannedStart: minDate,
+          plannedEnd: coordinateToDate(clampedX2, dates, columnWidth),
+        };
+        isChanged = changedTask.x1 !== selectedTask.x1 || changedTask.x2 !== selectedTask.x2;
+      } else if (action === "start" && !rtl) {
+        const clampedX1 = taskXCoordinate(minDate, dates, columnWidth);
+        changedTask = {
+          ...changedTask,
+          x1: clampedX1,
+          plannedStart: minDate,
+        };
+        isChanged = changedTask.x1 !== selectedTask.x1;
+      }
+    }
+  }
+
+  // 约束：拖拽计划结束把手时，计划结束时间不能早于计划开始时间
+  if (isChanged && action === "end") {
+    const ps = changedTask.plannedStart;
+    const pe = changedTask.plannedEnd;
+    if (ps && pe && pe < ps) {
+      changedTask = {
+        ...changedTask,
+        x2: changedTask.x1,
+        plannedEnd: ps,
+      };
+      isChanged = changedTask.x2 !== selectedTask.x2;
+    }
+  }
+
   // 根据最新日期重新计算 delayDays，确保与条形图显示的延期天数一致
   if (isChanged && (action === "start" || action === "end" || action === "actualStart" || action === "actualEnd" || action === "move")) {
     const plannedEnd = changedTask.plannedEnd ?? changedTask.end;
