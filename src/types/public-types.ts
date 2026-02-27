@@ -442,6 +442,30 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   }) => React.ReactNode;
 }
 
+/**
+ * 滚动到今日的时间指向配置。
+ * - `'now'`：指向当前时刻（默认）
+ * - `'start'`：指向当天 00:00
+ * - `'end'`：指向当天 23:59
+ * - `{ hours, minutes }`：指向指定时刻，如 `{ hours: 9, minutes: 30 }`
+ */
+export type ScrollTodayTimeOfDay =
+  | "now"
+  | "start"
+  | "end"
+  | { hours: number; minutes: number };
+
+export interface ScrollTodayOptions {
+  /**
+   * 时间指向配置，默认 `'now'`（当前时刻）。
+   * 可设为 `'end'` 使时间轴定位到今天最末端（23:59），
+   * 或 `{ hours, minutes }` 指向任意时刻。
+   */
+  timeOfDay?: ScrollTodayTimeOfDay;
+  /** 视口对齐方式，默认 `'center'` */
+  align?: "start" | "center" | "end";
+}
+
 export interface GanttRef {
   /**
    * 将时间轴滚动到指定日期。
@@ -452,6 +476,12 @@ export interface GanttRef {
     date: Date,
     options?: { align?: "start" | "center" | "end" }
   ) => void;
+  /**
+   * 将时间轴滚动到今天。
+   * 通过 `timeOfDay` 可配置时间指向：`'now'`（当前时刻）、`'start'`（00:00）、
+   * `'end'`（23:59）或自定义 `{ hours, minutes }`。
+   */
+  scrollToToday: (options?: ScrollTodayOptions) => void;
   /**
    * 切换时间轴模式（用于oaTask模式）
    */

@@ -97,31 +97,14 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
         fontFamily={barProps.fontFamily}
       >
         <Calendar {...calendarProps} />
-        {dragIndicators.map((ind, i) => {
-          const bx = Math.max(BADGE_W / 2, Math.min(svgWidth - BADGE_W / 2, ind.x));
-          return (
-            <g key={i} style={{ pointerEvents: "none" }}>
-              <line
-                x1={ind.x} y1={0} x2={ind.x} y2={headerHeight}
-                stroke="#4a90e2" strokeWidth={2} opacity={0.9}
-              />
-              <rect
-                x={bx - BADGE_W / 2}
-                y={headerHeight - BADGE_H - 4}
-                width={BADGE_W} height={BADGE_H} rx={BADGE_H / 2}
-                fill="#4a90e2"
-              />
-              <text
-                x={bx} y={headerHeight - 4 - BADGE_H / 2}
-                textAnchor="middle" dominantBaseline="middle"
-                fill="white" fontSize="11" fontWeight="600"
-                fontFamily={barProps.fontFamily}
-              >
-                {ind.label}
-              </text>
-            </g>
-          );
-        })}
+        {dragIndicators.map((ind, i) => (
+          <line
+            key={i}
+            x1={ind.x} y1={0} x2={ind.x} y2={headerHeight}
+            stroke="#4a90e2" strokeWidth={2} opacity={0.9}
+            style={{ pointerEvents: "none" }}
+          />
+        ))}
       </svg>
       <div
         ref={horizontalContainerRef}
@@ -141,14 +124,32 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
         >
           <Grid {...gridProps} />
           <TaskGanttContent {...newBarProps} />
-          {dragIndicators.map((ind, i) => (
-            <line
-              key={i}
-              x1={ind.x} y1={0} x2={ind.x} y2={gridHeight}
-              stroke="#4a90e2" strokeWidth={1} strokeDasharray="5,3"
-              opacity={0.35} style={{ pointerEvents: "none" }}
-            />
-          ))}
+          {dragIndicators.map((ind, i) => {
+            const bx = Math.max(BADGE_W / 2, Math.min(svgWidth - BADGE_W / 2, ind.x));
+            return (
+              <g key={i} style={{ pointerEvents: "none" }}>
+                <line
+                  x1={ind.x} y1={0} x2={ind.x} y2={gridHeight}
+                  stroke="#4a90e2" strokeWidth={1} strokeDasharray="5,3"
+                  opacity={0.35}
+                />
+                <rect
+                  x={bx - BADGE_W / 2}
+                  y={4}
+                  width={BADGE_W} height={BADGE_H} rx={BADGE_H / 2}
+                  fill="#4a90e2"
+                />
+                <text
+                  x={bx} y={4 + BADGE_H / 2}
+                  textAnchor="middle" dominantBaseline="middle"
+                  fill="white" fontSize="11" fontWeight="600"
+                  fontFamily={barProps.fontFamily}
+                >
+                  {ind.label}
+                </text>
+              </g>
+            );
+          })}
         </svg>
       </div>
     </div>

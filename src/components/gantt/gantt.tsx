@@ -7,7 +7,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { ViewMode, GanttProps, Task, GanttRef, OATaskViewMode } from "../../types/public-types";
+import { ViewMode, GanttProps, Task, GanttRef, OATaskViewMode, ScrollTodayOptions } from "../../types/public-types";
 import { GridProps } from "../grid/grid";
 import { ganttDateRange, seedDates } from "../../helpers/date-helper";
 import { CalendarProps } from "../calendar/calendar";
@@ -265,6 +265,57 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       }
       if (target > svgWidth) target = svgWidth;
       setScrollX(target);
+    },
+    scrollToToday: (options?: ScrollTodayOptions) => {
+      const { timeOfDay = "now", align = "center" } = options || {};
+      const today = new Date();
+      let target: Date;
+      if (timeOfDay === "now") {
+        target = today;
+      } else if (timeOfDay === "start") {
+        target = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+      } else if (timeOfDay === "end") {
+        target = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+      } else {
+        target = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          timeOfDay.hours,
+          timeOfDay.minutes,
+          0,
+          0
+        );
+      }
+      // 复用 scrollToDate 逻辑
+      const dates = dateSetup.dates;
+      if (!dates || dates.length < 2) return;
+      const idx = dates.findIndex(
+        (d, i) =>
+          target.valueOf() >= d.valueOf() &&
+          i + 1 < dates.length &&
+          target.valueOf() < dates[i + 1].valueOf()
+      );
+      let scrollTarget = 0;
+      if (idx <= 0) {
+        scrollTarget = 0;
+      } else if (idx >= dates.length - 1) {
+        scrollTarget = svgWidth;
+      } else {
+        const start = dates[idx].valueOf();
+        const end = dates[idx + 1].valueOf();
+        const ratio = (target.valueOf() - start) / (end - start);
+        scrollTarget = (idx + ratio) * columnWidth;
+      }
+      const visibleWidth = svgContainerWidth;
+      let finalX = scrollTarget;
+      if (align === "center") {
+        finalX = Math.max(0, scrollTarget - visibleWidth / 2);
+      } else if (align === "end") {
+        finalX = Math.max(0, scrollTarget - visibleWidth);
+      }
+      if (finalX > svgWidth) finalX = svgWidth;
+      setScrollX(finalX);
     },
     switchViewMode: (mode: OATaskViewMode) => {
       if (viewType === "oaTask") {
