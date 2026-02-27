@@ -25,7 +25,7 @@ type OABarDisplayProps = {
   delayDaysFormat?: (days: number) => string;
 };
 
-const DELAY_COLOR = "#FF4D4F";
+const DELAY_COLOR = "#C3314C";
 const DAY_MS = 1000 * 60 * 60 * 24;
 
 /**
