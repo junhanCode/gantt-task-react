@@ -97,14 +97,6 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
         fontFamily={barProps.fontFamily}
       >
         <Calendar {...calendarProps} />
-        {dragIndicators.map((ind, i) => (
-          <line
-            key={i}
-            x1={ind.x} y1={0} x2={ind.x} y2={headerHeight}
-            stroke="#4a90e2" strokeWidth={2} opacity={0.9}
-            style={{ pointerEvents: "none" }}
-          />
-        ))}
       </svg>
       <div
         ref={horizontalContainerRef}
