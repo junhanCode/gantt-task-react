@@ -1,5 +1,6 @@
 import React from "react";
 import GanttChartDemo from "./GanttChartDemo";
+import OAGanttDemo from "./OAGanttDemo";
 import { Task, ViewMode, Gantt } from "gantt-task-react";
 import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
@@ -877,7 +878,7 @@ const App = () => {
   };
 
   // 添加演示模式切换
-  const [demoMode, setDemoMode] = React.useState<'original' | 'new'>('new');
+  const [demoMode, setDemoMode] = React.useState<'original' | 'new' | 'oa'>('oa');
 
   return (
     <div className="Wrapper">
@@ -894,6 +895,12 @@ const App = () => {
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <Button 
+            type={demoMode === 'oa' ? 'primary' : 'default'}
+            onClick={() => setDemoMode('oa')}
+          >
+            OA任务模式（接口模拟）
+          </Button>
+          <Button 
             type={demoMode === 'new' ? 'primary' : 'default'}
             onClick={() => setDemoMode('new')}
           >
@@ -906,12 +913,14 @@ const App = () => {
             原始完整演示
           </Button>
           <span style={{ color: '#666', fontSize: '12px' }}>
-            当前模式：{demoMode === 'new' ? '新版 OA 任务模式（带周视图）' : '原始完整演示'}
+            当前模式：{demoMode === 'oa' ? 'OA任务模式（接口模拟）' : demoMode === 'new' ? '新版 OA 任务模式（带周视图）' : '原始完整演示'}
           </span>
         </div>
       </div>
 
-      {demoMode === 'new' ? (
+      {demoMode === 'oa' ? (
+        <OAGanttDemo />
+      ) : demoMode === 'new' ? (
         <GanttChartDemo />
       ) : (
         <>

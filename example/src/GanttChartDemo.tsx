@@ -608,44 +608,14 @@ const GanttChart: React.FC = () => {
             全屏
           </Button>
 
-          <Dropdown
-            menu={{
-              items: [
-                {
-                  key: "now",
-                  label: "定位到当前时刻",
-                  onClick: () =>
-                    ganttRef.current?.scrollToToday({ timeOfDay: "now", align: "center" }),
-                },
-                {
-                  key: "end",
-                  label: "定位到今天末尾（23:59）",
-                  onClick: () =>
-                    ganttRef.current?.scrollToToday({ timeOfDay: "end", align: "center" }),
-                },
-                {
-                  key: "start",
-                  label: "定位到今天开始（00:00）",
-                  onClick: () =>
-                    ganttRef.current?.scrollToToday({ timeOfDay: "start", align: "center" }),
-                },
-                {
-                  key: "custom",
-                  label: "定位到今天 09:00",
-                  onClick: () =>
-                    ganttRef.current?.scrollToToday({
-                      timeOfDay: { hours: 9, minutes: 0 },
-                      align: "center",
-                    }),
-                },
-              ],
-            }}
-            trigger={["click"]}
+          <Button
+            size="small"
+            onClick={() =>
+              ganttRef.current?.scrollToDate(new Date(), { align: "center" })
+            }
           >
-            <Button size="small">
-              定位到今天 <DownOutlined />
-            </Button>
-          </Dropdown>
+            定位到今天
+          </Button>
 
           <Button
             size="small"
