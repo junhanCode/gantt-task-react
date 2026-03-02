@@ -246,6 +246,7 @@ export const OATaskListTable: React.FC<{
         return (
           <tr 
             key={`${t.id}row`}
+            data-child-task={isChildTask ? "true" : undefined}
             className={`${styles.taskListTableRow}${isChildTask ? ` ${styles.taskListTableRowChild}` : ""}`}
             style={{
               height: rowHeight,

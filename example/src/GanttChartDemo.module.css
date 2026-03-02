@@ -85,6 +85,10 @@
   background-color: white;
 }
 
+.wrapper :global(.taskGantte) tbody tr[data-child-task="true"] {
+  background-color: #F8FCFE;
+}
+
 .wrapper :global(.taskGantte) tbody input[type="checkbox"] {
   margin-right: 6px !important;
 }
