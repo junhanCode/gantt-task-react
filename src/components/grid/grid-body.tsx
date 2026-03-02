@@ -21,6 +21,51 @@ export type GridBodyProps = {
   /** 双击某行空白区域时触发，参数为该行对应的任务 */
   onRowClick?: (task: Task) => void;
 };
+
+export type TodayOverlayProps = {
+  dates: Date[];
+  columnWidth: number;
+  todayLineWidth?: number;
+  viewType?: ViewType;
+  totalHeight: number;
+};
+
+export const TodayOverlay: React.FC<TodayOverlayProps> = ({
+  dates,
+  columnWidth,
+  todayLineWidth = 1,
+  viewType = "default",
+  totalHeight,
+}) => {
+  const now = new Date();
+
+  if (viewType !== "oaTask" || !dates || dates.length < 2) return null;
+
+  const idx = dates.findIndex((d, i) =>
+    now.valueOf() >= d.valueOf() &&
+    i + 1 < dates.length &&
+    now.valueOf() < dates[i + 1].valueOf()
+  );
+  if (idx < 0) return null;
+
+  const start = dates[idx].valueOf();
+  const end = dates[idx + 1].valueOf();
+  const ratio = (now.valueOf() - start) / (end - start);
+  const currentTimeX = (idx + ratio) * columnWidth;
+
+  return (
+    <g className="currentTimeLineOverlay" style={{ pointerEvents: "none" }}>
+      <line
+        x1={currentTimeX}
+        y1={0}
+        x2={currentTimeX}
+        y2={totalHeight}
+        stroke="#FFB592"
+        strokeWidth={todayLineWidth}
+      />
+    </g>
+  );
+};
 export const GridBody: React.FC<GridBodyProps> = ({
   tasks,
   dates,
@@ -28,9 +73,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
   svgWidth,
   columnWidth,
   todayColor,
-  todayLineWidth = 1,
   rtl,
-  viewType = "default",
   scrollY = 0,
   containerHeight,
   gridBorderWidth = 1,
@@ -90,30 +133,9 @@ export const GridBody: React.FC<GridBodyProps> = ({
   const now = new Date();
   let tickX = 0;
   const ticks: ReactChild[] = [];
-  let today: ReactChild = <rect />;
-  let currentTimeLine: ReactChild = <line />;
-  
-  // 计算当前时间轴位置（oaTask模式）
-  const getCurrentTimeX = () => {
-    if (viewType !== "oaTask" || !dates || dates.length < 2) return -1;
-    
-    const idx = dates.findIndex((d, i) => 
-      now.valueOf() >= d.valueOf() && 
-      i + 1 < dates.length && 
-      now.valueOf() < dates[i + 1].valueOf()
-    );
-    
-    if (idx < 0) return -1;
-    
-    const start = dates[idx].valueOf();
-    const end = dates[idx + 1].valueOf();
-    const ratio = (now.valueOf() - start) / (end - start);
-    return (idx + ratio) * columnWidth;
-  };
-  
-  const currentTimeX = getCurrentTimeX();
   const totalHeight = tasks.length * rowHeight;
-  
+  let today: ReactChild = <rect />;
+
   for (let i = 0; i < dates.length; i++) {
     const date = dates[i];
     ticks.push(
@@ -132,7 +154,6 @@ export const GridBody: React.FC<GridBodyProps> = ({
       (i + 1 !== dates.length &&
         date.getTime() < now.getTime() &&
         dates[i + 1].getTime() >= now.getTime()) ||
-      // if current date is last
       (i !== 0 &&
         i + 1 === dates.length &&
         date.getTime() < now.getTime() &&
@@ -143,16 +164,9 @@ export const GridBody: React.FC<GridBodyProps> = ({
         ).getTime() >= now.getTime())
     ) {
       today = (
-        <rect
-          x={tickX}
-          y={0}
-          width={columnWidth}
-          height={totalHeight}
-          fill={todayColor}
-        />
+        <rect x={tickX} y={0} width={columnWidth} height={totalHeight} fill={todayColor} />
       );
     }
-    // rtl for today
     if (
       rtl &&
       i + 1 !== dates.length &&
@@ -160,39 +174,18 @@ export const GridBody: React.FC<GridBodyProps> = ({
       dates[i + 1].getTime() < now.getTime()
     ) {
       today = (
-        <rect
-          x={tickX + columnWidth}
-          y={0}
-          width={columnWidth}
-          height={totalHeight}
-          fill={todayColor}
-        />
+        <rect x={tickX + columnWidth} y={0} width={columnWidth} height={totalHeight} fill={todayColor} />
       );
     }
     tickX += columnWidth;
   }
-  // oaTask模式的当前时间轴（从任务区域顶部开始，不穿过表头）
-  if (viewType === "oaTask" && currentTimeX >= 0) {
-    currentTimeLine = (
-      <line
-        key="currentTimeLine"
-        x1={currentTimeX}
-        y1={0}
-        x2={currentTimeX}
-        y2={totalHeight}
-        stroke="#FFB592"
-        strokeWidth={todayLineWidth}
-      />
-    );
-  }
-  
+
   return (
     <g className="gridBody">
       <g className="rows">{gridRows}</g>
       <g className="rowLines">{rowLines}</g>
       <g className="ticks">{ticks}</g>
       <g className="today">{today}</g>
-      {viewType === "oaTask" && <g className="currentTimeLine">{currentTimeLine}</g>}
     </g>
   );
 };

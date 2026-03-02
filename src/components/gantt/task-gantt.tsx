@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { GridProps, Grid } from "../grid/grid";
+import { TodayOverlay } from "../grid/grid-body";
 import { CalendarProps, Calendar } from "../calendar/calendar";
 import { TaskGanttContentProps, TaskGanttContent } from "./task-gantt-content";
 import { GanttEvent } from "../../types/gantt-task-actions";
@@ -116,6 +117,13 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
         >
           <Grid {...gridProps} />
           <TaskGanttContent {...newBarProps} />
+          <TodayOverlay
+            dates={gridProps.dates}
+            columnWidth={gridProps.columnWidth}
+            todayLineWidth={gridProps.todayLineWidth}
+            viewType={gridProps.viewType}
+            totalHeight={gridHeight}
+          />
           {dragIndicators.map((ind, i) => {
             const bx = Math.max(BADGE_W / 2, Math.min(svgWidth - BADGE_W / 2, ind.x));
             return (
