@@ -22,13 +22,14 @@
   position: absolute;
   display: flex;
   flex-shrink: 0;
-  pointer-events: none;
+  /* 允許滑鼠事件和文字選中，方便複製內容 */
+  pointer-events: auto;
   z-index: 100;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 .tooltipDetailsContainerHidden {

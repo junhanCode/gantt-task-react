@@ -508,30 +508,43 @@ export const handleTaskBySVGMouseEvent = (
 
   // 约束：计划开始时间不能早于创建时间（createdAt）的右侧（即次日起始）
   if (isChanged && changedTask.createdAt && (action === "move" || action === "start")) {
-    const createdAt = changedTask.createdAt instanceof Date
-      ? changedTask.createdAt
-      : new Date(changedTask.createdAt as string);
-    // 卡在 createdAt 当天的右边缘 = 次日 00:00:00
-    const minDate = new Date(createdAt.getFullYear(), createdAt.getMonth(), createdAt.getDate() + 1, 0, 0, 0, 0);
-    const plannedStart = changedTask.plannedStart;
-    if (plannedStart && plannedStart < minDate) {
+    // 将 createdAt 解析为本地时间（避免 ISO 字符串被按 UTC 解析导致时区偏移）
+    let createdAtLocal: Date;
+    if (changedTask.createdAt instanceof Date) {
+      createdAtLocal = changedTask.createdAt;
+    } else {
+      const s = (changedTask.createdAt as string).split("T")[0]; // 取 "YYYY-MM-DD" 部分
+      const [y, m, d] = s.split("-").map(Number);
+      createdAtLocal = new Date(y, m - 1, d, 0, 0, 0, 0); // 本地时间午夜
+    }
+
+    // 右边缘 = createdAt 当天结束 = 次日 00:00:00（本地时间）
+    const minDate = new Date(
+      createdAtLocal.getFullYear(),
+      createdAtLocal.getMonth(),
+      createdAtLocal.getDate() + 1,
+      0, 0, 0, 0
+    );
+
+    // 通过 dates 数组直接计算右边缘的像素 x，保证与甘特图刻度完全对齐
+    const minX = taskXCoordinate(minDate, dates, columnWidth);
+
+    if (changedTask.x1 < minX) {
       if (action === "move") {
         const duration = changedTask.x2 - changedTask.x1;
-        const clampedX1 = taskXCoordinate(minDate, dates, columnWidth);
-        const clampedX2 = clampedX1 + duration;
+        const clampedX2 = minX + duration;
         changedTask = {
           ...changedTask,
-          x1: clampedX1,
+          x1: minX,
           x2: clampedX2,
           plannedStart: minDate,
           plannedEnd: coordinateToDate(clampedX2, dates, columnWidth),
         };
         isChanged = changedTask.x1 !== selectedTask.x1 || changedTask.x2 !== selectedTask.x2;
       } else if (action === "start" && !rtl) {
-        const clampedX1 = taskXCoordinate(minDate, dates, columnWidth);
         changedTask = {
           ...changedTask,
-          x1: clampedX1,
+          x1: minX,
           plannedStart: minDate,
         };
         isChanged = changedTask.x1 !== selectedTask.x1;
@@ -539,17 +552,41 @@ export const handleTaskBySVGMouseEvent = (
     }
   }
 
-  // 约束：拖拽计划结束把手时，计划结束时间不能早于计划开始时间
+  // 约束：拖拽计划结束把手时，计划结束时间不能早于创建时间当天的 23:59:59
   if (isChanged && action === "end") {
-    const ps = changedTask.plannedStart;
-    const pe = changedTask.plannedEnd;
-    if (ps && pe && pe < ps) {
-      changedTask = {
-        ...changedTask,
-        x2: changedTask.x1,
-        plannedEnd: ps,
-      };
-      isChanged = changedTask.x2 !== selectedTask.x2;
+    // 解析 createdAt 为本地时间，计算当天结束时刻
+    let minEndDate: Date | undefined;
+    if (changedTask.createdAt) {
+      let createdAtLocal: Date;
+      if (changedTask.createdAt instanceof Date) {
+        createdAtLocal = changedTask.createdAt;
+      } else {
+        const s = (changedTask.createdAt as string).split("T")[0];
+        const [y, m, d] = s.split("-").map(Number);
+        createdAtLocal = new Date(y, m - 1, d, 0, 0, 0, 0);
+      }
+      // 最早截止时间 = createdAt 当天 23:59:59.999
+      minEndDate = new Date(
+        createdAtLocal.getFullYear(),
+        createdAtLocal.getMonth(),
+        createdAtLocal.getDate(),
+        23, 59, 59, 999
+      );
+    } else {
+      // 兜底：不能早于计划开始时间
+      minEndDate = changedTask.plannedStart;
+    }
+
+    if (minEndDate) {
+      const minX = taskXCoordinate(minEndDate, dates, columnWidth);
+      if (changedTask.x2 < minX) {
+        changedTask = {
+          ...changedTask,
+          x2: minX,
+          plannedEnd: minEndDate,
+        };
+        isChanged = changedTask.x2 !== selectedTask.x2;
+      }
     }
   }
 

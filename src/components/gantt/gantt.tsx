@@ -1018,6 +1018,14 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       <div
         className={styles.wrapper}
         onKeyDown={handleKeyDown}
+        onMouseLeave={() => {
+          // 僅在懸浮狀態下，鼠標離開整個甘特區域時關閉 tooltip
+          setGanttEvent(prev =>
+            prev.action === "mouseenter"
+              ? { action: "" }
+              : prev
+          );
+        }}
         tabIndex={0}
         ref={wrapperRef}
       >

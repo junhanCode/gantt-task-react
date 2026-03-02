@@ -128,9 +128,6 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
       onMouseEnter={e => {
         onEventStart("mouseenter", task, e);
       }}
-      onMouseLeave={e => {
-        onEventStart("mouseleave", task, e);
-      }}
       onDoubleClick={e => {
         onEventStart("dblclick", task, e);
       }}

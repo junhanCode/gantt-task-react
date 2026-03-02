@@ -292,16 +292,13 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
     }
     // Mouse Events
     else if (action === "mouseenter") {
-      if (!ganttEvent.action) {
+      // 只有在當前沒有其他操作（或仍為 hover 狀態）時，才更新懸浮任務
+      if (!ganttEvent.action || ganttEvent.action === "mouseenter") {
         setGanttEvent({
-          action,
+          action: "mouseenter",
           changedTask: task,
           originalSelectedTask: task,
         });
-      }
-    } else if (action === "mouseleave") {
-      if (ganttEvent.action === "mouseenter") {
-        setGanttEvent({ action: "" });
       }
     } else if (action === "dblclick") {
       !!onDoubleClick && onDoubleClick(task);

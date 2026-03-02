@@ -75,11 +75,55 @@ export const Tooltip: React.FC<TooltipProps> = ({
           newRelatedY += rowHeight;
         }
       }
-
       const tooltipLowerPoint = tooltipHeight + newRelatedY - scrollY;
       if (tooltipLowerPoint > svgContainerHeight - scrollY) {
         newRelatedY = svgContainerHeight - tooltipHeight;
       }
+
+      // 最後一層保護：確保懸浮框在瀏覽器可視區內（避免太靠右或超出視窗）
+      const parentEl = tooltipRef.current.parentElement;
+      if (parentEl) {
+        const parentRect = parentEl.getBoundingClientRect();
+        const viewportWidth =
+          window.innerWidth || document.documentElement.clientWidth;
+        const viewportHeight =
+          window.innerHeight || document.documentElement.clientHeight;
+        const margin = 8;
+
+        let screenLeft = parentRect.left + newRelatedX;
+        let screenTop = parentRect.top + newRelatedY;
+
+        // 右側溢出：往左移動
+        if (screenLeft + tooltipWidth > viewportWidth - margin) {
+          const diff =
+            screenLeft + tooltipWidth - (viewportWidth - margin);
+          newRelatedX -= diff;
+          screenLeft -= diff;
+        }
+
+        // 左側溢出：往右移動
+        if (screenLeft < margin) {
+          const diff = margin - screenLeft;
+          newRelatedX += diff;
+          screenLeft += diff;
+        }
+
+        // 底部溢出：往上移動
+        if (screenTop + tooltipHeight > viewportHeight - margin) {
+          const diff =
+            screenTop + tooltipHeight - (viewportHeight - margin);
+          newRelatedY -= diff;
+          screenTop -= diff;
+        }
+
+        // 頂部溢出：往下移動
+        if (screenTop < margin) {
+          const diff = margin - screenTop;
+          newRelatedY += diff;
+          screenTop += diff;
+        }
+      }
+
       setRelatedY(newRelatedY);
       setRelatedX(newRelatedX);
     }
