@@ -256,10 +256,12 @@ export const TaskListTableDefault: React.FC<{
           }
           // if task has no children info, show nothing
 
+          const isChildTask = !!t.project;
+
           return (
             <tr 
               key={`${t.id}row`} 
-              className={styles.taskListTableRow}
+              className={`${styles.taskListTableRow}${isChildTask ? ` ${styles.taskListTableRowChild}` : ""}`}
               onContextMenu={(e) => openContextMenu(e, t)}
               style={{
                 height: rowHeight,

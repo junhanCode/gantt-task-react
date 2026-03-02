@@ -105,6 +105,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
   ];
   for (let i = startIdx; i <= endIdx; i++) {
     const task = tasks[i];
+    const isChildTask = !!task.project;
     gridRows.push(
       <rect
         key={"Row" + task.id}
@@ -112,7 +113,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
         y={y}
         width={svgWidth}
         height={rowHeight}
-        className={styles.gridRow}
+        className={isChildTask ? styles.gridRowChild : styles.gridRow}
         onDoubleClick={onRowClick ? () => onRowClick(task) : undefined}
         style={onRowClick ? { cursor: "pointer" } : undefined}
       />

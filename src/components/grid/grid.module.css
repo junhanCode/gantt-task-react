@@ -2,8 +2,16 @@
   fill: #fff;
 }
 
-.gridRow:nth-child(even) {
-  fill: #f5f5f5;
+.gridRow:hover {
+  fill: #fafafa;
+}
+
+.gridRowChild {
+  fill: #f8fcfe;
+}
+
+.gridRowChild:hover {
+  fill: #fafafa;
 }
 
 .gridRowLine {

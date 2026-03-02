@@ -241,10 +241,12 @@ export const OATaskListTable: React.FC<{
         const isChecked = rowSelection?.selectedRowKeys?.includes(rowKey) || false;
         const checkboxProps = rowSelection?.getCheckboxProps?.(t) || {};
 
+        const isChildTask = !!t.project;
+
         return (
           <tr 
             key={`${t.id}row`}
-            className={styles.taskListTableRow}
+            className={`${styles.taskListTableRow}${isChildTask ? ` ${styles.taskListTableRowChild}` : ""}`}
             style={{
               height: rowHeight,
               ...(tableStyles?.rowBackgroundColor && index % 2 === 0
