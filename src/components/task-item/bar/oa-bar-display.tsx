@@ -23,10 +23,16 @@ type OABarDisplayProps = {
   actualEndX: number;
   onMouseDown: (event: React.MouseEvent<SVGPolygonElement, MouseEvent>) => void;
   delayDaysFormat?: (days: number) => string;
+  /** 延期段背景色，默认 #FFF0F5 */
+  delayColor?: string;
 };
 
-const DELAY_COLOR = "#C3314C";
+const DEFAULT_DELAY_COLOR = "#FFF0F5";
+const DELAY_TEXT_COLOR = "#C3314C";
 const DAY_MS = 1000 * 60 * 60 * 24;
+
+const toEndOfDay = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
 
 /**
  * OA 任务条形图。
@@ -62,6 +68,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   actualEndX,
   onMouseDown,
   delayDaysFormat,
+  delayColor = DEFAULT_DELAY_COLOR,
 }) => {
   const safeWidth = Math.max(0, width || 0);
 
@@ -97,23 +104,25 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
     (statusDescription && statusColors[statusDescription as TaskStatus]) ||
     "#E6E6E6";
 
-  const now = new Date();
-  const deadLineMs = plannedEnd.getTime();
-  const finishDateMs = actualEnd ? actualEnd.getTime() : null;
+  // 除「掛起中」外，所有狀態都允許顯示延期段
+  const canShowDelay = statusDescription !== "掛起中";
 
-  // 延期判定：有 finishDate → finishDate > deadLine；无 finishDate → 今日 > deadLine
-  const isDelayed =
-    finishDateMs !== null
-      ? finishDateMs > deadLineMs
-      : now.getTime() > deadLineMs;
+  // finishDate 只在「待驗收」/「已完成」状态下才视为有效完成时间
+  const COMPLETION_STATUSES: (TaskStatus | undefined)[] = ["待驗收", "已完成"];
+  const isCompletionStatus = COMPLETION_STATUSES.includes(statusDescription);
+  const hasValidFinishDate = isCompletionStatus && !!actualEnd;
 
-  // actualEndX 是 finishDate（或今日）在甘特图中的精确像素位置（由 bar-helper 用 taskXCoordinate 计算）
-  // x 是 createDate 的像素位置，x + safeWidth 是 deadLine 的像素位置
+  // actualEndX 由 bar-helper 按以下规则算出（与 isCompletionStatus 一致）：
+  //   待驗收/已完成 且有 finishDate → x(finishDate)
+  //   其他 → x(today) 如已过期，否则 x(deadLine)
+  // 因此直接用像素比较判断延期：actualEndX > x + safeWidth（即 > x(deadLine)）
+  const deadLineX = x + safeWidth;
+  const isDelayed = canShowDelay && actualEndX > deadLineX;
 
   // ── 未延期 ──────────────────────────────────────────────────────────
   if (!isDelayed) {
-    if (actualEnd) {
-      // finishDate 在 deadLine 之前：已完成段 + 剩余段
+    // 仅当状态是完成态且有 finishDate 时，才拆分已完成段 + 剩余段
+    if (hasValidFinishDate) {
       const completedWidth = Math.max(0, Math.min(safeWidth, actualEndX - x));
       const remainingWidth = safeWidth - completedWidth;
 
@@ -147,7 +156,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
       );
     }
 
-    // 进行中且未超期：整条状态色
+    // 进行中且未超期（或掛起中等）：整条状态色
     return (
       <g onMouseDown={onMouseDown}>
         <rect
@@ -165,12 +174,18 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   }
 
   // ── 延期 ────────────────────────────────────────────────────────────
-  // 延期段像素宽度 = actualEndX（finishDate/今日位置）- (x + safeWidth)（deadLine 位置）
-  const delayWidth = Math.max(0, actualEndX - (x + safeWidth));
+  // 延期段像素宽度 = actualEndX（finishDate/今日位置）- deadLineX（deadLine 位置）
+  const delayWidth = Math.max(0, actualEndX - deadLineX);
 
-  const effectiveEnd = actualEnd || now;
+  // delayDays：用 end-of-day 归一化，避免 Math.ceil 因时间部分多计一天
+  const now = new Date();
+  const deadLineEOD = toEndOfDay(plannedEnd);
+  // 完成态用 finishDate，否则用今天
+  const effectiveEndEOD = hasValidFinishDate
+    ? toEndOfDay(actualEnd!)
+    : toEndOfDay(now);
   const delayDays = Math.ceil(
-    (effectiveEnd.getTime() - deadLineMs) / DAY_MS
+    (effectiveEndEOD.getTime() - deadLineEOD.getTime()) / DAY_MS
   );
   const delayLabel = delayDaysFormat
     ? delayDaysFormat(delayDays)
@@ -200,13 +215,13 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
             height={height}
             rx={barCornerRadius}
             ry={barCornerRadius}
-            fill={DELAY_COLOR}
+            fill={delayColor}
           />
           {delayWidth > 30 && (
             <text
               x={x + safeWidth + delayWidth / 2}
               y={y + height / 2}
-              fill="#FFFFFF"
+              fill={DELAY_TEXT_COLOR}
               fontSize="12"
               textAnchor="middle"
               dominantBaseline="central"

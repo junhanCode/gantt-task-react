@@ -197,6 +197,11 @@ export const OATooltipContent: React.FC<{
       </div>
 
       <div className={styles.oaTooltipRow}>
+        <span className={styles.oaTooltipLabel}>完成時間</span>
+        <span className={styles.oaTooltipValue}>{formatDate(task.actualEnd)}</span>
+      </div>
+
+      <div className={styles.oaTooltipRow}>
         <span className={styles.oaTooltipLabel}>發起人</span>
         <span
           className={styles.oaTooltipValueEllipsis}

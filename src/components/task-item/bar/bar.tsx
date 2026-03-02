@@ -37,6 +37,7 @@ export const Bar: React.FC<TaskItemProps> = ({
           actualEnd={task.actualEnd}
           actualEndX={task.actualX2}
           isSelected={isSelected}
+          delayColor={task.styles?.delayColor}
           onMouseDown={e => {
             isDateChangeable && enableTaskDrag && onEventStart("move", task, e);
           }}

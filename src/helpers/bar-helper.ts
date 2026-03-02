@@ -172,12 +172,18 @@ const convertToBar = (
   let plannedEnd = task.plannedEnd || task.end;
   let actualStart = task.actualStart || task.start;
 
-  // actualEnd 处理：
-  //   有 finishDate → 用 finishDate
-  //   无 finishDate 且已过 deadLine → 用今天（延期到今日）
-  //   无 finishDate 且未过 deadLine → 用 plannedEnd
+  // actualEnd 处理（用于计算 actualX2 的视觉位置）：
+  //   finishDate 存在 且 状态为「待驗收」/「已完成」→ 用 finishDate
+  //   其他情况（含 finishDate 但状态不是完成态）→ 用今天（如过期）或 plannedEnd
+  const COMPLETION_STATUSES = ["待驗收", "已完成"];
+  const taskStatusDesc =
+    typeof task.status === "string"
+      ? task.status
+      : (task.status as any)?.description;
+  const isCompletionStatus = taskStatusDesc && COMPLETION_STATUSES.includes(taskStatusDesc);
+
   let actualEnd: Date;
-  if (task.actualEnd) {
+  if (task.actualEnd && isCompletionStatus) {
     actualEnd = task.actualEnd;
   } else {
     const now = new Date();
@@ -500,11 +506,13 @@ export const handleTaskBySVGMouseEvent = (
       break;
   }
 
-  // 约束：计划开始时间不能早于创建时间（createdAt）
+  // 约束：计划开始时间不能早于创建时间（createdAt）的右侧（即次日起始）
   if (isChanged && changedTask.createdAt && (action === "move" || action === "start")) {
-    const minDate = changedTask.createdAt instanceof Date
+    const createdAt = changedTask.createdAt instanceof Date
       ? changedTask.createdAt
       : new Date(changedTask.createdAt as string);
+    // 卡在 createdAt 当天的右边缘 = 次日 00:00:00
+    const minDate = new Date(createdAt.getFullYear(), createdAt.getMonth(), createdAt.getDate() + 1, 0, 0, 0, 0);
     const plannedStart = changedTask.plannedStart;
     if (plannedStart && plannedStart < minDate) {
       if (action === "move") {
@@ -548,12 +556,14 @@ export const handleTaskBySVGMouseEvent = (
   // 根据最新日期重新计算 delayDays，确保与条形图显示的延期天数一致
   if (isChanged && (action === "start" || action === "end" || action === "actualStart" || action === "actualEnd" || action === "move")) {
     const plannedEnd = changedTask.plannedEnd ?? changedTask.end;
-    const actualEnd = changedTask.actualEnd ?? changedTask.end;
+    const actualEnd = changedTask.actualEnd;
     const now = new Date();
-    const endTimeForDelay = actualEnd || now;
-    const isDelayed = endTimeForDelay > plannedEnd;
+    const toEOD = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+    const plannedEndEOD = toEOD(plannedEnd);
+    const effectiveEndEOD = actualEnd ? toEOD(actualEnd) : toEOD(now);
+    const isDelayed = effectiveEndEOD > plannedEndEOD;
     const delayDays = isDelayed
-      ? Math.ceil((endTimeForDelay.getTime() - plannedEnd.getTime()) / (1000 * 60 * 60 * 24))
+      ? Math.ceil((effectiveEndEOD.getTime() - plannedEndEOD.getTime()) / (1000 * 60 * 60 * 24))
       : 0;
     (changedTask as any).delayDays = delayDays;
   }
