@@ -180,7 +180,7 @@ export const OATooltipContent: React.FC<{
     掛起中: "#AAAAAA",
     待確認: "#FFD700",
     已完成: "#52C41A",
-    已撤銷: "#CCCCCC",
+    已撤销: "#CCCCCC",
   };
 
   const getStatusInfo = (s?: TaskStatus | StatusInfo) => {
