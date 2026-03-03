@@ -160,6 +160,8 @@ export interface DisplayOption {
    */
   locale?: string;
   rtl?: boolean;
+  /** 初始加载时是否水平滚动到今天，默认 true */
+  scrollToTodayOnLoad?: boolean;
   /**
    * Enable task drag (move entire task). Default: false
    */

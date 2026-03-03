@@ -48,7 +48,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   barBackgroundSelectedColor = "#aeb8c2",
   barActualColor = "#4CAF50",
   barActualSelectedColor = "#45a049",
-  barDelayColor = "#FFF0F5",
+  barDelayColor = "#fbc2d5",
   projectProgressColor = "#7db59a",
   projectProgressSelectedColor = "#59a985",
   projectBackgroundColor = "#fac465",
@@ -69,6 +69,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   gridBorderWidth = 1,
   gridBorderColor = "#e6e4e4",
   viewDate,
+  scrollToTodayOnLoad = true,
   TooltipContent,
   TaskListHeader = TaskListHeaderDefault,
   TaskListTable = TaskListTableDefault,
@@ -557,6 +558,40 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     rtl,
     onExpanderClick,
   ]);
+
+  // 初始加载时默认滚动到今天（非 rtl 且 scrollX 尚未初始化时）
+  useEffect(() => {
+    if (scrollX !== -1 || rtl) return;
+    const dates = dateSetup.dates;
+    if (!dates || dates.length < 2) return;
+    const svgWidth = dates.length * columnWidth;
+    if (scrollToTodayOnLoad) {
+      const today = new Date();
+      const idx = dates.findIndex(
+        (d, i) =>
+          today.valueOf() >= d.valueOf() &&
+          i + 1 < dates.length &&
+          today.valueOf() < dates[i + 1].valueOf()
+      );
+      let scrollTarget = 0;
+      if (idx <= 0) {
+        scrollTarget = 0;
+      } else if (idx >= dates.length - 1) {
+        scrollTarget = svgWidth;
+      } else {
+        const start = dates[idx].valueOf();
+        const end = dates[idx + 1].valueOf();
+        const ratio = (today.valueOf() - start) / (end - start);
+        scrollTarget = (idx + ratio) * columnWidth;
+      }
+      const visibleWidth = svgContainerWidth;
+      let finalX = Math.max(0, scrollTarget - visibleWidth / 2);
+      if (finalX > svgWidth) finalX = svgWidth;
+      setScrollX(finalX);
+    } else {
+      setScrollX(0);
+    }
+  }, [scrollX, rtl, dateSetup.dates, columnWidth, svgContainerWidth, scrollToTodayOnLoad]);
 
   useEffect(() => {
     if (
@@ -1089,7 +1124,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
             </div>
           ));
         })()}
-        {showTooltip && ganttEvent.changedTask && (
+        {showTooltip && ganttEvent.changedTask && !["move", "start", "end", "actualStart", "actualEnd", "progress"].includes(ganttEvent.action) && (
           <Tooltip
             arrowIndent={arrowIndent}
             rowHeight={rowHeight}

@@ -23,11 +23,11 @@ type OABarDisplayProps = {
   actualEndX: number;
   onMouseDown: (event: React.MouseEvent<SVGPolygonElement, MouseEvent>) => void;
   delayDaysFormat?: (days: number) => string;
-  /** 延期段背景色，默认 #FFF0F5 */
+  /** 延期段背景色，默认 #fbc2d5 */
   delayColor?: string;
 };
 
-const DEFAULT_DELAY_COLOR = "#FFF0F5";
+const DEFAULT_DELAY_COLOR = "#fbc2d5";
 const DELAY_TEXT_COLOR = "#C3314C";
 const DAY_MS = 1000 * 60 * 60 * 24;
 
