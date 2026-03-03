@@ -440,22 +440,44 @@ export const handleTaskBySVGMouseEvent = (
       }
       isChanged = changedTask.x1 !== selectedTask.x1 || changedTask.x2 !== selectedTask.x2;
       break;
-    case "end":
+    case "end": {
+      const newPlannedEnd = coordinateToDate(x, dates, columnWidth);
       if (rtl) {
         changedTask = {
           ...changedTask,
           x1: x,
-          plannedStart: coordinateToDate(x, dates, columnWidth),
+          plannedStart: newPlannedEnd,
         };
       } else {
         changedTask = {
           ...changedTask,
           x2: x,
-          plannedEnd: coordinateToDate(x, dates, columnWidth),
+          plannedEnd: newPlannedEnd,
         };
+      }
+      // 同步更新 actualX2：进行中任务的 actualEnd = max(now, newPlannedEnd)
+      // 避免拖动截止日期时出现虚假的延期段
+      {
+        const endStatusDesc =
+          typeof changedTask.status === "string"
+            ? changedTask.status
+            : (changedTask.status as any)?.description;
+        const isEndCompletionStatus =
+          endStatusDesc && ["待驗收", "已完成"].includes(endStatusDesc);
+        if (!isEndCompletionStatus || !changedTask.actualEnd) {
+          const now = new Date();
+          const newActualEnd = now > newPlannedEnd ? now : newPlannedEnd;
+          changedTask = {
+            ...changedTask,
+            actualX2: rtl
+              ? taskXCoordinateRTL(newActualEnd, dates, columnWidth)
+              : taskXCoordinate(newActualEnd, dates, columnWidth),
+          };
+        }
       }
       isChanged = changedTask.x1 !== selectedTask.x1 || changedTask.x2 !== selectedTask.x2;
       break;
+    }
     case "actualStart":
       if (rtl) {
         changedTask = {
@@ -488,20 +510,42 @@ export const handleTaskBySVGMouseEvent = (
       }
       isChanged = changedTask.actualX1 !== selectedTask.actualX1 || changedTask.actualX2 !== selectedTask.actualX2;
       break;
-    case "move":
+    case "move": {
       // 只移动计划条，实际条保持独立
       const newX1 = x - initEventX1Delta;
       const newX2 = x - initEventX1Delta + (selectedTask.x2 - selectedTask.x1);
-      
+      const newMovePlannedEnd = coordinateToDate(newX2, dates, columnWidth);
+
       changedTask = {
         ...changedTask,
         x1: newX1,
         x2: newX2,
         plannedStart: coordinateToDate(newX1, dates, columnWidth),
-        plannedEnd: coordinateToDate(newX2, dates, columnWidth),
+        plannedEnd: newMovePlannedEnd,
       };
+
+      // 同步更新 actualX2：进行中任务随 plannedEnd 变化
+      {
+        const moveStatusDesc =
+          typeof changedTask.status === "string"
+            ? changedTask.status
+            : (changedTask.status as any)?.description;
+        const isMoveCompletionStatus =
+          moveStatusDesc && ["待驗收", "已完成"].includes(moveStatusDesc);
+        if (!isMoveCompletionStatus || !changedTask.actualEnd) {
+          const now = new Date();
+          const newActualEnd = now > newMovePlannedEnd ? now : newMovePlannedEnd;
+          changedTask = {
+            ...changedTask,
+            actualX2: rtl
+              ? taskXCoordinateRTL(newActualEnd, dates, columnWidth)
+              : taskXCoordinate(newActualEnd, dates, columnWidth),
+          };
+        }
+      }
       isChanged = changedTask.x1 !== selectedTask.x1 || changedTask.x2 !== selectedTask.x2;
       break;
+    }
     case "progress":
       const progressWidth = x - selectedTask.x1;
       const progress = (progressWidth / (selectedTask.x2 - selectedTask.x1)) * 100;
