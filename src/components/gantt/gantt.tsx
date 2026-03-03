@@ -154,6 +154,30 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const [ganttEvent, setGanttEvent] = useState<GanttEvent>({
     action: "",
   });
+  const tooltipHideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const TOOLTIP_HIDE_DELAY_MS = 300;
+
+  const clearTooltipHideTimer = () => {
+    if (tooltipHideTimerRef.current) {
+      clearTimeout(tooltipHideTimerRef.current);
+      tooltipHideTimerRef.current = null;
+    }
+  };
+
+  const startTooltipHideTimer = () => {
+    clearTooltipHideTimer();
+    tooltipHideTimerRef.current = setTimeout(() => {
+      setGanttEvent(prev =>
+        prev.action === "mouseenter" ? { action: "", changedTask: undefined } : prev
+      );
+      tooltipHideTimerRef.current = null;
+    }, TOOLTIP_HIDE_DELAY_MS);
+  };
+
+  useEffect(() => {
+    return () => clearTooltipHideTimer();
+  }, []);
+
   const taskHeight = useMemo(
     () => (rowHeight * barFill) / 100,
     [rowHeight, barFill]
@@ -940,6 +964,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     onDelete,
     onTaskDragEnd,
     onTaskDragComplete,
+    onBarMouseLeave: startTooltipHideTimer,
+    onBarMouseEnter: clearTooltipHideTimer,
   };
 
   const [expandAllLeafTasks, setExpandAllLeafTasks] = useState(true);
@@ -1054,12 +1080,10 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
         className={styles.wrapper}
         onKeyDown={handleKeyDown}
         onMouseLeave={() => {
-          // 僅在懸浮狀態下，鼠標離開整個甘特區域時關閉 tooltip
-          setGanttEvent(prev =>
-            prev.action === "mouseenter"
-              ? { action: "" }
-              : prev
-          );
+          // 僅在懸浮狀態下，鼠標離開整個甘特區域時延時關閉 tooltip（便於移入懸浮框）
+          if (ganttEvent.action === "mouseenter") {
+            startTooltipHideTimer();
+          }
         }}
         tabIndex={0}
         ref={wrapperRef}
@@ -1125,22 +1149,31 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
           ));
         })()}
         {showTooltip && ganttEvent.changedTask && !["move", "start", "end", "actualStart", "actualEnd", "progress"].includes(ganttEvent.action) && (
-          <Tooltip
-            arrowIndent={arrowIndent}
-            rowHeight={rowHeight}
-            svgContainerHeight={svgContainerHeight}
-            svgContainerWidth={svgContainerWidth}
-            fontFamily={fontFamily}
-            fontSize={fontSize}
-            scrollX={scrollX}
-            scrollY={scrollY}
-            task={ganttEvent.changedTask}
-            headerHeight={headerHeight}
-            taskListWidth={taskListWidth}
-            TooltipContent={resolvedTooltipContent}
-            rtl={rtl}
-            svgWidth={svgWidth}
-          />
+          <div style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }}>
+            <div
+              onMouseEnter={clearTooltipHideTimer}
+              onMouseLeave={startTooltipHideTimer}
+              style={{ pointerEvents: "auto", display: "inline-block" }}
+            >
+              <Tooltip
+                key={ganttEvent.changedTask.id}
+                arrowIndent={arrowIndent}
+                rowHeight={rowHeight}
+                svgContainerHeight={svgContainerHeight}
+                svgContainerWidth={svgContainerWidth}
+                fontFamily={fontFamily}
+                fontSize={fontSize}
+                scrollX={scrollX}
+                scrollY={scrollY}
+                task={ganttEvent.changedTask}
+                headerHeight={headerHeight}
+                taskListWidth={taskListWidth}
+                TooltipContent={resolvedTooltipContent}
+                rtl={rtl}
+                svgWidth={svgWidth}
+              />
+            </div>
+          </div>
         )}
         <VerticalScroll
           ganttFullHeight={ganttFullHeight}

@@ -46,7 +46,13 @@ export const Tooltip: React.FC<TooltipProps> = ({
       const tooltipHeight = tooltipRef.current.offsetHeight * 1.1;
       const tooltipWidth = tooltipRef.current.offsetWidth * 1.1;
 
-      let newRelatedY = task.index * rowHeight - scrollY + headerHeight;
+      const rowTop = task.index * rowHeight - scrollY + headerHeight;
+      const gap = 8;
+      // 悬浮框不覆盖任务条：优先放在任务条上方，空间不足时放下方
+      let newRelatedY = rowTop - tooltipHeight - gap;
+      if (newRelatedY < 0) {
+        newRelatedY = rowTop + rowHeight + gap;
+      }
       let newRelatedX: number;
       if (rtl) {
         newRelatedX = task.x1 - arrowIndent * 1.5 - tooltipWidth - scrollX;
@@ -182,7 +188,10 @@ export const OATooltipContent: React.FC<{
     if (typeof s === "string") {
       return { text: s, color: statusColorMap[s as TaskStatus] ?? "#AAAAAA" };
     }
-    return { text: s.description || "-", color: s.color || "#AAAAAA" };
+    // 对象时用 description 查表，保证状态 tag 背景色与状态文字颜色一致，不沿用对象里可能错误的 color
+    const text = s.description || "-";
+    const color = statusColorMap[text as TaskStatus] ?? s.color ?? "#AAAAAA";
+    return { text, color };
   };
 
   const priorityColorMap: Record<string, string> = {

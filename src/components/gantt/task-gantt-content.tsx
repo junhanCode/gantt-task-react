@@ -39,6 +39,8 @@ export type TaskGanttContentProps = {
   setSelectedTask: (taskId: string) => void;
   scrollY?: number;
   containerHeight?: number;
+  onBarMouseLeave?: () => void;
+  onBarMouseEnter?: () => void;
 } & EventOption;
 
 export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
@@ -74,6 +76,8 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   onDelete,
   onTaskDragEnd,
   onTaskDragComplete,
+  onBarMouseLeave,
+  onBarMouseEnter,
 }) => {
   const point = svg?.current?.createSVGPoint();
   const [xStep, setXStep] = useState(0);
@@ -292,6 +296,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
     }
     // Mouse Events
     else if (action === "mouseenter") {
+      onBarMouseEnter?.();
       // 只有在當前沒有其他操作（或仍為 hover 狀態）時，才更新懸浮任務
       if (!ganttEvent.action || ganttEvent.action === "mouseenter") {
         setGanttEvent({
@@ -400,6 +405,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               enableTaskResize={enableTaskResize}
               hideTaskName={hideTaskName}
               onEventStart={handleBarEventStart}
+              onBarMouseLeave={onBarMouseLeave}
               key={task.id}
               isSelected={!!selectedTask && task.id === selectedTask.id}
               rtl={rtl}

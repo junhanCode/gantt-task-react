@@ -1,6 +1,5 @@
 import React, { ReactChild, useMemo } from "react";
 import { Task, ViewType } from "../../types/public-types";
-import { addToDate } from "../../helpers/date-helper";
 import { getVirtualRange, shouldUseVirtualScroll } from "../../helpers/virtual-scroll-helper";
 import styles from "./grid.module.css";
 
@@ -10,7 +9,8 @@ export type GridBodyProps = {
   svgWidth: number;
   rowHeight: number;
   columnWidth: number;
-  todayColor: string;
+  /** @deprecated 已不再绘制「今天」整列背景块，保留仅为兼容调用方传参 */
+  todayColor?: string;
   todayLineWidth?: number;
   rtl: boolean;
   viewType?: ViewType;
@@ -72,8 +72,6 @@ export const GridBody: React.FC<GridBodyProps> = ({
   rowHeight,
   svgWidth,
   columnWidth,
-  todayColor,
-  rtl,
   scrollY = 0,
   containerHeight,
   gridBorderWidth = 1,
@@ -131,11 +129,9 @@ export const GridBody: React.FC<GridBodyProps> = ({
     y += rowHeight;
   }
 
-  const now = new Date();
   let tickX = 0;
   const ticks: ReactChild[] = [];
   const totalHeight = tasks.length * rowHeight;
-  let today: ReactChild = <rect />;
 
   for (let i = 0; i < dates.length; i++) {
     const date = dates[i];
@@ -151,33 +147,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
         strokeWidth={gridBorderWidth}
       />
     );
-    if (
-      (i + 1 !== dates.length &&
-        date.getTime() < now.getTime() &&
-        dates[i + 1].getTime() >= now.getTime()) ||
-      (i !== 0 &&
-        i + 1 === dates.length &&
-        date.getTime() < now.getTime() &&
-        addToDate(
-          date,
-          date.getTime() - dates[i - 1].getTime(),
-          "millisecond"
-        ).getTime() >= now.getTime())
-    ) {
-      today = (
-        <rect x={tickX} y={0} width={columnWidth} height={totalHeight} fill={todayColor} />
-      );
-    }
-    if (
-      rtl &&
-      i + 1 !== dates.length &&
-      date.getTime() >= now.getTime() &&
-      dates[i + 1].getTime() < now.getTime()
-    ) {
-      today = (
-        <rect x={tickX + columnWidth} y={0} width={columnWidth} height={totalHeight} fill={todayColor} />
-      );
-    }
+    // 不再绘制「今天」整列竖向背景块，仅保留竖线
     tickX += columnWidth;
   }
 
@@ -186,7 +156,7 @@ export const GridBody: React.FC<GridBodyProps> = ({
       <g className="rows">{gridRows}</g>
       <g className="rowLines">{rowLines}</g>
       <g className="ticks">{ticks}</g>
-      <g className="today">{today}</g>
+      <g className="today"><rect /></g>
     </g>
   );
 };

@@ -26,6 +26,7 @@ export type TaskItemProps = {
     selectedTask: BarTask,
     event?: React.MouseEvent | React.KeyboardEvent
   ) => any;
+  onBarMouseLeave?: () => void;
 };
 
 export const TaskItem: React.FC<TaskItemProps> = props => {
@@ -38,6 +39,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
     rtl,
     hideTaskName = true,
     onEventStart,
+    onBarMouseLeave,
   } = {
     ...props,
   };
@@ -127,6 +129,9 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
       }}
       onMouseEnter={e => {
         onEventStart("mouseenter", task, e);
+      }}
+      onMouseLeave={() => {
+        onBarMouseLeave?.();
       }}
       onDoubleClick={e => {
         onEventStart("dblclick", task, e);
