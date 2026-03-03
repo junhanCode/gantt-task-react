@@ -99,6 +99,7 @@
 
 .calendarTopTick {
   stroke: #e6e4e4;
+  stroke-width: 0.25;
 }
 
 .calendarTopText {
