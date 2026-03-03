@@ -104,8 +104,8 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
     (statusDescription && statusColors[statusDescription as TaskStatus]) ||
     "#E6E6E6";
 
-  // 除「掛起中」外，所有狀態都允許顯示延期段
-  const canShowDelay = statusDescription !== "掛起中";
+  // 「掛起中」和「已撤銷」不顯示延期段
+  const canShowDelay = statusDescription !== "掛起中" && statusDescription !== "已撤銷";
 
   // finishDate 只在「待驗收」/「已完成」状态下才视为有效完成时间
   const COMPLETION_STATUSES: (TaskStatus | undefined)[] = ["待驗收", "已完成"];
