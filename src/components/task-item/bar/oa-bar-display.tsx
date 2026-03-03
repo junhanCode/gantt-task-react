@@ -21,6 +21,8 @@ type OABarDisplayProps = {
   actualEnd?: Date;
   /** finishDate（或延期到今日）的像素 x 坐标，由 bar-helper 通过 taskXCoordinate 计算 */
   actualEndX: number;
+  /** 今日在时间轴上的像素 x 坐标，用于绘制「剩余时间」浅色段 */
+  todayX?: number;
   onMouseDown: (event: React.MouseEvent<SVGPolygonElement, MouseEvent>) => void;
   delayDaysFormat?: (days: number) => string;
   /** 延期段背景色，默认 #fbc2d5 */
@@ -37,17 +39,17 @@ const toEndOfDay = (d: Date) =>
 /**
  * OA 任务条形图。
  *
- * 未延期（finishDate <= deadLine）：
+ * 未延期 · 已完成（finishDate <= deadLine，状态为待驗收/已完成）：
  *   createDate ═══ finishDate ─── deadLine
- *   [  实色(已完成)  |  浅色(剩余)  ]
+ *   [  实色(已完成)  |  浅色(提前时间)  ]
+ *
+ * 未延期 · 进行中（今日 <= deadLine）：
+ *   createDate ═══ 今日 ─── deadLine
+ *   [  实色(已过时间)  |  浅色(剩余时间)  ]
  *
  * 延期（finishDate > deadLine，或无 finishDate 且今日 > deadLine）：
  *   createDate ═══ deadLine ████ finishDate / 今日
- *   [  状态色(正常)  | 红色(延期)  ]
- *
- * 进行中未超期（无 finishDate 且今日 <= deadLine）：
- *   createDate ═══════════════ deadLine
- *   [         状态色(整条)         ]
+ *   [  状态色(正常)  |  延期色(延期时间)  ]
  */
 export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   x,
@@ -66,6 +68,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   actualStart,
   actualEnd,
   actualEndX,
+  todayX,
   onMouseDown,
   delayDaysFormat,
   delayColor = DEFAULT_DELAY_COLOR,
@@ -156,7 +159,48 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
       );
     }
 
-    // 进行中且未超期（或掛起中等）：整条状态色
+    // 进行中且未超期：createDate → today（实色）+ today → deadLine（浅色，剩余时间）
+    // 掛起中/已撤销 或无 todayX 时，整条显示状态色
+    const canSplitByToday =
+      canShowDelay &&
+      todayX !== undefined &&
+      todayX > x &&
+      todayX < x + safeWidth;
+
+    if (canSplitByToday) {
+      const activeWidth = Math.max(0, todayX! - x);
+      const remainingWidth = safeWidth - activeWidth;
+
+      return (
+        <g onMouseDown={onMouseDown}>
+          {activeWidth > 0 && (
+            <rect
+              x={x}
+              y={y}
+              width={activeWidth}
+              height={height}
+              rx={barCornerRadius}
+              ry={barCornerRadius}
+              fill={baseColor}
+              className={style.barBackground}
+            />
+          )}
+          {remainingWidth > 0 && (
+            <rect
+              x={x + activeWidth}
+              y={y}
+              width={remainingWidth}
+              height={height}
+              rx={barCornerRadius}
+              ry={barCornerRadius}
+              fill={baseColor}
+              opacity={0.35}
+            />
+          )}
+        </g>
+      );
+    }
+
     return (
       <g onMouseDown={onMouseDown}>
         <rect

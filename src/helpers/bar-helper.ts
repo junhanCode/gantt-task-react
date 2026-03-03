@@ -256,6 +256,12 @@ const convertToBar = (
 
   const y = taskYCoordinate(index, rowHeight, taskHeight);
 
+  // 今日在时间轴上的像素坐标，用于渲染「剩余时间」段
+  const todayDate = new Date();
+  const todayX = rtl
+    ? taskXCoordinateRTL(todayDate, dates, columnWidth)
+    : taskXCoordinate(todayDate, dates, columnWidth);
+
   const styles = {
     backgroundColor,
     backgroundSelectedColor,
@@ -273,6 +279,7 @@ const convertToBar = (
     x2,
     actualX1,
     actualX2,
+    todayX,
     y,
     height: taskHeight,
     progressX,
@@ -302,6 +309,7 @@ const convertToMilestone = (
 
   const x1 = x - taskHeight * 0.5;
   const x2 = x + taskHeight * 0.5;
+  const todayX = taskXCoordinate(new Date(), dates, columnWidth);
 
   const styles = {
     backgroundColor,
@@ -320,6 +328,7 @@ const convertToMilestone = (
     x2,
     actualX1: x1,
     actualX2: x2,
+    todayX,
     y,
     height: taskHeight,
     progressX: x1,

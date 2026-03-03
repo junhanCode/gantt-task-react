@@ -7,6 +7,8 @@ export interface BarTask extends Task {
   x2: number;
   actualX1: number;
   actualX2: number;
+  /** 今日在时间轴上的像素 x 坐标，用于绘制「剩余时间」段 */
+  todayX: number;
   y: number;
   height: number;
   progressX: number;

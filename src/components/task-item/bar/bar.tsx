@@ -36,6 +36,7 @@ export const Bar: React.FC<TaskItemProps> = ({
           actualStart={actualStart}
           actualEnd={task.actualEnd}
           actualEndX={task.actualX2}
+          todayX={task.todayX}
           isSelected={isSelected}
           delayColor={task.styles?.delayColor}
           onMouseDown={e => {
