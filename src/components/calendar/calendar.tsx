@@ -1352,6 +1352,28 @@ export const Calendar: React.FC<CalendarProps> = ({
       );
     }
     
+    // 表头上下边框（2px），分隔表头与表体
+    bgValues.push(
+      <line
+        key="header-top-border"
+        x1={0}
+        y1={0}
+        x2={totalWidth}
+        y2={0}
+        stroke={gridBorderColor}
+        strokeWidth={2}
+      />,
+      <line
+        key="header-bottom-border"
+        x1={0}
+        y1={headerHeight}
+        x2={totalWidth}
+        y2={headerHeight}
+        stroke={gridBorderColor}
+        strokeWidth={2}
+      />
+    );
+
     // 返回顺序：文字层在上、背景层在下
     // 将bgValues和bottomValues合并，因为Calendar组件期望的是[topValues, bottomValues]
     return [topValues, [...bgValues, ...bottomValues]];
