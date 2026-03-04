@@ -108,6 +108,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   columnEllipsisMaxChars,
   onCellOverflow,
   tableStyles,
+  resizableColumns = false,
   isTaskDraggable,
   rowSelection,
   unreadColumn,
@@ -1130,8 +1131,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     timeColumnWidths,
     onDateChange,
     tableStyles,
-    // pass-through to task list header/table
-    // Note: TaskListProps typing supports these via component prop types
+    resizableColumns,
   };
   return (
     <div ref={ganttContainerRef}>

@@ -57,6 +57,8 @@ export type TaskListProps = {
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
   onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
+  /** 是否允许通过拖拽调整列宽，默认 false */
+  resizableColumns?: boolean;
   /** 表格样式配置 */
   tableStyles?: {
     headerHeight?: number;
@@ -104,6 +106,10 @@ export type TaskListProps = {
     collapseIcon?: React.ReactNode;
     /** 列宽拖拽回调，列 key + 新宽度(px) */
     onColumnResize?: (colKey: string, newWidthPx: number) => void;
+    /** OA 视图：状态列宽度 */
+    statusColumnWidth?: string;
+    /** OA 视图：负责人列宽度 */
+    assigneeColumnWidth?: string;
     tableStyles?: {
       height?: number | string;
       container?: React.CSSProperties;
@@ -167,6 +173,10 @@ export type TaskListProps = {
     expandIcon?: React.ReactNode;
     collapseIcon?: React.ReactNode;
     onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
+    /** OA 视图：状态列宽度 */
+    statusColumnWidth?: string;
+    /** OA 视图：负责人列宽度 */
+    assigneeColumnWidth?: string;
     tableStyles?: {
       height?: number | string;
       container?: React.CSSProperties;
@@ -223,6 +233,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   TaskListTable,
   onDateChange,
   tableStyles,
+  resizableColumns = false,
 }) => {
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -241,6 +252,9 @@ export const TaskList: React.FC<TaskListProps> = ({
     actualStart: parseWidthPx(timeColumnWidths?.actualStart ?? rowWidth, defaultPx),
     actualEnd: parseWidthPx(timeColumnWidths?.actualEnd ?? rowWidth, defaultPx),
     operations: parseWidthPx(operationsColumnWidth, 120),
+    // OA 视图专用列
+    status: 100,
+    assignee: 100,
   }));
 
   const handleColumnResize = (colKey: string, newWidthPx: number) => {
@@ -256,6 +270,8 @@ export const TaskList: React.FC<TaskListProps> = ({
     actualEnd: `${colWidths.actualEnd}px`,
   };
   const resolvedOperationsWidth = `${colWidths.operations}px`;
+  const resolvedStatusWidth = `${colWidths.status}px`;
+  const resolvedAssigneeWidth = `${colWidths.assignee}px`;
 
   const headerProps = {
     headerHeight,
@@ -278,8 +294,10 @@ export const TaskList: React.FC<TaskListProps> = ({
     onToggleTaskList,
     expandIcon,
     collapseIcon,
-    onColumnResize: handleColumnResize,
+    onColumnResize: resizableColumns ? handleColumnResize : undefined,
     tableStyles,
+    statusColumnWidth: resolvedStatusWidth,
+    assigneeColumnWidth: resolvedAssigneeWidth,
   };
   const selectedTaskId = selectedTask ? selectedTask.id : "";
   const tableProps = {
@@ -305,6 +323,8 @@ export const TaskList: React.FC<TaskListProps> = ({
     tableStyles,
     scrollY,
     containerHeight: ganttHeight || undefined,
+    statusColumnWidth: resolvedStatusWidth,
+    assigneeColumnWidth: resolvedAssigneeWidth,
   };
 
   return (

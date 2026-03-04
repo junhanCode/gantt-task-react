@@ -2,6 +2,37 @@ import React from "react";
 import { I18nTexts } from "../../i18n";
 import styles from "./task-list-header.module.css";
 
+const MIN_COL_WIDTH = 50;
+
+const startResize = (
+  e: React.MouseEvent,
+  colKey: string,
+  onColumnResize: (colKey: string, newWidthPx: number) => void
+) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const cell = (e.currentTarget as HTMLElement).parentElement!;
+  const startX = e.clientX;
+  const startWidth = cell.getBoundingClientRect().width;
+
+  const onMouseMove = (ev: MouseEvent) => {
+    const newWidth = Math.max(MIN_COL_WIDTH, Math.round(startWidth + ev.clientX - startX));
+    onColumnResize(colKey, newWidth);
+  };
+
+  const onMouseUp = () => {
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
+  };
+
+  document.body.style.cursor = "col-resize";
+  document.body.style.userSelect = "none";
+  document.addEventListener("mousemove", onMouseMove);
+  document.addEventListener("mouseup", onMouseUp);
+};
+
 export const OATaskListHeader: React.FC<{
   headerHeight: number;
   rowWidth: string;
@@ -16,6 +47,12 @@ export const OATaskListHeader: React.FC<{
   operationsColumnWidth?: string;
   operationsColumnLabel?: string;
   showOperationsColumn?: boolean;
+  /** 状态列宽度（可通过拖拽调整） */
+  statusColumnWidth?: string;
+  /** 负责人列宽度（可通过拖拽调整） */
+  assigneeColumnWidth?: string;
+  /** 列宽拖拽回调，列 key + 新宽度(px) */
+  onColumnResize?: (colKey: string, newWidthPx: number) => void;
   tableStyles?: {
     headerHeight?: number;
     height?: number | string;
@@ -86,7 +123,10 @@ export const OATaskListHeader: React.FC<{
   taskTitleHeaderRender,
   columnHeaderRenderers,
   i18n,
-}) => {
+  statusColumnWidth,
+  assigneeColumnWidth,
+  onColumnResize,
+}) => { 
   const renderHeader = (
     key: keyof NonNullable<typeof columnHeaderRenderers>,
     defaultLabel: string,
@@ -126,7 +166,16 @@ export const OATaskListHeader: React.FC<{
           ))
       }
     </div>
-  ) : null; 
+  ) : null;
+
+  const handle = (colKey: string) =>
+    onColumnResize ? (
+      <div
+        className={styles.resizeHandle}
+        onMouseDown={(e) => startResize(e, colKey, onColumnResize)}
+      />
+    ) : null;
+
   return (
     <div
       className={styles.ganttTable}
@@ -279,6 +328,7 @@ export const OATaskListHeader: React.FC<{
               );
             })()}
           </div>
+          {handle("name")}
         </div>
         <div
           className={styles.ganttTable_HeaderSeparator}
@@ -292,8 +342,8 @@ export const OATaskListHeader: React.FC<{
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
-            minWidth: "100px",
-            maxWidth: "100px",
+            minWidth: statusColumnWidth ?? "100px",
+            maxWidth: statusColumnWidth ?? "100px",
             textAlign: 'center',
             ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
@@ -306,6 +356,7 @@ export const OATaskListHeader: React.FC<{
             if (typeof custom === 'string') return <span>{custom}</span>;
             return custom;
           })()}
+          {handle("status")}
         </div>
         <div
           className={styles.ganttTable_HeaderSeparator}
@@ -319,8 +370,8 @@ export const OATaskListHeader: React.FC<{
         <div
           className={styles.ganttTable_HeaderItem}
           style={{
-            minWidth: "100px",
-            maxWidth: "100px",
+            minWidth: assigneeColumnWidth ?? "100px",
+            maxWidth: assigneeColumnWidth ?? "100px",
             textAlign: 'center',
             ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
             ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
@@ -333,6 +384,7 @@ export const OATaskListHeader: React.FC<{
             if (typeof custom === 'string') return <span>{custom}</span>;
             return custom;
           })()}
+          {handle("assignee")}
         </div>
         {showOperationsColumn && (
           <React.Fragment>
@@ -361,6 +413,7 @@ export const OATaskListHeader: React.FC<{
                 if (typeof custom === 'string') return <span>{custom}</span>;
                 return custom;
               })()}
+              {handle("operations")}
             </div>
           </React.Fragment>
         )}

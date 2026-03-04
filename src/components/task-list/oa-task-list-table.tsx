@@ -22,6 +22,10 @@ export const OATaskListTable: React.FC<{
   onToggleExpandAll?: () => void;
   operationsColumnWidth?: string;
   showOperationsColumn?: boolean;
+  /** 状态列宽度（拖拽调整后传入） */
+  statusColumnWidth?: string;
+  /** 负责人列宽度（拖拽调整后传入） */
+  assigneeColumnWidth?: string;
   columnRenderers?: Partial<{
     unread: (task: Task, meta: { value: boolean; displayValue: React.ReactNode }) => React.ReactNode;
     name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
@@ -84,6 +88,8 @@ export const OATaskListTable: React.FC<{
   onToggleExpandAll,
   operationsColumnWidth,
   showOperationsColumn = true,
+  statusColumnWidth,
+  assigneeColumnWidth,
   columnRenderers,
   columnEllipsisMaxChars,
   onCellOverflow,
@@ -201,8 +207,8 @@ export const OATaskListTable: React.FC<{
         {rowSelection && <col style={{ width: rowSelection.columnWidth || "50px" }} />}
         {unreadColumn?.show && <col style={{ width: unreadColumn.width || "40px" }} />}
         <col style={{ width: nameColumnWidth || rowWidth }} />
-        <col style={{ width: "100px" }} />
-        <col style={{ width: "100px" }} />
+        <col style={{ width: statusColumnWidth ?? "100px" }} />
+        <col style={{ width: assigneeColumnWidth ?? "100px" }} />
         {showOperationsColumn && <col style={{ width: operationsColumnWidth ?? "120px" }} />}
       </colgroup>
       <tbody>

@@ -235,6 +235,11 @@ export interface StylingOption {
     actualStart?: string;
     actualEnd?: string;
   };
+  /**
+   * 是否允许通过拖拽调整左侧任务列表的列宽，默认 false。
+   * 开启后，每个列表头右侧会出现拖拽手柄；关闭时行为与之前一致。
+   */
+  resizableColumns?: boolean;
   /** 表格样式配置 */
   tableStyles?: {
     /** 左侧表头高度（数字，如 50），不传则使用全局 headerHeight */
