@@ -155,8 +155,8 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
         originalSelectedTask.plannedEnd?.getTime() !== newChangedTask.plannedEnd?.getTime();
 
       // remove listeners
-      svg.current.removeEventListener("mousemove", handleMouseMove);
-      svg.current.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
       setGanttEvent({ action: "" });
       setIsMoving(false);
 
@@ -243,8 +243,8 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
         ganttEvent.action === "progress") &&
       svg?.current
     ) {
-      svg.current.addEventListener("mousemove", handleMouseMove);
-      svg.current.addEventListener("mouseup", handleMouseUp);
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
       setIsMoving(true);
     }
   }, [

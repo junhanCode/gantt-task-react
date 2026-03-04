@@ -261,6 +261,10 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const [scrollY, setScrollY] = useState(0);
   const [scrollX, setScrollX] = useState(-1);
 
+  // Refs for drag auto-scroll
+  const autoScrollRAFRef = useRef<number | null>(null);
+  const dragMouseXRef = useRef<number | null>(null);
+
   // 暴露方法：滚动到指定日期、切换视图模式、全屏、导出图片
   useImperativeHandle(ref, () => ({
     scrollToDate: (date: Date, options?: { align?: "start" | "center" | "end" }) => {
@@ -772,6 +776,61 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     rtl,
     ganttFullHeight,
   ]);
+
+  // Auto-scroll when dragging near / beyond the horizontal edges of the timeline
+  const isDraggingActive = ["move", "end", "start", "actualStart", "actualEnd"].includes(ganttEvent.action);
+  useEffect(() => {
+    if (!isDraggingActive) {
+      if (autoScrollRAFRef.current !== null) {
+        cancelAnimationFrame(autoScrollRAFRef.current);
+        autoScrollRAFRef.current = null;
+      }
+      dragMouseXRef.current = null;
+      return;
+    }
+
+    const EDGE_ZONE = 80;  // px from edge where scroll kicks in
+    const MAX_SPEED = 15;  // px per animation frame at max speed
+
+    const onMouseMove = (e: MouseEvent) => {
+      dragMouseXRef.current = e.clientX;
+    };
+
+    const tick = () => {
+      const wrapperEl = wrapperRef.current;
+      if (wrapperEl && dragMouseXRef.current !== null) {
+        const rect = wrapperEl.getBoundingClientRect();
+        const leftEdge = rect.left + taskListWidth;
+        const rightEdge = rect.right;
+        const mx = dragMouseXRef.current;
+
+        let delta = 0;
+        if (mx > rightEdge - EDGE_ZONE) {
+          delta = ((mx - (rightEdge - EDGE_ZONE)) / EDGE_ZONE) * MAX_SPEED;
+        } else if (mx < leftEdge + EDGE_ZONE) {
+          delta = -((leftEdge + EDGE_ZONE - mx) / EDGE_ZONE) * MAX_SPEED;
+        }
+        delta = Math.sign(delta) * Math.min(Math.abs(delta), MAX_SPEED);
+
+        if (Math.abs(delta) > 0.5) {
+          setScrollX(prev => Math.max(0, Math.min(svgWidth, prev + delta)));
+        }
+      }
+      autoScrollRAFRef.current = requestAnimationFrame(tick);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    autoScrollRAFRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      if (autoScrollRAFRef.current !== null) {
+        cancelAnimationFrame(autoScrollRAFRef.current);
+        autoScrollRAFRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDraggingActive, taskListWidth, svgWidth]);
 
   // 渲染完成回调 - 在关键状态更新后触发
   useEffect(() => {
