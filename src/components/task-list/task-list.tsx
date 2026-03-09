@@ -15,7 +15,7 @@ export type TaskListProps = {
   taskListRef: React.RefObject<HTMLDivElement>;
   horizontalContainerClass?: string;
   selectedTask: BarTask | undefined;
-  setSelectedTask: (task: string) => void;
+  setSelectedTask: (task: string | number) => void;
   onExpanderClick: (task: Task) => void;
   // 新增：名称列宽、时间列标题与列宽（若未传则组件内部回退到 rowWidth）
   nameColumnWidth?: string;
@@ -37,7 +37,7 @@ export type TaskListProps = {
   AddTaskModal?: React.FC<{
     isOpen: boolean;
     onClose: () => void;
-    parentTaskId: string;
+    parentTaskId: string | number;
     onConfirm: (taskData: Partial<Task>) => void;
   }>;
   onEditTask?: (task: Task) => void;
@@ -91,8 +91,8 @@ export type TaskListProps = {
     fontSize: string;
     locale: string;
     tasks: Task[];
-    selectedTaskId: string;
-    setSelectedTask: (taskId: string) => void;
+    selectedTaskId: string | number;
+    setSelectedTask: (taskId: string | number) => void;
     onExpanderClick: (task: Task) => void;
     nameColumnWidth?: string;
     timeColumnWidths?: {
@@ -113,7 +113,7 @@ export type TaskListProps = {
     AddTaskModal?: React.FC<{
       isOpen: boolean;
       onClose: () => void;
-      parentTaskId: string;
+      parentTaskId: string | number;
       onConfirm: (taskData: Partial<Task>) => void;
     }>;
     onEditTask?: (task: Task) => void;

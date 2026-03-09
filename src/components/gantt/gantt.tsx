@@ -23,11 +23,12 @@ import { convertToBarTasks } from "../../helpers/bar-helper";
 import { GanttEvent } from "../../types/gantt-task-actions";
 import { DateSetup } from "../../types/date-setup";
 import { HorizontalScroll } from "../other/horizontal-scroll";
-import { removeHiddenTasks, sortTasks } from "../../helpers/other-helper";
+import { removeHiddenTasks, sortTasks, flattenTreeTasks } from "../../helpers/other-helper";
 import styles from "./gantt.module.css";
 
 export const Gantt = forwardRef<GanttRef, GanttProps>(({ 
   tasks,
+  childrenColumnName,
   headerHeight = 50,
   columnWidth = 60,
   listCellWidth = "155px",
@@ -83,8 +84,36 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
 }, ref) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
+
+  // 树形数据支持：跟踪已折叠的节点 id
+  const [collapsedTaskIds, setCollapsedTaskIds] = useState<Set<string | number>>(new Set());
+
+  // 检测是否为树形数据，并将其展平为扁平列表
+  const { isTreeData, effectiveTasks } = useMemo(() => {
+    const cKey = childrenColumnName || "children";
+    // 要求至少有一个非空 children 数组，避免 children:[] 误触发树形模式
+    const hasTree = tasks.some(t => {
+      const v = (t as any)[cKey];
+      return Array.isArray(v) && (v as any[]).length > 0;
+    });
+    if (!hasTree) return { isTreeData: false, effectiveTasks: tasks };
+    return {
+      isTreeData: true,
+      effectiveTasks: flattenTreeTasks(tasks, cKey, collapsedTaskIds),
+    };
+  }, [tasks, childrenColumnName, collapsedTaskIds]);
+
   const [dateSetup, setDateSetup] = useState<DateSetup>(() => {
-    const [startDate, endDate] = ganttDateRange(tasks, viewMode, preStepsCount);
+    // 初始化时若为树形数据则先全展开展平，以得到完整日期范围
+    const cKey = childrenColumnName || "children";
+    const hasTree = tasks.some(t => {
+      const v = (t as any)[cKey];
+      return Array.isArray(v) && (v as any[]).length > 0;
+    });
+    const initialTasks = hasTree
+      ? flattenTreeTasks(tasks, cKey, new Set())
+      : tasks;
+    const [startDate, endDate] = ganttDateRange(initialTasks, viewMode, preStepsCount);
     return { viewMode, dates: seedDates(startDate, endDate, viewMode) };
   });
   const [currentViewDate, setCurrentViewDate] = useState<Date | undefined>(
@@ -150,10 +179,13 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   // task change events
   useEffect(() => {
     let filteredTasks: Task[];
-    if (onExpanderClick) {
-      filteredTasks = removeHiddenTasks(tasks);
+    if (isTreeData) {
+      // 树形模式：effectiveTasks 已经根据折叠状态过滤好子节点，直接使用
+      filteredTasks = effectiveTasks;
+    } else if (onExpanderClick) {
+      filteredTasks = removeHiddenTasks(effectiveTasks);
     } else {
-      filteredTasks = tasks;
+      filteredTasks = effectiveTasks;
     }
     filteredTasks = filteredTasks.sort(sortTasks);
     const [startDate, endDate] = ganttDateRange(
@@ -195,7 +227,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       )
     );
   }, [
-    tasks,
+    effectiveTasks,
+    isTreeData,
     viewMode,
     preStepsCount,
     rowHeight,
@@ -308,9 +341,9 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     if (ganttHeight) {
       setSvgContainerHeight(ganttHeight + headerHeight);
     } else {
-      setSvgContainerHeight(tasks.length * rowHeight + headerHeight);
+      setSvgContainerHeight(effectiveTasks.length * rowHeight + headerHeight);
     }
-  }, [ganttHeight, tasks, headerHeight, rowHeight]);
+  }, [ganttHeight, effectiveTasks, headerHeight, rowHeight]);
 
   // scroll events
   useEffect(() => {
@@ -425,7 +458,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   /**
    * Task select event
    */
-  const handleSelectedTask = (taskId: string) => {
+  const handleSelectedTask = (taskId: string | number) => {
     const newSelectedTask = barTasks.find(t => t.id === taskId);
     const oldSelectedTask = barTasks.find(
       t => !!selectedTask && t.id === selectedTask.id
@@ -441,7 +474,22 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     setSelectedTask(newSelectedTask);
   };
   const handleExpanderClick = (task: Task) => {
-    if (onExpanderClick && task.hideChildren !== undefined) {
+    if (isTreeData) {
+      // 树形模式：组件内部管理折叠状态
+      setCollapsedTaskIds(prev => {
+        const next = new Set(prev);
+        if (next.has(task.id)) {
+          next.delete(task.id);
+        } else {
+          next.add(task.id);
+        }
+        return next;
+      });
+      // 仍然通知外部（如有需要）
+      if (onExpanderClick) {
+        onExpanderClick({ ...task, hideChildren: !task.hideChildren });
+      }
+    } else if (onExpanderClick && task.hideChildren !== undefined) {
       onExpanderClick({ ...task, hideChildren: !task.hideChildren });
     }
   };
@@ -452,7 +500,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const gridProps: GridProps = {
     columnWidth,
     svgWidth,
-    tasks: tasks,
+    tasks: effectiveTasks,
     rowHeight,
     dates: dateSetup.dates,
     todayColor,

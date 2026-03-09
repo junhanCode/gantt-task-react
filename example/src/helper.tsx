@@ -1,4 +1,4 @@
-import { Task } from "../../dist/types/public-types";
+import { Task } from "gantt-task-react";
 
 export function initTasks() {
   const currentDate = new Date();
@@ -141,7 +141,128 @@ export function initTasks() {
   return tasks;
 }
 
-export function getStartEndDateForProject(tasks: Task[], projectId: string) {
+/**
+ * 树形数据格式示例（参照 antd Table 的 children 字段规范）。
+ * 当任意节点含有 children 字段时，Gantt 组件会自动识别并以树形层级渲染，
+ * 展开/折叠状态由组件内部管理，无需外部维护 hideChildren 字段。
+ */
+export function initTreeTasks() {
+  const currentDate = new Date();
+  const tasks: Task[] = [
+    {
+      start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+      end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+      name: "Some Project",
+      id: 1,
+      progress: 25,
+      type: "project",
+      children: [
+        {
+          start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+          end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 2, 12, 28),
+          plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+          plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 2, 12, 28),
+          actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+          actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 2, 12, 28),
+          name: "Idea",
+          id: 11,
+          progress: 45,
+          type: "task",
+        },
+        {
+          start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 2),
+          end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4, 0, 0),
+          plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 2),
+          plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4, 0, 0),
+          actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1, 18, 0),
+          actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 3, 16, 0),
+          name: "Research",
+          id: 12,
+          progress: 25,
+          type: "task",
+        },
+        {
+          start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4),
+          end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 0, 0),
+          plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4),
+          plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 0, 0),
+          actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 5, 10, 0),
+          actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 0, 0),
+          name: "Discussion",
+          id: 13,
+          progress: 10,
+          type: "project",
+          children: [
+            {
+              start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4),
+              end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 6, 0, 0),
+              plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 4),
+              plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 6, 0, 0),
+              actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 5, 10, 0),
+              actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 6, 0, 0),
+              name: "Team Meeting",
+              id: 131,
+              progress: 20,
+              type: "task",
+            },
+            {
+              start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 6),
+              end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 0, 0),
+              plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 6),
+              plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 0, 0),
+              actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 6),
+              actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 0, 0),
+              name: "Stakeholder Review",
+              id: 132,
+              progress: 5,
+              type: "task",
+            },
+          ],
+        },
+        {
+          start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8),
+          end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 10),
+          plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8),
+          plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 10),
+          actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 8, 14, 0),
+          actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 9, 18, 0),
+          name: "Review",
+          id: 14,
+          type: "task",
+          progress: 70,
+        },
+        {
+          start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+          end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+          plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+          plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+          actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+          actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 15),
+          name: "Release",
+          id: 15,
+          progress: currentDate.getMonth(),
+          type: "milestone",
+        },
+      ],
+    },
+    {
+      start: new Date(currentDate.getFullYear(), currentDate.getMonth(), 18),
+      end: new Date(currentDate.getFullYear(), currentDate.getMonth(), 19),
+      plannedStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 18),
+      plannedEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 19),
+      actualStart: new Date(currentDate.getFullYear(), currentDate.getMonth(), 18),
+      actualEnd: new Date(currentDate.getFullYear(), currentDate.getMonth(), 19),
+      name: "Party Time",
+      id: 2,
+      progress: 0,
+      isDisabled: true,
+      type: "task",
+    },
+  ];
+  return tasks;
+}
+
+export function getStartEndDateForProject(tasks: Task[], projectId: string | number) {
   const projectTasks = tasks.filter(t => t.project === projectId);
   let start = projectTasks[0].start;
   let end = projectTasks[0].end;

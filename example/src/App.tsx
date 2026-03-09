@@ -14,7 +14,7 @@ const { RangePicker } = DatePicker;
 const AddTaskModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  parentTaskId: string;
+  parentTaskId: string | number;
   onConfirm: (taskData: Partial<Task>) => void;
 }> = ({ isOpen, onClose, parentTaskId, onConfirm }) => {
   const [form] = Form.useForm();

@@ -48,6 +48,52 @@ function getChildren(taskList: Task[], task: Task) {
   return tasks;
 }
 
+/**
+ * 将树形结构数据（含 children 字段）展平为甘特图所需的扁平数组。
+ * - 自动为每个节点设置 project（父节点 id）、displayOrder、hideChildren。
+ * - 已折叠节点（id 存在于 collapsedTaskIds）的子节点不会加入结果数组。
+ * - type 未指定时，有子节点的节点默认为 "project"，叶节点默认为 "task"。
+ */
+export function flattenTreeTasks(
+  treeTasks: Task[],
+  childrenKey: string,
+  collapsedTaskIds: Set<string | number>,
+  parentId?: string | number,
+  counter: { value: number } = { value: 1 }
+): Task[] {
+  const result: Task[] = [];
+
+  for (const task of treeTasks) {
+    const rawChildren = (task as any)[childrenKey];
+    const children = Array.isArray(rawChildren) ? (rawChildren as Task[]) : undefined;
+    const hasChildren = !!children && children.length > 0;
+    const isCollapsed = collapsedTaskIds.has(task.id);
+
+    const flatTask: Task = {
+      ...(task as any),
+      project: parentId,
+      type: task.type || (hasChildren ? "project" : "task"),
+      hideChildren: hasChildren ? isCollapsed : undefined,
+      displayOrder: counter.value++,
+      children: undefined,
+    };
+
+    if (childrenKey !== "children") {
+      delete (flatTask as any)[childrenKey];
+    }
+
+    result.push(flatTask);
+
+    if (hasChildren && !isCollapsed) {
+      result.push(
+        ...flattenTreeTasks(children!, childrenKey, collapsedTaskIds, task.id, counter)
+      );
+    }
+  }
+
+  return result;
+}
+
 export const sortTasks = (taskA: Task, taskB: Task) => {
   const orderA = taskA.displayOrder || Number.MAX_VALUE;
   const orderB = taskB.displayOrder || Number.MAX_VALUE;

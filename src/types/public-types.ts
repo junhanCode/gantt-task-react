@@ -12,7 +12,7 @@ export enum ViewMode {
 }
 export type TaskType = "task" | "milestone" | "project";
 export interface Task {
-  id: string;
+  id: string | number;
   type: TaskType;
   name: string;
   start: Date;
@@ -33,10 +33,18 @@ export interface Task {
     progressSelectedColor?: string;
   };
   isDisabled?: boolean;
-  project?: string;
-  dependencies?: string[];
+  /** 扁平数据模式下引用父节点 id；树形数据模式下由组件自动推导，无需手动设置 */
+  project?: string | number;
+  /** 扁平数据模式下使用；树形数据模式下父子关系由 children 字段表达，无需设置 */
+  dependencies?: (string | number)[];
   hideChildren?: boolean;
   displayOrder?: number;
+  /**
+   * 子任务列表，用于树形数据格式（参照 antd Table）。
+   * 当数据中存在该字段时，组件会自动将树形数据展平并以层级形式渲染。
+   * 可通过 GanttProps.childrenColumnName 指定其他字段名。
+   */
+  children?: Task[];
 }
 
 export interface EventOption {
@@ -158,22 +166,28 @@ export interface StylingOption {
     fontSize: string;
     locale: string;
     tasks: Task[];
-    selectedTaskId: string;
+    selectedTaskId: string | number;
     /**
      * Sets selected task by id
      */
-    setSelectedTask: (taskId: string) => void;
+    setSelectedTask: (taskId: string | number) => void;
     onExpanderClick: (task: Task) => void;
   }>;
 }
 
 export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   tasks: Task[];
+  /**
+   * 指定树形数据中子节点所在的字段名，默认为 "children"。
+   * 当 tasks 中任意节点含有该字段时，组件自动切换为树形数据模式，
+   * 展开/折叠状态由组件内部管理，无需外部维护 hideChildren。
+   */
+  childrenColumnName?: string;
   onAddTask?: (task: Task) => void; // 修改这里：从 (parentTaskId: string) => void 改为 (task: Task) => void
   AddTaskModal?: React.FC<{
     isOpen: boolean;
     onClose: () => void;
-    parentTaskId: string;
+    parentTaskId: string | number;
     onConfirm: (taskData: Partial<Task>) => void;
   }>;
   onEditTask?: (task: Task) => void;

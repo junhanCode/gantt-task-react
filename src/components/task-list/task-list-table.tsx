@@ -19,8 +19,8 @@ export const TaskListTableDefault: React.FC<{
   fontSize: string;
   locale: string;
   tasks: Task[];
-  selectedTaskId: string;
-  setSelectedTask: (taskId: string) => void;
+  selectedTaskId: string | number;
+  setSelectedTask: (taskId: string | number) => void;
   onExpanderClick: (task: Task) => void;
   nameColumnWidth?: string;
   timeColumnWidths?: {
@@ -42,7 +42,7 @@ export const TaskListTableDefault: React.FC<{
   AddTaskModal?: React.FC<{
     isOpen: boolean;
     onClose: () => void;
-    parentTaskId: string;
+    parentTaskId: string | number;
     onConfirm: (taskData: Partial<Task>) => void;
   }>;
   onEditTask?: (task: Task) => void;
@@ -78,7 +78,7 @@ export const TaskListTableDefault: React.FC<{
   const [menuTask, setMenuTask] = useState<Task | null>(null);
 
   // 编辑时间跨度状态
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<string | number | null>(null);
   const [editingDuration, setEditingDuration] = useState<string>("");
 
   // 计算时间跨度（天数）
