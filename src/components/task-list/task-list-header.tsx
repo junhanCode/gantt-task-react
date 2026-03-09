@@ -1,6 +1,9 @@
 import React from "react";
 import styles from "./task-list-header.module.css";
 
+const colStyle = (w: string): React.CSSProperties =>
+  w === "0px" ? { display: "none", padding: 0, minWidth: 0, maxWidth: 0, border: "none" } : {};
+
 
 export const 
 TaskListHeaderDefault: React.FC<{
@@ -95,6 +98,9 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.plannedStart,
             maxWidth: width.plannedStart,
             textAlign: 'center',
+            ...(timeColumnWidths?.plannedStart != null
+              ? colStyle(timeColumnWidths.plannedStart)
+              : {}),
           }}
         >
           &nbsp;{label.plannedStart}
@@ -112,6 +118,9 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.plannedEnd,
             maxWidth: width.plannedEnd,
             textAlign: 'center',
+            ...(timeColumnWidths?.plannedEnd != null
+              ? colStyle(timeColumnWidths.plannedEnd)
+              : {}),
           }}
         >
           &nbsp;{label.plannedEnd}
@@ -129,6 +138,9 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.plannedDuration,
             maxWidth: width.plannedDuration,
             textAlign: 'center',
+            ...(timeColumnWidths?.plannedDuration != null
+              ? colStyle(timeColumnWidths.plannedDuration)
+              : {}),
           }}
         >
           &nbsp;{label.plannedDuration}
@@ -146,6 +158,9 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.actualStart,
             maxWidth: width.actualStart,
             textAlign: 'center',
+            ...(timeColumnWidths?.actualStart != null
+              ? colStyle(timeColumnWidths.actualStart)
+              : {}),
           }}
         >
           &nbsp;{label.actualStart}
@@ -163,6 +178,9 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.actualEnd,
             maxWidth: width.actualEnd,
             textAlign: 'center',
+            ...(timeColumnWidths?.actualEnd != null
+              ? colStyle(timeColumnWidths.actualEnd)
+              : {}),
           }}
         >
           &nbsp;{label.actualEnd}
@@ -180,6 +198,7 @@ TaskListHeaderDefault: React.FC<{
             minWidth: width.operations,
             maxWidth: width.operations,
             textAlign: 'center',
+            ...colStyle(width.operations),
           }}
         >
           &nbsp;{operationsColumnLabel ?? "操作"}

@@ -1,6 +1,11 @@
 import React from "react";
-import { Task, ViewMode, Gantt } from "gantt-task-react";
-import { ViewSwitcher } from "./components/view-switcher";
+import { Task, Gantt } from "gantt-task-react";
+import {
+  GanttConfigurator,
+  GanttConfig,
+  DEFAULT_GANTT_CONFIG,
+  getTimeColumnWidths,
+} from "./components/gantt-configurator";
 import { getStartEndDateForProject, initTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
 import { Modal, Input, Select, Button, DatePicker, InputNumber, Form } from "antd";
@@ -329,19 +334,8 @@ const EditTaskModal: React.FC<{
 // Init
 const App = () => {
   const ganttRef = React.useRef<any>(null);
-  const [view, setView] = React.useState<ViewMode>(ViewMode.DayShift);
   const [tasks, setTasks] = React.useState<Task[]>(initTasks());
-  const [isChecked, setIsChecked] = React.useState(true);
-  
-
-  let columnWidth = 65;
-  if (view === ViewMode.Year) {
-    columnWidth = 350;
-  } else if (view === ViewMode.Month) {
-    columnWidth = 300;
-  } else if (view === ViewMode.Week) {
-    columnWidth = 250;
-  }
+  const [config, setConfig] = React.useState<GanttConfig>(DEFAULT_GANTT_CONFIG);
 
   const handleTaskChange = (task: Task) => {
     console.log("On date change Id:" + task.id);
@@ -464,17 +458,12 @@ const App = () => {
         <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() - 24*3600*1000), { align: "start" })}>滚到昨天(开始)</Button>
         <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() + 24*3600*1000), { align: "end" })}>滚到明天(末尾)</Button>
       </div>
-      <ViewSwitcher
-        onViewModeChange={viewMode => setView(viewMode)}
-        onViewListChange={setIsChecked}
-        isChecked={isChecked}
-      />
+      <GanttConfigurator config={config} onChange={setConfig} />
       <Gantt
-        // 需要依赖库版本包含 forwardRef 才可生效
         // @ts-ignore
         ref={ganttRef}
         tasks={tasks}
-        viewMode={view}
+        viewMode={config.viewMode}
         onDateChange={handleTaskChange}
         onDelete={handleTaskDelete}
         onProgressChange={handleProgressChange}
@@ -482,44 +471,36 @@ const App = () => {
         onClick={handleClick}
         onSelect={handleSelect}
         onExpanderClick={handleExpanderClick}
-        listCellWidth={isChecked ? "140px" : ""}
-        nameColumnWidth="190px"  
+        listCellWidth={config.showTaskList ? "140px" : ""}
+        nameColumnWidth="190px"
         timeColumnLabels={{
-          plannedStart: "Planned Start",
-          plannedEnd: "Planned End",
-          plannedDuration: "Duration (Days)",
-          actualStart: "Actual Start",
-          actualEnd: "Actual End",
+          plannedStart: "计划开始",
+          plannedEnd: "计划结束",
+          plannedDuration: "工期(天)",
+          actualStart: "实际开始",
+          actualEnd: "实际结束",
         }}
-        timeColumnWidths={{
-          plannedStart: "170px",
-          plannedEnd: "170px",
-          plannedDuration: "120px",
-          actualStart: "170px",
-          actualEnd: "170px",
-        }}
-        ganttHeight={298}
-        columnWidth={columnWidth}
+        timeColumnWidths={getTimeColumnWidths(config)}
+        ganttHeight={config.ganttHeight}
+        columnWidth={config.columnWidth}
         onAddTask={handleAddTask}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}
         operationsColumnWidth="0px"
         operationsColumnLabel=""
-        // 自定义展开/折叠图标
         expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
         collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
-        // 双条形图样式配置
-        barActualColor="#4CAF50"           // 实际条颜色 - 绿色
-        barActualSelectedColor="#45a049"   // 选中状态实际条颜色
-        barDelayColor="#FF9800"            // 延误部分颜色 - 橙色
-        barBackgroundColor="#e0e0e0"       // 计划条背景颜色 - 灰色
-        barBackgroundSelectedColor="#d0d0d0" // 选中状态计划条背景颜色
-        barProgressColor="#2196F3"         // 进度条颜色 - 蓝色
-        barProgressSelectedColor="#1976D2" // 选中状态进度条颜色
-        projectBackgroundColor="#e0e0e0"   // 项目计划条背景颜色
-        projectBackgroundSelectedColor="#d0d0d0" // 项目选中状态计划条背景颜色
-        projectProgressColor="#2196F3"     // 项目进度条颜色
-        projectProgressSelectedColor="#1976D2" // 项目选中状态进度条颜色
+        barActualColor={config.barActualColor}
+        barActualSelectedColor={config.barActualSelectedColor}
+        barDelayColor={config.barDelayColor}
+        barBackgroundColor={config.barBackgroundColor}
+        barBackgroundSelectedColor={config.barBackgroundSelectedColor}
+        barProgressColor={config.barProgressColor}
+        barProgressSelectedColor={config.barProgressSelectedColor}
+        projectBackgroundColor={config.projectBackgroundColor}
+        projectBackgroundSelectedColor={config.projectBackgroundSelectedColor}
+        projectProgressColor={config.projectProgressColor}
+        projectProgressSelectedColor={config.projectProgressSelectedColor}
       />
       
       {/* 新增任务弹框 */}

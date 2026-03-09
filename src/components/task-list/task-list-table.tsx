@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import styles from "./task-list-table.module.css";
 import { Task } from "../../types/public-types";
 
+const colStyle = (w: string): React.CSSProperties =>
+  w === "0px" ? { display: "none", padding: 0, minWidth: 0, maxWidth: 0, border: "none" } : {};
+
 // 统一显示为 YYYY/M/D，例如 2025/8/25
 const formatYmd = (date: Date) => {
   const y = date.getFullYear();
@@ -235,6 +238,9 @@ export const TaskListTableDefault: React.FC<{
                   style={{
                     minWidth: timeColumnWidths?.plannedStart ?? rowWidth,
                     maxWidth: timeColumnWidths?.plannedStart ?? rowWidth,
+                    ...(timeColumnWidths?.plannedStart != null
+                      ? colStyle(timeColumnWidths.plannedStart)
+                      : {}),
                   }}
                 >
                   &nbsp;{formatYmd(t.plannedStart ?? t.start)}
@@ -244,6 +250,9 @@ export const TaskListTableDefault: React.FC<{
                   style={{
                     minWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
                     maxWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
+                    ...(timeColumnWidths?.plannedEnd != null
+                      ? colStyle(timeColumnWidths.plannedEnd)
+                      : {}),
                   }}
                 >
                   &nbsp;{formatYmd(t.plannedEnd ?? t.end)}
@@ -255,6 +264,9 @@ export const TaskListTableDefault: React.FC<{
                     maxWidth: timeColumnWidths?.plannedDuration ?? "100px",
                     cursor: "pointer",
                     textAlign: "center",
+                    ...(timeColumnWidths?.plannedDuration != null
+                      ? colStyle(timeColumnWidths.plannedDuration)
+                      : {}),
                   }}
                   onDoubleClick={() => startEditDuration(t)}
                 >
@@ -288,6 +300,9 @@ export const TaskListTableDefault: React.FC<{
                   style={{
                     minWidth: timeColumnWidths?.actualStart ?? rowWidth,
                     maxWidth: timeColumnWidths?.actualStart ?? rowWidth,
+                    ...(timeColumnWidths?.actualStart != null
+                      ? colStyle(timeColumnWidths.actualStart)
+                      : {}),
                   }}
                 >
                   &nbsp;{formatYmd(t.actualStart ?? t.start)}
@@ -297,6 +312,9 @@ export const TaskListTableDefault: React.FC<{
                   style={{
                     minWidth: timeColumnWidths?.actualEnd ?? rowWidth,
                     maxWidth: timeColumnWidths?.actualEnd ?? rowWidth,
+                    ...(timeColumnWidths?.actualEnd != null
+                      ? colStyle(timeColumnWidths.actualEnd)
+                      : {}),
                   }}
                 >
                   &nbsp;{formatYmd(t.actualEnd ?? t.end)}
