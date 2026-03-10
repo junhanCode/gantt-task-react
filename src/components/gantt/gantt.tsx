@@ -139,6 +139,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
 
   const [scrollY, setScrollY] = useState(0);
   const [scrollX, setScrollX] = useState(-1);
+  const autoScrollRAFRef = useRef<number | null>(null);
+  const dragMouseXRef = useRef<number | null>(null);
 
   // 暴露方法：滚动到指定日期
   useImperativeHandle(ref, () => ({
@@ -308,6 +310,62 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     if (target > svgWidth) target = svgWidth;
     setScrollX(target);
   }, [scrollX, rtl, dateSetup.dates, columnWidth, svgContainerWidth, svgWidth]);
+
+  const isDraggingActive = ["move", "end", "start", "actualStart", "actualEnd"].includes(
+    ganttEvent.action
+  );
+
+  useEffect(() => {
+    if (!isDraggingActive) {
+      if (autoScrollRAFRef.current !== null) {
+        cancelAnimationFrame(autoScrollRAFRef.current);
+        autoScrollRAFRef.current = null;
+      }
+      dragMouseXRef.current = null;
+      return;
+    }
+
+    const EDGE_ZONE = 80;
+    const MAX_SPEED = 15;
+
+    const onMouseMove = (event: MouseEvent) => {
+      dragMouseXRef.current = event.clientX;
+    };
+
+    const tick = () => {
+      const wrapperEl = wrapperRef.current;
+      if (wrapperEl && dragMouseXRef.current !== null) {
+        const rect = wrapperEl.getBoundingClientRect();
+        const leftEdge = rect.left + taskListWidth;
+        const rightEdge = rect.right;
+        const mouseX = dragMouseXRef.current;
+
+        let delta = 0;
+        if (mouseX > rightEdge - EDGE_ZONE) {
+          delta = ((mouseX - (rightEdge - EDGE_ZONE)) / EDGE_ZONE) * MAX_SPEED;
+        } else if (mouseX < leftEdge + EDGE_ZONE) {
+          delta = -((leftEdge + EDGE_ZONE - mouseX) / EDGE_ZONE) * MAX_SPEED;
+        }
+
+        delta = Math.sign(delta) * Math.min(Math.abs(delta), MAX_SPEED);
+        if (Math.abs(delta) > 0.5) {
+          setScrollX(prev => Math.max(0, Math.min(svgWidth, prev + delta)));
+        }
+      }
+      autoScrollRAFRef.current = requestAnimationFrame(tick);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    autoScrollRAFRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      if (autoScrollRAFRef.current !== null) {
+        cancelAnimationFrame(autoScrollRAFRef.current);
+        autoScrollRAFRef.current = null;
+      }
+    };
+  }, [isDraggingActive, taskListWidth, svgWidth]);
 
   useEffect(() => {
     const { changedTask, action } = ganttEvent;
