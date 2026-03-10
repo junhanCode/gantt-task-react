@@ -27,8 +27,6 @@ TaskListHeaderDefault: React.FC<{
     actualStart?: string;
     actualEnd?: string;
   };
-  operationsColumnWidth?: string;
-  operationsColumnLabel?: string;
   isTaskListCollapsed?: boolean;
   onToggleTaskList?: () => void;
   expandIcon?: React.ReactNode;
@@ -42,8 +40,6 @@ TaskListHeaderDefault: React.FC<{
   nameColumnWidth, 
   timeColumnLabels, 
   timeColumnWidths, 
-  operationsColumnWidth, 
-  operationsColumnLabel,
 }) => {
   const label = {
     plannedStart: timeColumnLabels?.plannedStart ?? "Planned Start",
@@ -59,7 +55,6 @@ TaskListHeaderDefault: React.FC<{
     plannedDuration: timeColumnWidths?.plannedDuration ?? "100px",
     actualStart: timeColumnWidths?.actualStart ?? rowWidth,
     actualEnd: timeColumnWidths?.actualEnd ?? rowWidth,
-    operations: operationsColumnWidth ?? "120px",
   };
   return (
     <div
@@ -184,24 +179,6 @@ TaskListHeaderDefault: React.FC<{
           }}
         >
           &nbsp;{label.actualEnd}
-        </div>
-        <div
-          className={styles.ganttTable_HeaderSeparator}
-          style={{
-            height: headerHeight * 0.6,
-            marginTop: headerHeight * 0.2,
-          }}
-        />
-        <div
-          className={styles.ganttTable_HeaderItem}
-          style={{
-            minWidth: width.operations,
-            maxWidth: width.operations,
-            textAlign: 'center',
-            ...colStyle(width.operations),
-          }}
-        >
-          &nbsp;{operationsColumnLabel ?? "操作"}
         </div>
       </div>
     </div>

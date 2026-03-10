@@ -2,9 +2,6 @@ import React, { useEffect, useState } from "react";
 import styles from "./task-list-table.module.css";
 import { Task } from "../../types/public-types";
 
-const colStyle = (w: string): React.CSSProperties =>
-  w === "0px" ? { display: "none", padding: 0, minWidth: 0, maxWidth: 0, border: "none" } : {};
-
 // 统一显示为 YYYY/M/D，例如 2025/8/25
 const formatYmd = (date: Date) => {
   const y = date.getFullYear();
@@ -12,6 +9,10 @@ const formatYmd = (date: Date) => {
   const d = date.getDate();
   return `${y}/${m}/${d}`;
 };
+
+/** 列宽为 "0px" 时隐藏 td */
+const hiddenCellStyle = (w: string | undefined): React.CSSProperties =>
+  w === "0px" ? { display: "none", padding: 0, border: "none" } : {};
 
 // 右键菜单替代了操作图标，去除未使用图标组件
 
@@ -40,7 +41,6 @@ export const TaskListTableDefault: React.FC<{
     actualStart?: string;
     actualEnd?: string;
   };
-  operationsColumnWidth?: string;
   onAddTask?: (task: Task) => void;
   AddTaskModal?: React.FC<{
     isOpen: boolean;
@@ -92,29 +92,11 @@ export const TaskListTableDefault: React.FC<{
   };
 
   const handleAddClick = (task: Task) => {
-    console.log("=== handleAddClick called ===");
-    console.log("Add task clicked for:", task);
-    console.log("onAddTask available:", !!onAddTask);
-    if (onAddTask) {
-      console.log("Calling onAddTask...");
-      onAddTask(task);
-    } else {
-      console.log("onAddTask is not available!");
-    }
-  };
-
-  const handleEditClick = (task: Task) => {
-    console.log("Edit task clicked for:", task);
-    if (onEditTask) {
-      onEditTask(task);
-    }
+    if (onAddTask) onAddTask(task);
   };
 
   const handleDeleteClick = (task: Task) => {
-    console.log("Delete task clicked for:", task);
-    if (onDeleteTask) {
-      onDeleteTask(task);
-    }
+    if (onDeleteTask) onDeleteTask(task);
   };
 
   // 打开右键菜单
@@ -125,7 +107,6 @@ export const TaskListTableDefault: React.FC<{
     setMenuVisible(true);
   };
 
-  // 关闭菜单
   const closeMenu = () => setMenuVisible(false);
 
   // 开始编辑时间跨度
@@ -141,19 +122,12 @@ export const TaskListTableDefault: React.FC<{
     if (!isNaN(newDuration) && newDuration > 0 && onDateChange) {
       const plannedStart = task.plannedStart ?? task.start;
       const newPlannedEnd = new Date(plannedStart.getTime() + (newDuration * 24 * 60 * 60 * 1000));
-      
-      const updatedTask = {
-        ...task,
-        plannedEnd: newPlannedEnd,
-      };
-      
-      onDateChange(updatedTask, []);
+      onDateChange({ ...task, plannedEnd: newPlannedEnd }, []);
     }
     setEditingTaskId(null);
     setEditingDuration("");
   };
 
-  // 取消编辑
   const cancelEditDuration = () => {
     setEditingTaskId(null);
     setEditingDuration("");
@@ -170,53 +144,63 @@ export const TaskListTableDefault: React.FC<{
     };
   }, []);
 
-
-
-
+  const colW = {
+    name: nameColumnWidth ?? rowWidth,
+    plannedStart: timeColumnWidths?.plannedStart ?? rowWidth,
+    plannedEnd: timeColumnWidths?.plannedEnd ?? rowWidth,
+    plannedDuration: timeColumnWidths?.plannedDuration ?? "100px",
+    actualStart: timeColumnWidths?.actualStart ?? rowWidth,
+    actualEnd: timeColumnWidths?.actualEnd ?? rowWidth,
+  };
 
   return (
     <div>
-      <div
-        className={styles.taskListWrapper}
-        style={{
-          fontFamily: fontFamily,
-          fontSize: fontSize,
-        }}
+      <table
+        className={styles.taskListTable}
+        style={{ fontFamily, fontSize }}
       >
-        {tasks.map((t) => {
-          let expanderContent: React.ReactNode = null;
-          if (t.hideChildren === false) {
-            expanderContent = collapseIcon ?? (
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="2" y="2" width="12" height="2" rx="1" />
-                <rect x="2" y="7" width="12" height="2" rx="1" />
-                <rect x="2" y="12" width="12" height="2" rx="1" />
-              </svg>
-            );
-          } else if (t.hideChildren === true) {
-            expanderContent = expandIcon ?? (
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
-                <rect x="2" y="2" width="4" height="4" rx="1" />
-                <rect x="10" y="2" width="4" height="4" rx="1" />
-                <rect x="2" y="10" width="4" height="4" rx="1" />
-                <rect x="10" y="10" width="4" height="4" rx="1" />
-              </svg>
-            );
-          }
-          // if task has no children info, show nothing
+        <colgroup>
+          <col style={{ width: colW.name }} />
+          <col style={{ width: colW.plannedStart === "0px" ? 0 : colW.plannedStart }} />
+          <col style={{ width: colW.plannedEnd === "0px" ? 0 : colW.plannedEnd }} />
+          <col style={{ width: colW.plannedDuration === "0px" ? 0 : colW.plannedDuration }} />
+          <col style={{ width: colW.actualStart === "0px" ? 0 : colW.actualStart }} />
+          <col style={{ width: colW.actualEnd === "0px" ? 0 : colW.actualEnd }} />
+        </colgroup>
+        <tbody>
+          {tasks.map((t) => {
+            let expanderContent: React.ReactNode = null;
+            if (t.hideChildren === false) {
+              expanderContent = collapseIcon ?? (
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                  <rect x="2" y="2" width="12" height="2" rx="1" />
+                  <rect x="2" y="7" width="12" height="2" rx="1" />
+                  <rect x="2" y="12" width="12" height="2" rx="1" />
+                </svg>
+              );
+            } else if (t.hideChildren === true) {
+              expanderContent = expandIcon ?? (
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                  <rect x="2" y="2" width="4" height="4" rx="1" />
+                  <rect x="10" y="2" width="4" height="4" rx="1" />
+                  <rect x="2" y="10" width="4" height="4" rx="1" />
+                  <rect x="10" y="10" width="4" height="4" rx="1" />
+                </svg>
+              );
+            }
 
-          return (
-            <div key={`${t.id}row`} onContextMenu={(e) => openContextMenu(e, t)}>
-              <div
-                className={styles.taskListTableRow}
-                style={{ height: rowHeight }}
+            const isChildTask = !!t.project;
+
+            return (
+              <tr
+                key={`${t.id}row`}
+                className={`${styles.taskListTableRow}${isChildTask ? ` ${styles.taskListTableRowChild}` : ""}`}
+                style={{ height: rowHeight, cursor: onEditTask ? "pointer" : undefined }}
+                onContextMenu={(e) => openContextMenu(e, t)}
+                onDoubleClick={() => onEditTask && onEditTask(t)}
               >
-                <div
+                <td
                   className={styles.taskListCell}
-                  style={{
-                    minWidth: nameColumnWidth ?? rowWidth,
-                    maxWidth: nameColumnWidth ?? rowWidth,
-                  }}
                   title={t.name}
                 >
                   <div className={styles.taskListNameWrapper}>
@@ -230,45 +214,29 @@ export const TaskListTableDefault: React.FC<{
                     >
                       {expanderContent}
                     </div>
-                    <div>{t.name}</div>
+                    <div className={styles.taskListNameText}>{t.name}</div>
                   </div>
-                </div>
-                <div
+                </td>
+                <td
                   className={styles.taskListCell}
-                  style={{
-                    minWidth: timeColumnWidths?.plannedStart ?? rowWidth,
-                    maxWidth: timeColumnWidths?.plannedStart ?? rowWidth,
-                    ...(timeColumnWidths?.plannedStart != null
-                      ? colStyle(timeColumnWidths.plannedStart)
-                      : {}),
-                  }}
+                  style={hiddenCellStyle(timeColumnWidths?.plannedStart)}
                 >
                   &nbsp;{formatYmd(t.plannedStart ?? t.start)}
-                </div>
-                <div
+                </td>
+                <td
                   className={styles.taskListCell}
-                  style={{
-                    minWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
-                    maxWidth: timeColumnWidths?.plannedEnd ?? rowWidth,
-                    ...(timeColumnWidths?.plannedEnd != null
-                      ? colStyle(timeColumnWidths.plannedEnd)
-                      : {}),
-                  }}
+                  style={hiddenCellStyle(timeColumnWidths?.plannedEnd)}
                 >
                   &nbsp;{formatYmd(t.plannedEnd ?? t.end)}
-                </div>
-                <div
+                </td>
+                <td
                   className={styles.taskListCell}
                   style={{
-                    minWidth: timeColumnWidths?.plannedDuration ?? "100px",
-                    maxWidth: timeColumnWidths?.plannedDuration ?? "100px",
                     cursor: "pointer",
                     textAlign: "center",
-                    ...(timeColumnWidths?.plannedDuration != null
-                      ? colStyle(timeColumnWidths.plannedDuration)
-                      : {}),
+                    ...hiddenCellStyle(timeColumnWidths?.plannedDuration),
                   }}
-                  onDoubleClick={() => startEditDuration(t)}
+                  onDoubleClick={(e) => { e.stopPropagation(); startEditDuration(t); }}
                 >
                   {editingTaskId === t.id ? (
                     <input
@@ -278,88 +246,54 @@ export const TaskListTableDefault: React.FC<{
                       onChange={(e) => setEditingDuration(e.target.value)}
                       onBlur={() => saveDuration(t)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          saveDuration(t);
-                        } else if (e.key === "Escape") {
-                          cancelEditDuration();
-                        }
+                        if (e.key === "Enter") saveDuration(t);
+                        else if (e.key === "Escape") cancelEditDuration();
                       }}
                       autoFocus
-                      style={{
-                        width: "80%",
-                        padding: "2px 4px",
-                        textAlign: "center",
-                      }}
+                      style={{ width: "80%", padding: "2px 4px", textAlign: "center" }}
                     />
                   ) : (
                     <span>{calculateDuration(t.plannedStart ?? t.start, t.plannedEnd ?? t.end)}</span>
                   )}
-                </div>
-                <div
+                </td>
+                <td
                   className={styles.taskListCell}
-                  style={{
-                    minWidth: timeColumnWidths?.actualStart ?? rowWidth,
-                    maxWidth: timeColumnWidths?.actualStart ?? rowWidth,
-                    ...(timeColumnWidths?.actualStart != null
-                      ? colStyle(timeColumnWidths.actualStart)
-                      : {}),
-                  }}
+                  style={hiddenCellStyle(timeColumnWidths?.actualStart)}
                 >
                   &nbsp;{formatYmd(t.actualStart ?? t.start)}
-                </div>
-                <div
+                </td>
+                <td
                   className={styles.taskListCell}
-                  style={{
-                    minWidth: timeColumnWidths?.actualEnd ?? rowWidth,
-                    maxWidth: timeColumnWidths?.actualEnd ?? rowWidth,
-                    ...(timeColumnWidths?.actualEnd != null
-                      ? colStyle(timeColumnWidths.actualEnd)
-                      : {}),
-                  }}
+                  style={hiddenCellStyle(timeColumnWidths?.actualEnd)}
                 >
                   &nbsp;{formatYmd(t.actualEnd ?? t.end)}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        {/* 右键菜单 */}
-        {menuVisible && menuTask && (
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      {/* 右键菜单 */}
+      {menuVisible && menuTask && (
+        <div
+          className={styles.contextMenu}
+          style={{ left: menuPos.x, top: menuPos.y }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
           <div
-            className={styles.contextMenu}
-            style={{ left: menuPos.x, top: menuPos.y }}
-            onContextMenu={(e) => e.preventDefault()}
+            className={styles.contextMenuItem}
+            onClick={() => { closeMenu(); handleAddClick(menuTask); }}
           >
-            <div
-              className={styles.contextMenuItem}
-              onClick={() => {
-                closeMenu();
-                handleAddClick(menuTask);
-              }}
-            >
-              新增子任务
-            </div>
-            <div
-              className={styles.contextMenuItem}
-              onClick={() => {
-                closeMenu();
-                handleEditClick(menuTask);
-              }}
-            >
-              编辑
-            </div>
-            <div
-              className={styles.contextMenuItem}
-              onClick={() => {
-                closeMenu();
-                handleDeleteClick(menuTask);
-              }}
-            >
-              删除
-            </div>
+            新增子任务
           </div>
-        )}
-      </div>
+          <div
+            className={styles.contextMenuItem}
+            onClick={() => { closeMenu(); handleDeleteClick(menuTask); }}
+          >
+            删除
+          </div>
+        </div>
+      )}
     </div>
   );
 };

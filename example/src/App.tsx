@@ -8,7 +8,7 @@ import {
 } from "./components/gantt-configurator";
 import { getStartEndDateForProject, initTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
-import { Modal, Input, Select, Button, DatePicker, InputNumber, Form } from "antd";
+import { Modal, Input, Select, Button, DatePicker, InputNumber, Form, message } from "antd";
 import { PlusSquareOutlined, MinusSquareOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -178,46 +178,45 @@ const EditTaskModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   task: Task;
-  onConfirm: (taskData: Partial<Task>) => void;
+  onConfirm: (taskData: Partial<Task>) => boolean | void;
 }> = ({ isOpen, onClose, task, onConfirm }) => {
-  const [form] = Form.useForm();
-  const [plannedDuration, setPlannedDuration] = React.useState<number>(1);
-
   // 计算时间跨度（天数）
-  const calculateDuration = (start: Date, end: Date): number => {
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+  const calcDuration = (start: Date, end: Date) =>
+    Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+  const initDuration = calcDuration(
+    task.plannedStart ?? task.start,
+    task.plannedEnd ?? task.end
+  );
+
+  const [form] = Form.useForm();
+  const [plannedDuration, setPlannedDuration] = React.useState<number>(initDuration);
+
+  // 文本/数字字段用 initialValues 同步初始化
+  const initialValues = {
+    name: task.name,
+    type: task.type,
+    progress: task.progress,
+    plannedDuration: initDuration,
   };
 
+  // 日期选择器字段在挂载后用 setFieldsValue 回填，否则 RangePicker 不响应 initialValues
   React.useEffect(() => {
-    if (isOpen && task) {
-      const plannedStart = task.plannedStart || task.start;
-      const plannedEnd = task.plannedEnd || task.end;
-      const duration = calculateDuration(plannedStart, plannedEnd);
-      
-      form.setFieldsValue({
-        name: task.name,
-        type: task.type,
-        plannedDateRange: task.plannedStart && task.plannedEnd ? [
-          dayjs(task.plannedStart),
-          dayjs(task.plannedEnd)
-        ] : undefined,
-        actualDateRange: task.actualStart && task.actualEnd ? [
-          dayjs(task.actualStart),
-          dayjs(task.actualEnd)
-        ] : undefined,
-        progress: task.progress,
-        plannedDuration: duration,
-      });
-      setPlannedDuration(duration);
-    }
-  }, [isOpen, task, form]);
+    form.setFieldsValue({
+      plannedDateRange: task.plannedStart && task.plannedEnd
+        ? [dayjs(task.plannedStart), dayjs(task.plannedEnd)]
+        : undefined,
+      actualDateRange: task.actualStart && task.actualEnd
+        ? [dayjs(task.actualStart), dayjs(task.actualEnd)]
+        : undefined,
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 当计划时间范围改变时，更新时间跨度
   const handlePlannedDateRangeChange = (dates: any) => {
     if (dates && dates[0] && dates[1]) {
-      const duration = calculateDuration(dates[0].toDate(), dates[1].toDate());
+      const duration = calcDuration(dates[0].toDate(), dates[1].toDate());
       setPlannedDuration(duration);
       form.setFieldsValue({ plannedDuration: duration });
     }
@@ -240,18 +239,25 @@ const EditTaskModal: React.FC<{
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
+      const plannedStart = values.plannedDateRange?.[0]?.toDate();
+      const plannedEnd   = values.plannedDateRange?.[1]?.toDate();
       const taskData: Partial<Task> = {
         id: task.id,
         name: values.name,
         type: values.type,
-        plannedStart: values.plannedDateRange?.[0]?.toDate(),
-        plannedEnd: values.plannedDateRange?.[1]?.toDate(),
+        // 同步 start/end，使甘特条联动
+        start: plannedStart ?? task.start,
+        end:   plannedEnd   ?? task.end,
+        plannedStart,
+        plannedEnd,
         actualStart: values.actualDateRange?.[0]?.toDate(),
-        actualEnd: values.actualDateRange?.[1]?.toDate(),
+        actualEnd:   values.actualDateRange?.[1]?.toDate(),
         progress: values.progress || 0,
       };
-      onConfirm(taskData);
-      onClose();
+      // onConfirm 返回 false 时保持弹框开启（校验失败）
+      if (onConfirm(taskData) !== false) {
+        onClose();
+      }
     });
   };
 
@@ -270,7 +276,7 @@ const EditTaskModal: React.FC<{
       ]}
       width={600}
     >
-      <Form form={form} layout="vertical">
+      <Form form={form} layout="vertical" initialValues={initialValues}>
         <Form.Item
           name="name"
           label="任务名称"
@@ -286,6 +292,7 @@ const EditTaskModal: React.FC<{
         >
           <Select>
             <Option value="task">任务</Option>
+            <Option value="project">项目</Option>
             <Option value="milestone">里程碑</Option>
           </Select>
         </Form.Item>
@@ -432,10 +439,48 @@ const App = () => {
     setSelectedParentTask(null);
   };
 
-  const handleEditModalConfirm = (taskData: Partial<Task>) => {
-    setTasks(tasks.map(t => 
+  const handleEditModalConfirm = (taskData: Partial<Task>): boolean | void => {
+    // ── 父子时间约束校验 ────────────────────────────────────────────────
+    const editedTask = tasks.find(t => t.id === taskData.id);
+    const parentId = editedTask?.project;
+    if (parentId) {
+      const parent = tasks.find(t => t.id === parentId);
+      if (parent) {
+        const parentStart = parent.plannedStart ?? parent.start;
+        const parentEnd   = parent.plannedEnd   ?? parent.end;
+        const childStart  = taskData.plannedStart ?? taskData.start;
+        const childEnd    = taskData.plannedEnd   ?? taskData.end;
+        const fmt = (d: Date) =>
+          `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+        if (childStart && childStart < parentStart) {
+          message.error(`子任务开始时间不能早于父任务开始时间（${fmt(parentStart)}）`);
+          return false;
+        }
+        if (childEnd && childEnd > parentEnd) {
+          message.error(`子任务结束时间不能晚于父任务结束时间（${fmt(parentEnd)}）`);
+          return false;
+        }
+      }
+    }
+
+    // ── 更新任务列表 ────────────────────────────────────────────────────
+    let newTasks = tasks.map(t =>
       t.id === taskData.id ? { ...t, ...taskData } : t
-    ));
+    );
+
+    // 若编辑的是子任务，同步扩展/收缩父任务时间范围（与拖拽逻辑一致）
+    if (parentId) {
+      const [start, end] = getStartEndDateForProject(newTasks, parentId);
+      const parent = newTasks.find(t => t.id === parentId)!;
+      if (parent.start.getTime() !== start.getTime() ||
+          parent.end.getTime()   !== end.getTime()) {
+        newTasks = newTasks.map(t =>
+          t.id === parentId ? { ...t, start, end } : t
+        );
+      }
+    }
+
+    setTasks(newTasks);
     setShowEditModal(false);
     setSelectedEditTask(null);
   };
@@ -486,8 +531,6 @@ const App = () => {
         onAddTask={handleAddTask}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}
-        operationsColumnWidth="0px"
-        operationsColumnLabel=""
         expandIcon={<PlusSquareOutlined style={{ fontSize: '14px' }} />}
         collapseIcon={<MinusSquareOutlined style={{ fontSize: '14px' }} />}
         barActualColor={config.barActualColor}

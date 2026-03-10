@@ -48,8 +48,6 @@ export type TaskListProps = {
     onConfirm: (taskData: Partial<Task>) => void;
   }>;
   onDeleteTask?: (task: Task) => void;
-  operationsColumnWidth?: string;
-  operationsColumnLabel?: string;
   isTaskListCollapsed?: boolean;
   onToggleTaskList?: () => void;
   expandIcon?: React.ReactNode;
@@ -77,8 +75,6 @@ export type TaskListProps = {
       actualStart?: string;
       actualEnd?: string;
     };
-    operationsColumnWidth?: string;
-    operationsColumnLabel?: string;
     isTaskListCollapsed?: boolean;
     onToggleTaskList?: () => void;
     expandIcon?: React.ReactNode;
@@ -124,7 +120,6 @@ export type TaskListProps = {
       onConfirm: (taskData: Partial<Task>) => void;
     }>;
     onDeleteTask?: (task: Task) => void;
-    operationsColumnWidth?: string;
     expandIcon?: React.ReactNode;
     collapseIcon?: React.ReactNode;
     onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
@@ -152,8 +147,6 @@ export const TaskList: React.FC<TaskListProps> = ({
   onAddTask,
   onEditTask,
   onDeleteTask,
-  operationsColumnWidth,
-  operationsColumnLabel,
   isTaskListCollapsed = false,
   onToggleTaskList,
   expandIcon,
@@ -184,8 +177,6 @@ export const TaskList: React.FC<TaskListProps> = ({
     nameColumnWidth,
     timeColumnLabels,
     timeColumnWidths,
-    operationsColumnWidth,
-    operationsColumnLabel,
     isTaskListCollapsed,
     onToggleTaskList,
     expandIcon,
@@ -205,7 +196,6 @@ export const TaskList: React.FC<TaskListProps> = ({
     nameColumnWidth,
     timeColumnWidths,
     timeColumnLabels,
-    operationsColumnWidth,
     onAddTask,
     onEditTask,
     onDeleteTask,
