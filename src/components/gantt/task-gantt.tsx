@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { GridProps, Grid } from "../grid/grid";
+import { TodayOverlay } from "../grid/grid-body";
 import { CalendarProps, Calendar } from "../calendar/calendar";
 import { TaskGanttContentProps, TaskGanttContent } from "./task-gantt-content";
 import styles from "./gantt.module.css";
@@ -26,13 +27,13 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
   const newBarProps = { ...barProps, svg: ganttSVGRef };
 
   useEffect(() => {
-    if (horizontalContainerRef.current) {
+    if (horizontalContainerRef.current && horizontalContainerRef.current.scrollTop !== scrollY) {
       horizontalContainerRef.current.scrollTop = scrollY;
     }
   }, [scrollY]);
 
   useEffect(() => {
-    if (verticalGanttContainerRef.current) {
+    if (verticalGanttContainerRef.current && verticalGanttContainerRef.current.scrollLeft !== scrollX) {
       verticalGanttContainerRef.current.scrollLeft = scrollX;
     }
   }, [scrollX]);
@@ -69,6 +70,11 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
         >
           <Grid {...gridProps} />
           <TaskGanttContent {...newBarProps} />
+          <TodayOverlay
+            dates={gridProps.dates}
+            columnWidth={gridProps.columnWidth}
+            totalHeight={barProps.rowHeight * barProps.tasks.length}
+          />
         </svg>
       </div>
     </div>

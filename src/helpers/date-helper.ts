@@ -72,16 +72,27 @@ export const startOfDate = (date: Date, scale: DateHelperScales) => {
 export const ganttDateRange = (
   tasks: Task[],
   viewMode: ViewMode,
-  preStepsCount: number
+  _preStepsCount: number
 ) => {
-  let newStartDate: Date = tasks[0].start;
-  let newEndDate: Date = tasks[0].start;
+  const now = new Date();
+
+  if (!tasks || tasks.length === 0) {
+    const defaultStart = addToDate(now, -10, "day");
+    const defaultEnd = addToDate(now, 10, "day");
+    return [defaultStart, defaultEnd];
+  }
+
+  let newStartDate: Date = tasks[0].plannedStart || tasks[0].start;
+  let newEndDate: Date =
+    tasks[0].actualEnd || tasks[0].plannedEnd || tasks[0].end;
   for (const task of tasks) {
-    if (task.start < newStartDate) {
-      newStartDate = task.start;
+    const taskStart = task.plannedStart || task.start;
+    const taskEnd = task.actualEnd || task.plannedEnd || task.end;
+    if (taskStart < newStartDate) {
+      newStartDate = taskStart;
     }
-    if (task.end > newEndDate) {
-      newEndDate = task.end;
+    if (taskEnd > newEndDate) {
+      newEndDate = taskEnd;
     }
   }
   switch (viewMode) {
@@ -98,54 +109,57 @@ export const ganttDateRange = (
       newEndDate = startOfDate(newEndDate, "year");
       break;
     case ViewMode.Month:
-      newStartDate = addToDate(newStartDate, -1 * preStepsCount, "month");
+      newStartDate = addToDate(newStartDate, -1, "month");
       newStartDate = startOfDate(newStartDate, "month");
-      newEndDate = addToDate(newEndDate, 1, "year");
-      newEndDate = startOfDate(newEndDate, "year");
+      newEndDate = addToDate(newEndDate, 10, "month");
+      newEndDate = startOfDate(newEndDate, "month");
       break;
     case ViewMode.Week:
       newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(
-        getMonday(newStartDate),
-        -7 * preStepsCount,
-        "day"
-      );
+      newStartDate = addToDate(getMonday(newStartDate), -7, "day");
       newEndDate = startOfDate(newEndDate, "day");
-      newEndDate = addToDate(newEndDate, 1.5, "month");
+      newEndDate = addToDate(newEndDate, 70, "day");
       break;
     case ViewMode.Day:
       newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -1 * preStepsCount, "day");
+      newStartDate = addToDate(newStartDate, -10, "day");
       newEndDate = startOfDate(newEndDate, "day");
-      newEndDate = addToDate(newEndDate, 19, "day");
+      newEndDate = addToDate(newEndDate, 10, "day");
       break;
     case ViewMode.DayShift:
-      // 以天为单位显示，但每天细分为 4 个班次
       newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -1 * preStepsCount, "day");
+      newStartDate = addToDate(newStartDate, -10, "day");
       newEndDate = startOfDate(newEndDate, "day");
-      // 展示大约 20 天的区间，和 Day 模式保持一致
-      newEndDate = addToDate(newEndDate, 19, "day");
+      newEndDate = addToDate(newEndDate, 10, "day");
       break;
     case ViewMode.QuarterDay:
       newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -1 * preStepsCount, "day");
+      newStartDate = addToDate(newStartDate, -10, "day");
       newEndDate = startOfDate(newEndDate, "day");
-      newEndDate = addToDate(newEndDate, 66, "hour"); // 24(1 day)*3 - 6
+      newEndDate = addToDate(newEndDate, 10, "day");
       break;
     case ViewMode.HalfDay:
       newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -1 * preStepsCount, "day");
+      newStartDate = addToDate(newStartDate, -10, "day");
       newEndDate = startOfDate(newEndDate, "day");
-      newEndDate = addToDate(newEndDate, 108, "hour"); // 24(1 day)*5 - 12
+      newEndDate = addToDate(newEndDate, 10, "day");
       break;
     case ViewMode.Hour:
       newStartDate = startOfDate(newStartDate, "hour");
-      newStartDate = addToDate(newStartDate, -1 * preStepsCount, "hour");
+      newStartDate = addToDate(newStartDate, -10, "hour");
       newEndDate = startOfDate(newEndDate, "day");
-      newEndDate = addToDate(newEndDate, 1, "day");
+      newEndDate = addToDate(newEndDate, 10, "day");
       break;
   }
+
+  const today = startOfDate(now, "day");
+  if (today > newEndDate) {
+    newEndDate = addToDate(today, 10, "day");
+  }
+  if (today < newStartDate) {
+    newStartDate = addToDate(today, -10, "day");
+  }
+
   return [newStartDate, newEndDate];
 };
 

@@ -17,12 +17,22 @@ export const VerticalScroll: React.FC<{
   onScroll,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isProgrammaticScroll = useRef(false);
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && scrollRef.current.scrollTop !== scroll) {
+      isProgrammaticScroll.current = true;
       scrollRef.current.scrollTop = scroll;
     }
   }, [scroll]);
+
+  const handleScroll = (event: SyntheticEvent<HTMLDivElement>) => {
+    if (isProgrammaticScroll.current) {
+      isProgrammaticScroll.current = false;
+      return;
+    }
+    onScroll(event);
+  };
 
   return (
     <div
@@ -32,7 +42,7 @@ export const VerticalScroll: React.FC<{
         marginLeft: rtl ? "" : "-1rem",
       }}
       className={styles.scroll}
-      onScroll={onScroll}
+      onScroll={handleScroll}
       ref={scrollRef}
     >
       <div style={{ height: ganttFullHeight, width: 1 }} />

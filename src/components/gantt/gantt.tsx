@@ -139,7 +139,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
 
   const [scrollY, setScrollY] = useState(0);
   const [scrollX, setScrollX] = useState(-1);
-  const [ignoreScrollEvent, setIgnoreScrollEvent] = useState(false);
 
   // 暴露方法：滚动到指定日期
   useImperativeHandle(ref, () => ({
@@ -170,7 +169,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       }
       if (target > svgWidth) target = svgWidth;
       setScrollX(target);
-      setIgnoreScrollEvent(true);
     },
   }));
 
@@ -282,6 +280,36 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   ]);
 
   useEffect(() => {
+    if (scrollX !== -1 || rtl || svgContainerWidth <= 0) return;
+    const dates = dateSetup.dates;
+    if (!dates || dates.length < 2) return;
+
+    const today = new Date();
+    const index = dates.findIndex(
+      (d, i) =>
+        today.valueOf() >= d.valueOf() &&
+        i + 1 < dates.length &&
+        today.valueOf() < dates[i + 1].valueOf()
+    );
+
+    let scrollTarget = 0;
+    if (index <= 0) {
+      scrollTarget = 0;
+    } else if (index >= dates.length - 1) {
+      scrollTarget = svgWidth;
+    } else {
+      const start = dates[index].valueOf();
+      const end = dates[index + 1].valueOf();
+      const ratio = (today.valueOf() - start) / (end - start);
+      scrollTarget = (index + ratio) * columnWidth;
+    }
+
+    let target = Math.max(0, scrollTarget - svgContainerWidth / 2);
+    if (target > svgWidth) target = svgWidth;
+    setScrollX(target);
+  }, [scrollX, rtl, dateSetup.dates, columnWidth, svgContainerWidth, svgWidth]);
+
+  useEffect(() => {
     const { changedTask, action } = ganttEvent;
     if (changedTask) {
       if (action === "delete") {
@@ -354,7 +382,9 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
         } else if (newScrollX > svgWidth) {
           newScrollX = svgWidth;
         }
-        setScrollX(newScrollX);
+        if (newScrollX !== scrollX) {
+          setScrollX(newScrollX);
+        }
         event.preventDefault();
       } else if (ganttHeight) {
         let newScrollY = scrollY + event.deltaY;
@@ -368,8 +398,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
           event.preventDefault();
         }
       }
-
-      setIgnoreScrollEvent(true);
     };
 
     // subscribe if scroll is necessary
@@ -390,20 +418,14 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   ]);
 
   const handleScrollY = (event: SyntheticEvent<HTMLDivElement>) => {
-    if (scrollY !== event.currentTarget.scrollTop && !ignoreScrollEvent) {
+    if (scrollY !== event.currentTarget.scrollTop) {
       setScrollY(event.currentTarget.scrollTop);
-      setIgnoreScrollEvent(true);
-    } else {
-      setIgnoreScrollEvent(false);
     }
   };
 
   const handleScrollX = (event: SyntheticEvent<HTMLDivElement>) => {
-    if (scrollX !== event.currentTarget.scrollLeft && !ignoreScrollEvent) {
+    if (scrollX !== event.currentTarget.scrollLeft) {
       setScrollX(event.currentTarget.scrollLeft);
-      setIgnoreScrollEvent(true);
-    } else {
-      setIgnoreScrollEvent(false);
     }
   };
 
@@ -450,7 +472,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       }
       setScrollY(newScrollY);
     }
-    setIgnoreScrollEvent(true);
   };
 
   /**
