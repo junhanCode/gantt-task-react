@@ -178,8 +178,9 @@ const EditTaskModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   task: Task;
+  hasChildren: boolean;
   onConfirm: (taskData: Partial<Task>) => boolean | void;
-}> = ({ isOpen, onClose, task, onConfirm }) => {
+}> = ({ isOpen, onClose, task, hasChildren, onConfirm }) => {
   // 计算时间跨度（天数）
   const calcDuration = (start: Date, end: Date) =>
     Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
@@ -200,16 +201,18 @@ const EditTaskModal: React.FC<{
     plannedDuration: initDuration,
   };
 
-  // 日期选择器字段在挂载后用 setFieldsValue 回填，否则 RangePicker 不响应 initialValues
+  // 日期选择器字段在挂载后用 setFieldsValue 回填（无子任务时才需要）
   React.useEffect(() => {
-    form.setFieldsValue({
-      plannedDateRange: task.plannedStart && task.plannedEnd
-        ? [dayjs(task.plannedStart), dayjs(task.plannedEnd)]
-        : undefined,
-      actualDateRange: task.actualStart && task.actualEnd
-        ? [dayjs(task.actualStart), dayjs(task.actualEnd)]
-        : undefined,
-    });
+    if (!hasChildren) {
+      form.setFieldsValue({
+        plannedDateRange: task.plannedStart && task.plannedEnd
+          ? [dayjs(task.plannedStart), dayjs(task.plannedEnd)]
+          : undefined,
+        actualDateRange: task.actualStart && task.actualEnd
+          ? [dayjs(task.actualStart), dayjs(task.actualEnd)]
+          : undefined,
+      });
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -239,21 +242,25 @@ const EditTaskModal: React.FC<{
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
-      const plannedStart = values.plannedDateRange?.[0]?.toDate();
-      const plannedEnd   = values.plannedDateRange?.[1]?.toDate();
       const taskData: Partial<Task> = {
         id: task.id,
         name: values.name,
         type: values.type,
-        // 同步 start/end，使甘特条联动
-        start: plannedStart ?? task.start,
-        end:   plannedEnd   ?? task.end,
-        plannedStart,
-        plannedEnd,
-        actualStart: values.actualDateRange?.[0]?.toDate(),
-        actualEnd:   values.actualDateRange?.[1]?.toDate(),
         progress: values.progress || 0,
       };
+
+      // 有子任务时时间由子任务自动计算，不覆盖
+      if (!hasChildren) {
+        const plannedStart = values.plannedDateRange?.[0]?.toDate();
+        const plannedEnd   = values.plannedDateRange?.[1]?.toDate();
+        taskData.start       = plannedStart ?? task.start;
+        taskData.end         = plannedEnd   ?? task.end;
+        taskData.plannedStart = plannedStart;
+        taskData.plannedEnd   = plannedEnd;
+        taskData.actualStart  = values.actualDateRange?.[0]?.toDate();
+        taskData.actualEnd    = values.actualDateRange?.[1]?.toDate();
+      }
+
       // onConfirm 返回 false 时保持弹框开启（校验失败）
       if (onConfirm(taskData) !== false) {
         onClose();
@@ -297,35 +304,50 @@ const EditTaskModal: React.FC<{
           </Select>
         </Form.Item>
         
-        <Form.Item
-          name="plannedDateRange"
-          label="计划时间范围"
-        >
-          <RangePicker 
-            showTime 
-            style={{ width: "100%" }} 
-            onChange={handlePlannedDateRangeChange}
-          />
-        </Form.Item>
-        
-        <Form.Item
-          name="plannedDuration"
-          label="计划时间跨度（天）"
-        >
-          <InputNumber 
-            min={1} 
-            value={plannedDuration}
-            onChange={handleDurationChange}
-            style={{ width: "100%" }} 
-          />
-        </Form.Item>
-        
-        <Form.Item
-          name="actualDateRange"
-          label="实际时间范围"
-        >
-          <RangePicker showTime style={{ width: "100%" }} />
-        </Form.Item>
+        {hasChildren ? (
+          <div style={{
+            padding: "8px 12px",
+            background: "#f5f5f5",
+            borderRadius: 6,
+            color: "#888",
+            fontSize: 13,
+            marginBottom: 16,
+          }}>
+            该任务包含子任务，计划时间和实际时间由子任务自动汇总，不可单独编辑。
+          </div>
+        ) : (
+          <>
+            <Form.Item
+              name="plannedDateRange"
+              label="计划时间范围"
+            >
+              <RangePicker 
+                showTime 
+                style={{ width: "100%" }} 
+                onChange={handlePlannedDateRangeChange}
+              />
+            </Form.Item>
+            
+            <Form.Item
+              name="plannedDuration"
+              label="计划时间跨度（天）"
+            >
+              <InputNumber 
+                min={1} 
+                value={plannedDuration}
+                onChange={handleDurationChange}
+                style={{ width: "100%" }} 
+              />
+            </Form.Item>
+            
+            <Form.Item
+              name="actualDateRange"
+              label="实际时间范围"
+            >
+              <RangePicker showTime style={{ width: "100%" }} />
+            </Form.Item>
+          </>
+        )}
         
         <Form.Item
           name="progress"
@@ -562,6 +584,7 @@ const App = () => {
           isOpen={showEditModal}
           onClose={handleEditModalClose}
           task={selectedEditTask}
+          hasChildren={tasks.some(t => t.project === selectedEditTask.id)}
           onConfirm={handleEditModalConfirm}
         />
       )}
