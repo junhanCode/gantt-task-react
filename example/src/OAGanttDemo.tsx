@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Gantt, Task, ViewMode, OATaskViewMode } from "gantt-task-react";
-import { initTasks } from "./helper";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Gantt, Task, ViewMode, OATaskViewMode, flattenTaskTree } from "gantt-task-react";
+import { initTasksTree } from "./helper";
 import "gantt-task-react/dist/index.css";
 import {
   Button,
@@ -45,9 +45,21 @@ const toggleFullscreen = (element: HTMLElement | null) => {
   }
 };
 
+// 在树形任务列表中找到指定 id 的节点并更新字段（用于 expand/collapse 等事件回写）
+function updateNodeInTree(tasks: Task[], id: string, updates: Partial<Task> | Record<string, any>): Task[] {
+  return tasks.map(t => {
+    if (t.id === id) return { ...t, ...updates };
+    if ((t as any).children) {
+      return { ...t, children: updateNodeInTree((t as any).children, id, updates) };
+    }
+    return t;
+  });
+}
+
 const OAGanttDemo: React.FC = () => {
   const ganttRef = React.useRef<any>(null);
   const [view, setView] = React.useState<ViewMode>(ViewMode.Day);
+  // 以树形结构存储任务（children 嵌套，类似 antd Table 数据格式）
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
@@ -56,23 +68,28 @@ const OAGanttDemo: React.FC = () => {
   const [oaTaskViewMode, setOATaskViewMode] =
     React.useState<OATaskViewMode>("日");
 
+  // 从树形数据派生出平铺列表，用于 cascade 多选逻辑
+  const flatTasks = useMemo(() => flattenTaskTree(tasks), [tasks]);
+
   const viewOptions = [
     { label: "日", value: ViewMode.Day },
     { label: "周", value: ViewMode.Week },
     { label: "月", value: ViewMode.Month },
   ];
 
-  // 模拟接口加载数据（用 setTimeout 模拟异步请求）
+  // 模拟接口加载数据（返回树形格式，Gantt 组件内部自动展平）
   const loadData = useCallback(() => {
     setLoading(true);
     setTimeout(() => {
-      const data = initTasks(false);
+      // initTasksTree 返回带 children 嵌套的 Task[]（antd Table 风格）
+      const data = initTasksTree(false);
       setTasks(data);
-      // 判断是否有未读（随机）
-      const hasUnread = data.some((t) => (t as any).unread);
+      // 判断是否有未读（遍历展平后的列表）
+      const hasUnread = flattenTaskTree(data).some((t) => (t as any).unread);
       setNoUnread(!hasUnread);
       setLoading(false);
-      console.log(`✅ 数据加载完成，共 ${data.length} 条任务`);
+      const flat = flattenTaskTree(data);
+      console.log(`✅ 数据加载完成（树形格式），共 ${data.length} 个顶层任务，展平后共 ${flat.length} 条`);
     }, 600);
   }, []);
 
@@ -114,19 +131,19 @@ const OAGanttDemo: React.FC = () => {
     columnWidth = 35;
   }
 
-  // 获取直接子任务
+  // 获取直接子任务（从展平列表中查，保证树形和平铺格式均可用）
   const getDirectChildren = useCallback(
     (parentId: string): Task[] => {
-      return tasks.filter((t) => t.project === parentId);
+      return flatTasks.filter((t) => t.project === parentId);
     },
-    [tasks]
+    [flatTasks]
   );
 
   // 获取所有子任务（递归）
   const getAllChildren = useCallback(
     (parentId: string): Task[] => {
       const children: Task[] = [];
-      const directChildren = tasks.filter((t) => t.project === parentId);
+      const directChildren = flatTasks.filter((t) => t.project === parentId);
       directChildren.forEach((child) => {
         children.push(child);
         const grandChildren = getAllChildren(child.id);
@@ -135,12 +152,12 @@ const OAGanttDemo: React.FC = () => {
       return children;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tasks]
+    [flatTasks]
   );
 
-  // 获取当前页全部任务 id
+  // 获取当前页全部任务 id（从展平列表中取）
   const getCurrentPageAllTaskIds = (): string[] =>
-    tasks.map((t) => t.id);
+    flatTasks.map((t) => t.id);
 
   // 下拉选择菜单
   const getSelectionItems = () => [
@@ -210,10 +227,10 @@ const OAGanttDemo: React.FC = () => {
       const updatedKeys = new Set(keys);
 
       const updateAncestors = (taskId: string) => {
-        const currentTask = tasks.find((t) => t.id === taskId);
+        const currentTask = flatTasks.find((t) => t.id === taskId);
         if (!currentTask || !currentTask.project) return;
         const parentId = currentTask.project;
-        const parentTask = tasks.find((t) => t.id === parentId);
+        const parentTask = flatTasks.find((t) => t.id === parentId);
         if (!parentTask) return;
 
         const directChildren = getDirectChildren(parentId);
@@ -231,7 +248,7 @@ const OAGanttDemo: React.FC = () => {
         }
       };
 
-      tasks.forEach((task) => updateAncestors(task.id));
+      flatTasks.forEach((task) => updateAncestors(task.id));
       return Array.from(updatedKeys);
     };
 
@@ -240,16 +257,16 @@ const OAGanttDemo: React.FC = () => {
     setSelectedRowKeys(finalKeys);
   };
 
+  // 展开/折叠节点：在树中找到对应节点并更新 hideChildren
   const handleExpanderClick = useCallback((task: Task) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((t) =>
-        t.id === task.id ? { ...t, hideChildren: !t.hideChildren } : t
-      )
+    setTasks((prev) =>
+      updateNodeInTree(prev, task.id, { hideChildren: task.hideChildren })
     );
   }, []);
 
+  // 日期/进度拖拽后更新对应节点
   const handleTaskChange = (updatedTask: Task) => {
-    setTasks((prev) => prev.map((t) => (t.id === updatedTask.id ? updatedTask : t)));
+    setTasks((prev) => updateNodeInTree(prev, updatedTask.id, updatedTask));
   };
 
   const currentUser = React.useMemo(() => "何聪", []);
@@ -312,11 +329,10 @@ const OAGanttDemo: React.FC = () => {
         if (success) {
           message.success("保存成功");
           setTasks((prev) =>
-            prev.map((t) =>
-              t.id === task.id
-                ? { ...task, taskItem: { ...(task as any).taskItem, delayDays: (task as any).delayDays } }
-                : t
-            )
+            updateNodeInTree(prev, task.id, {
+              ...task,
+              taskItem: { ...(task as any).taskItem, delayDays: (task as any).delayDays },
+            } as any)
           );
           resolve(true);
         } else {
@@ -331,9 +347,17 @@ const OAGanttDemo: React.FC = () => {
   const handleMarkAllAsRead = async () => {
     setReadAllLoading(true);
     await new Promise<void>((resolve) => setTimeout(resolve, 800));
-    setTasks((prev) =>
-      prev.map((t) => ({ ...t, unread: false, read: true } as any))
-    );
+    // 递归把树中所有节点标记为已读
+    const markAllRead = (nodes: Task[]): Task[] =>
+      nodes.map((t) => ({
+        ...t,
+        unread: false,
+        read: true,
+        ...((t as any).children
+          ? { children: markAllRead((t as any).children) }
+          : {}),
+      } as Task));
+    setTasks((prev) => markAllRead(prev));
     setNoUnread(false);
     setReadAllLoading(false);
     message.success("已标记全部已读");

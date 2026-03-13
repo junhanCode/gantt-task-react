@@ -65,6 +65,12 @@ export interface Task {
   dependencies?: string[];
   hideChildren?: boolean;
   displayOrder?: number;
+  /**
+   * 子任务列表（类似 Ant Design Table 的 children 字段）。
+   * 传入此字段时，组件会自动将树形数据展平为平铺列表，
+   * 并根据父子关系设置 project 字段，无需手动维护。
+   */
+  children?: Task[];
   // 新增字段
   /** 是否禁用拖拽 */
   disableDrag?: boolean;

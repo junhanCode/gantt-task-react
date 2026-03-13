@@ -1592,7 +1592,7 @@ function convertMockToTask(mockTask: MockTask, displayOrder: number, parentId?: 
   return extendedTask;
 }
 
-// 递归转换Mock数据及其子任务
+// 递归转换Mock数据及其子任务（平铺格式，通过 project 字段关联父子）
 function convertMockDataRecursive(mockTasks: MockTask[]): Task[] {
   const result: Task[] = [];
   let displayOrder = 1;
@@ -1610,6 +1610,39 @@ function convertMockDataRecursive(mockTasks: MockTask[]): Task[] {
   });
   
   return result;
+}
+
+// 将 Mock 数据转换为树形 Task 格式（children 嵌套，类似 antd Table）
+function convertMockDataTree(mockTasks: MockTask[]): Task[] {
+  let displayOrder = 1;
+
+  function convertNode(mockTask: MockTask, parentId?: string): Task {
+    const task = convertMockToTask(mockTask, displayOrder++, parentId);
+
+    if (mockTask.children && mockTask.children.length > 0) {
+      // 保留 children 字段（Gantt 组件会自动展平并设置 project 关联）
+      (task as any).children = mockTask.children.map(child =>
+        convertNode(child, task.id)
+      );
+    }
+
+    return task;
+  }
+
+  return mockTasks.map(mockTask => convertNode(mockTask));
+}
+
+// 初始化任务（树形格式，children 嵌套）—— Gantt 组件内部自动展平
+export function initTasksTree(
+  useLargeData: boolean = false,
+  parentCount: number = 100,
+  childrenPerParent: number = 10
+): Task[] {
+  if (useLargeData) {
+    const largeData = generateLargeMockData(parentCount, childrenPerParent);
+    return convertMockDataTree(largeData);
+  }
+  return convertMockDataTree(mockData);
 }
 
 // 生成大量假数据用于性能测试

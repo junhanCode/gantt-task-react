@@ -25,7 +25,7 @@ import { convertToBarTasks } from "../../helpers/bar-helper";
 import { GanttEvent } from "../../types/gantt-task-actions";
 import { DateSetup } from "../../types/date-setup";
 import { HorizontalScroll } from "../other/horizontal-scroll";
-import { removeHiddenTasks, sortTasks } from "../../helpers/other-helper";
+import { removeHiddenTasks, sortTasks, flattenTaskTree } from "../../helpers/other-helper";
 import { getI18nTexts } from "../../i18n";
 import styles from "./gantt.module.css";
 
@@ -132,9 +132,12 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
 
   // 获取国际化文本
   const i18n = useMemo(() => getI18nTexts(language), [language]);
+
+  // 支持 Ant Design Table 风格的 children 嵌套数据：将树形结构展平为平铺数组
+  const flattenedTasks = useMemo(() => flattenTaskTree(tasks), [tasks]);
   
   const [dateSetup, setDateSetup] = useState<DateSetup>(() => {
-    const [startDate, endDate] = ganttDateRange(tasks, viewMode, preStepsCount);
+    const [startDate, endDate] = ganttDateRange(flattenedTasks, viewMode, preStepsCount);
     return { viewMode, dates: seedDates(startDate, endDate, viewMode) };
   });
 
@@ -220,7 +223,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const handleSelectAll = (checked: boolean) => {
     if (!rowSelection) return;
     
-    const availableTasks = tasks.filter(t => {
+    const availableTasks = flattenedTasks.filter(t => {
       if (!rowSelection.getCheckboxProps) return true;
       const props = rowSelection.getCheckboxProps(t);
       return !props.disabled;
@@ -234,7 +237,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
 
   // 计算全选状态
   const allSelected = rowSelection ? (() => {
-    const availableTasks = tasks.filter(t => {
+    const availableTasks = flattenedTasks.filter(t => {
       if (!rowSelection.getCheckboxProps) return true;
       const props = rowSelection.getCheckboxProps(t);
       return !props.disabled;
@@ -245,7 +248,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   })() : false;
 
   const indeterminate = rowSelection ? (() => {
-    const availableTasks = tasks.filter(t => {
+    const availableTasks = flattenedTasks.filter(t => {
       if (!rowSelection.getCheckboxProps) return true;
       const props = rowSelection.getCheckboxProps(t);
       return !props.disabled;
@@ -518,9 +521,9 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   useEffect(() => {
     let filteredTasks: Task[];
     if (onExpanderClick) {
-      filteredTasks = removeHiddenTasks(tasks);
+      filteredTasks = removeHiddenTasks(flattenedTasks);
     } else {
-      filteredTasks = tasks;
+      filteredTasks = flattenedTasks;
     }
     filteredTasks = filteredTasks.sort(sortTasks);
     const [startDate, endDate] = ganttDateRange(
@@ -563,7 +566,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     );
     // scrollX  intentionally excluded - 水平滚动不应触发时间轴重算
   }, [
-    tasks,
+    flattenedTasks,
     viewMode,
     preStepsCount,
     rowHeight,
@@ -727,9 +730,9 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     if (ganttHeight) {
       setSvgContainerHeight(ganttHeight + headerHeight);
     } else {
-      setSvgContainerHeight(tasks.length * rowHeight + headerHeight);
+      setSvgContainerHeight(flattenedTasks.length * rowHeight + headerHeight);
     }
-  }, [ganttHeight, tasks, headerHeight, rowHeight]);
+  }, [ganttHeight, flattenedTasks, headerHeight, rowHeight]);
 
   // scroll events
   useEffect(() => {
@@ -1035,8 +1038,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     // 展开/折叠所有任务（包括有子任务的任务）
     if (onBatchExpanderClick) {
       // 使用批量更新回调（推荐）
-      const updatedTasks = tasks.map(t => {
-        const hasChildren = tasks.some(child => child.project === t.id);
+      const updatedTasks = flattenedTasks.map(t => {
+        const hasChildren = flattenedTasks.some(child => child.project === t.id);
         if (hasChildren && t.hideChildren !== newValue) {
           return { ...t, hideChildren: newValue };
         }
@@ -1045,8 +1048,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       onBatchExpanderClick(updatedTasks);
     } else if (onExpanderClick) {
       // 兼容旧的方式（不推荐，因为在循环中多次调用setState可能导致问题）
-      tasks.forEach(t => {
-        const hasChildren = tasks.some(child => child.project === t.id);
+      flattenedTasks.forEach(t => {
+        const hasChildren = flattenedTasks.some(child => child.project === t.id);
         // 如果有子任务，则展开/折叠该任务
         if (hasChildren) {
           onExpanderClick({ ...t, hideChildren: newValue });
@@ -1105,7 +1108,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       ? (props: any) => {
           const tablePropsData = {
             ...props,
-            allTasks: tasks,
+            allTasks: flattenedTasks,
             expandAllLeafTasks,
             onToggleExpandAll: handleToggleExpandAll,
             operationsColumnWidth,
