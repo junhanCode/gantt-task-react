@@ -200,24 +200,18 @@ const ColumnsDemo: React.FC = () => {
       hidden: !showOperations,
       render: (_, task) => (
         <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-          <a
-            style={{ fontSize: 12 }}
-            onClick={(e) => {
-              e.preventDefault();
-              alert(`编辑任务：${task.name}`);
-            }}
+          <button
+            style={{ fontSize: 12, border: "none", background: "none", color: "#1677ff", cursor: "pointer", padding: 0 }}
+            onClick={() => alert(`编辑任务：${task.name}`)}
           >
             编辑
-          </a>
-          <a
-            style={{ fontSize: 12, color: "#ff4d4f" }}
-            onClick={(e) => {
-              e.preventDefault();
-              alert(`删除任务：${task.name}`);
-            }}
+          </button>
+          <button
+            style={{ fontSize: 12, border: "none", background: "none", color: "#ff4d4f", cursor: "pointer", padding: 0 }}
+            onClick={() => alert(`删除任务：${task.name}`)}
           >
             删除
-          </a>
+          </button>
         </div>
       ),
     },
@@ -319,7 +313,7 @@ const ColumnsDemo: React.FC = () => {
           }}
           // ── 样式 ──────────────────────────────────────────
           tableStyles={{
-            headerHeight: 40,
+            // headerHeight 不单独设置，与右侧时间轴全局 headerHeight（默认50）保持一致
             borderColor: "#f0f0f0",
             headerBackgroundColor: "#fafafa",
             headerTextColor: "#595959",
