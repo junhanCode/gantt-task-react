@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { BarTask } from "../../types/bar-task";
-import { Task } from "../../types/public-types";
+import { Task, GanttColumnConfig } from "../../types/public-types";
+import { initColWidths, applyColWidths, parseWidthPx } from "../../helpers/column-helper";
 
 export type TaskListProps = {
   headerHeight: number;
@@ -59,6 +60,11 @@ export type TaskListProps = {
   onDateChange?: (task: Task, children: Task[]) => void | boolean | Promise<void> | Promise<boolean>;
   /** 是否允许通过拖拽调整列宽，默认 false */
   resizableColumns?: boolean;
+  /**
+   * 统一列配置数组（仿 Ant Design Table columns）。
+   * 传入后由此数组驱动列顺序、宽度、标题、渲染，不传则保持遗留布局。
+   */
+  columns?: GanttColumnConfig[];
   /** 表格样式配置 */
   tableStyles?: {
     headerHeight?: number;
@@ -110,6 +116,8 @@ export type TaskListProps = {
     statusColumnWidth?: string;
     /** OA 视图：负责人列宽度 */
     assigneeColumnWidth?: string;
+    /** 已合并列宽状态的列配置数组 */
+    columns?: GanttColumnConfig[];
     tableStyles?: {
       height?: number | string;
       container?: React.CSSProperties;
@@ -177,6 +185,8 @@ export type TaskListProps = {
     statusColumnWidth?: string;
     /** OA 视图：负责人列宽度 */
     assigneeColumnWidth?: string;
+    /** 已合并列宽状态的列配置数组 */
+    columns?: GanttColumnConfig[];
     tableStyles?: {
       height?: number | string;
       container?: React.CSSProperties;
@@ -194,12 +204,6 @@ export type TaskListProps = {
   }>;
 };
 
-/** 将 CSS 宽度字符串解析为像素数值（如 "155px" → 155） */
-const parseWidthPx = (w: string | undefined, fallback: number): number => {
-  if (!w) return fallback;
-  const n = parseFloat(w);
-  return isNaN(n) ? fallback : n;
-};
 
 export const TaskList: React.FC<TaskListProps> = ({
   headerHeight,
@@ -234,6 +238,7 @@ export const TaskList: React.FC<TaskListProps> = ({
   onDateChange,
   tableStyles,
   resizableColumns = false,
+  columns,
 }) => {
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -244,34 +249,40 @@ export const TaskList: React.FC<TaskListProps> = ({
 
   // 列宽状态（由 props 初始化，之后由拖拽更新）
   const defaultPx = parseWidthPx(rowWidth, 155);
-  const [colWidths, setColWidths] = useState(() => ({
-    name: parseWidthPx(nameColumnWidth ?? rowWidth, defaultPx),
-    plannedStart: parseWidthPx(timeColumnWidths?.plannedStart ?? rowWidth, defaultPx),
-    plannedEnd: parseWidthPx(timeColumnWidths?.plannedEnd ?? rowWidth, defaultPx),
-    plannedDuration: parseWidthPx(timeColumnWidths?.plannedDuration, 100),
-    actualStart: parseWidthPx(timeColumnWidths?.actualStart ?? rowWidth, defaultPx),
-    actualEnd: parseWidthPx(timeColumnWidths?.actualEnd ?? rowWidth, defaultPx),
-    operations: parseWidthPx(operationsColumnWidth, 120),
-    // OA 视图专用列
-    status: 100,
-    assignee: 100,
-  }));
+  const [colWidths, setColWidths] = useState<Record<string, number>>(() =>
+    initColWidths({
+      columns,
+      rowWidth,
+      nameColumnWidth,
+      timeColumnWidths,
+      operationsColumnWidth,
+      statusColumnWidth: undefined,
+      assigneeColumnWidth: undefined,
+    })
+  );
 
   const handleColumnResize = (colKey: string, newWidthPx: number) => {
     setColWidths(prev => ({ ...prev, [colKey]: Math.max(50, newWidthPx) }));
   };
 
-  const resolvedNameWidth = `${colWidths.name}px`;
+  // 当 columns 传入时，将列宽状态合并回去形成最终 columns（带 `px` 宽度）
+  const resolvedColumns = useMemo(
+    () => applyColWidths(columns, colWidths, defaultPx),
+    [columns, colWidths, defaultPx]
+  );
+
+  // 遗留模式下的各项分解宽度（供旧组件 prop 使用）
+  const resolvedNameWidth = `${colWidths["name"] ?? defaultPx}px`;
   const resolvedTimeWidths = {
-    plannedStart: `${colWidths.plannedStart}px`,
-    plannedEnd: `${colWidths.plannedEnd}px`,
-    plannedDuration: `${colWidths.plannedDuration}px`,
-    actualStart: `${colWidths.actualStart}px`,
-    actualEnd: `${colWidths.actualEnd}px`,
+    plannedStart:    `${colWidths["plannedStart"]    ?? defaultPx}px`,
+    plannedEnd:      `${colWidths["plannedEnd"]      ?? defaultPx}px`,
+    plannedDuration: `${colWidths["plannedDuration"] ?? 100}px`,
+    actualStart:     `${colWidths["actualStart"]     ?? defaultPx}px`,
+    actualEnd:       `${colWidths["actualEnd"]       ?? defaultPx}px`,
   };
-  const resolvedOperationsWidth = `${colWidths.operations}px`;
-  const resolvedStatusWidth = `${colWidths.status}px`;
-  const resolvedAssigneeWidth = `${colWidths.assignee}px`;
+  const resolvedOperationsWidth = `${colWidths["operations"] ?? 120}px`;
+  const resolvedStatusWidth     = `${colWidths["status"]     ?? 100}px`;
+  const resolvedAssigneeWidth   = `${colWidths["assignee"]   ?? 100}px`;
 
   const headerProps = {
     headerHeight,
@@ -282,7 +293,6 @@ export const TaskList: React.FC<TaskListProps> = ({
       if (!ganttHeight) return 0;
       const contentHeight = tasks.length * rowHeight;
       const needScrollbar = contentHeight > ganttHeight;
-      // 近似的滚动条宽度（Windows 常见为 16px，macOS 叠加滚动条通常为 0）
       return needScrollbar ? 16 : 0;
     })(),
     nameColumnWidth: resolvedNameWidth,
@@ -298,6 +308,8 @@ export const TaskList: React.FC<TaskListProps> = ({
     tableStyles,
     statusColumnWidth: resolvedStatusWidth,
     assigneeColumnWidth: resolvedAssigneeWidth,
+    // columns 传入时覆盖所有遗留宽度 prop
+    ...(resolvedColumns ? { columns: resolvedColumns } : {}),
   };
   const selectedTaskId = selectedTask ? selectedTask.id : "";
   const tableProps = {
@@ -307,7 +319,7 @@ export const TaskList: React.FC<TaskListProps> = ({
     fontSize,
     tasks,
     locale,
-    selectedTaskId: selectedTaskId,
+    selectedTaskId,
     setSelectedTask,
     onExpanderClick,
     nameColumnWidth: resolvedNameWidth,
@@ -325,6 +337,8 @@ export const TaskList: React.FC<TaskListProps> = ({
     containerHeight: ganttHeight || undefined,
     statusColumnWidth: resolvedStatusWidth,
     assigneeColumnWidth: resolvedAssigneeWidth,
+    // columns 传入时覆盖所有遗留宽度 prop
+    ...(resolvedColumns ? { columns: resolvedColumns } : {}),
   };
 
   return (

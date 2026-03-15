@@ -1,6 +1,7 @@
 import React from "react";
 import GanttChartDemo from "./GanttChartDemo";
 import OAGanttDemo from "./OAGanttDemo";
+import ColumnsDemo from "./ColumnsDemo";
 import { Task, ViewMode, Gantt } from "gantt-task-react";
 import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
@@ -878,7 +879,7 @@ const App = () => {
   };
 
   // 添加演示模式切换
-  const [demoMode, setDemoMode] = React.useState<'original' | 'new' | 'oa'>('oa');
+  const [demoMode, setDemoMode] = React.useState<'original' | 'new' | 'oa' | 'columns'>('columns');
 
   return (
     <div className="Wrapper">
@@ -894,6 +895,13 @@ const App = () => {
           🎯 演示模式切换
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <Button 
+            type={demoMode === 'columns' ? 'primary' : 'default'}
+            onClick={() => setDemoMode('columns')}
+            style={demoMode === 'columns' ? { background: '#52c41a', borderColor: '#52c41a' } : {}}
+          >
+            🆕 columns 列配置演示
+          </Button>
           <Button 
             type={demoMode === 'oa' ? 'primary' : 'default'}
             onClick={() => setDemoMode('oa')}
@@ -913,12 +921,14 @@ const App = () => {
             原始完整演示
           </Button>
           <span style={{ color: '#666', fontSize: '12px' }}>
-            当前模式：{demoMode === 'oa' ? 'OA任务模式（接口模拟）' : demoMode === 'new' ? '新版 OA 任务模式（带周视图）' : '原始完整演示'}
+            当前模式：{demoMode === 'columns' ? 'columns 列配置演示（新功能）' : demoMode === 'oa' ? 'OA任务模式（接口模拟）' : demoMode === 'new' ? '新版 OA 任务模式（带周视图）' : '原始完整演示'}
           </span>
         </div>
       </div>
 
-      {demoMode === 'oa' ? (
+      {demoMode === 'columns' ? (
+        <ColumnsDemo />
+      ) : demoMode === 'oa' ? (
         <OAGanttDemo />
       ) : demoMode === 'new' ? (
         <GanttChartDemo />

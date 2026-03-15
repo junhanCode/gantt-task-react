@@ -14,6 +14,7 @@ export type {
   OATaskViewMode,
   TimelineUnitLabels,
   TaskStatus,
+  GanttColumnConfig,
   ColumnConfig,
   Language,
 } from "./types/public-types";

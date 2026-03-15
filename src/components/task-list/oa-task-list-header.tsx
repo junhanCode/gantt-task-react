@@ -1,6 +1,7 @@
 import React from "react";
 import { I18nTexts } from "../../i18n";
 import styles from "./task-list-header.module.css";
+import { GanttColumnConfig } from "../../types/public-types";
 
 const MIN_COL_WIDTH = 50;
 
@@ -53,6 +54,8 @@ export const OATaskListHeader: React.FC<{
   assigneeColumnWidth?: string;
   /** 列宽拖拽回调，列 key + 新宽度(px) */
   onColumnResize?: (colKey: string, newWidthPx: number) => void;
+  /** 统一列配置数组（由 task-list.tsx 传入，已合并列宽状态） */
+  columns?: GanttColumnConfig[];
   tableStyles?: {
     headerHeight?: number;
     height?: number | string;
@@ -126,6 +129,7 @@ export const OATaskListHeader: React.FC<{
   statusColumnWidth,
   assigneeColumnWidth,
   onColumnResize,
+  columns,
 }) => { 
   const renderHeader = (
     key: keyof NonNullable<typeof columnHeaderRenderers>,
@@ -176,12 +180,60 @@ export const OATaskListHeader: React.FC<{
       />
     ) : null;
 
+  const hPx = tableStyles?.headerHeight ?? headerHeight;
+
+  // 遗留模式下的默认列列表（不含系统列 rowSelection/unread），含标题回退
+  const legacyColumns: GanttColumnConfig[] = [
+    { key: "name",     title: i18n?.taskTitle ?? "任務標題", width: nameColumnWidth    ?? rowWidth,    align: "left"   },
+    { key: "status",   title: i18n?.status    ?? "狀態",     width: statusColumnWidth  ?? "100px",     align: "center" },
+    { key: "assignee", title: i18n?.assignee  ?? "負責人",   width: assigneeColumnWidth ?? "100px",    align: "center" },
+    ...(showOperationsColumn
+      ? [{ key: "operations", title: (operationsColumnLabel ?? i18n?.operations ?? "操作") as React.ReactNode, width: operationsColumnWidth ?? "120px", align: "center" as const }]
+      : []),
+  ];
+
+  const resolvedColumns = columns ?? legacyColumns;
+
+  const commonCellStyle = (col: GanttColumnConfig): React.CSSProperties => ({
+    minWidth: col.width,
+    maxWidth: col.width,
+    textAlign: col.align ?? "left",
+    ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding
+      ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding }
+      : {}),
+    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+    ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
+    ...(tableStyles?.headerCell || {}),
+  });
+
+  const separator = (
+    <div
+      className={styles.ganttTable_HeaderSeparator}
+      style={{ height: hPx * 0.5, marginTop: hPx * 0.25 }}
+    />
+  );
+
+  /** 渲染单个普通列的标题内容 */
+  const renderColTitle = (col: GanttColumnConfig): React.ReactNode => {
+    if (col.renderTitle) return col.renderTitle();
+    // 对已知列使用 columnHeaderRenderers 回退
+    const legacyRenderer = columnHeaderRenderers?.[col.key as keyof NonNullable<typeof columnHeaderRenderers>];
+    if (legacyRenderer) {
+      const defaultLabel = String(col.title ?? col.key);
+      const res = typeof legacyRenderer === "function"
+        ? (legacyRenderer as (p: { defaultLabel: string }) => React.ReactNode)({ defaultLabel })
+        : legacyRenderer;
+      if (res != null) return res;
+    }
+    return <span>{col.title ?? col.key}</span>;
+  };
+
   return (
     <div
       className={styles.ganttTable}
       style={{
-        fontFamily: fontFamily,
-        fontSize: fontSize,
+        fontFamily,
+        fontSize,
         paddingRight: headerGutterRight ?? 0,
         ...(tableStyles?.borderColor ? {
           borderColor: tableStyles.borderColor,
@@ -196,11 +248,11 @@ export const OATaskListHeader: React.FC<{
       <div
         className={`${styles.ganttTable_Header} oa-task-list-header-row`}
         style={{
-          height: (tableStyles?.headerHeight ?? headerHeight),
+          height: hPx,
           ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
         }}
       >
-        {/* 多選列 */}
+        {/* 系统列：多选框（不受 columns 控制） */}
         {rowSelection && (
           <React.Fragment>
             <div
@@ -208,7 +260,7 @@ export const OATaskListHeader: React.FC<{
               style={{
                 minWidth: rowSelection.columnWidth || "50px",
                 maxWidth: rowSelection.columnWidth || "50px",
-                textAlign: 'center',
+                textAlign: "center",
                 ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
                 ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
                 ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
@@ -216,55 +268,44 @@ export const OATaskListHeader: React.FC<{
               }}
             >
               {rowSelection.showSelectAll !== false && onSelectAll ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
                   <input
                     type="checkbox"
                     className={rowSelection.checkboxBorderColor ? styles.rowSelectionCheckbox : undefined}
                     checked={allSelected}
-                    ref={(input) => {
-                      if (input) {
-                        input.indeterminate = indeterminate;
-                      }
-                    }}
+                    ref={(input) => { if (input) input.indeterminate = indeterminate ?? false; }}
                     onChange={(e) => onSelectAll(e.target.checked)}
                     style={{
-                      cursor: 'pointer',
-                      ...(rowSelection.checkboxBorderColor ? {
-                        ['--checkbox-border-color' as string]: rowSelection.checkboxBorderColor,
-                      } as React.CSSProperties : {}),
+                      cursor: "pointer",
+                      ...(rowSelection.checkboxBorderColor
+                        ? { ["--checkbox-border-color" as string]: rowSelection.checkboxBorderColor } as React.CSSProperties
+                        : {}),
                     }}
                   />
                   {rowSelection.columnTitle != null && (() => {
                     const title = rowSelection.columnTitle!;
-                    const defaultLabel = '選擇';
-                    const content = typeof title === 'function' ? title({ defaultLabel }) : title;
-                    return typeof content === 'string' ? <span>{content}</span> : content;
+                    const content = typeof title === "function" ? title({ defaultLabel: "選擇" }) : title;
+                    return typeof content === "string" ? <span>{content}</span> : content;
                   })()}
                 </div>
               ) : (
                 (() => {
                   const renderer = columnHeaderRenderers?.rowSelection;
                   if (renderer) {
-                    const res = typeof renderer === 'function' ? renderer({ defaultLabel: '選擇' }) : renderer;
+                    const res = typeof renderer === "function" ? renderer({ defaultLabel: "選擇" }) : renderer;
                     if (res != null) return res;
                   }
                   const title = rowSelection.columnTitle;
-                  const defaultLabel = '選擇';
-                  const content = typeof title === 'function' ? title({ defaultLabel }) : (title ?? defaultLabel);
-                  return content != null ? (typeof content === 'string' ? <span>{content}</span> : content) : <span>{defaultLabel}</span>;
+                  const content = typeof title === "function" ? title({ defaultLabel: "選擇" }) : (title ?? "選擇");
+                  return typeof content === "string" ? <span>{content}</span> : content;
                 })()
               )}
             </div>
-            <div
-              className={styles.ganttTable_HeaderSeparator}
-              style={{
-                height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
-                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
-              }}
-            />
+            {separator}
           </React.Fragment>
         )}
-        {/* 未读列 */}
+
+        {/* 系统列：未读（不受 columns 控制） */}
         {unreadColumn?.show && (
           <React.Fragment>
             <div
@@ -272,151 +313,58 @@ export const OATaskListHeader: React.FC<{
               style={{
                 minWidth: unreadColumn.width || "40px",
                 maxWidth: unreadColumn.width || "40px",
-                textAlign: 'center',
+                textAlign: "center",
                 ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
                 ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
                 ...(tableStyles?.headerCell || {}),
               }}
             >
               {(() => {
-                const custom = renderHeader('unread', unreadColumn.title || "未读");
-                if (typeof custom === 'string') return <span>{custom}</span>;
-                return custom;
+                const custom = renderHeader("unread", unreadColumn.title || "未读");
+                return typeof custom === "string" ? <span>{custom}</span> : custom;
               })()}
             </div>
-            <div
-              className={styles.ganttTable_HeaderSeparator}
-              style={{
-                height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
-                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
-              }}
-            />
+            {separator}
           </React.Fragment>
         )}
-        {/* 任務標題列 */}
-        <div
-          className={styles.ganttTable_HeaderItem}
-          style={{
-            minWidth: nameColumnWidth || rowWidth,
-            maxWidth: nameColumnWidth || rowWidth,
-            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
-            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
-            ...(tableStyles?.headerCell || {}),
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-            {(() => {
-              const nameRenderer = columnHeaderRenderers?.name ?? taskTitleHeaderRender;
-              if (nameRenderer) {
-                let content: React.ReactNode;
-                if (typeof nameRenderer === 'function') {
-                  const taskTitle = i18n?.taskTitle || "任務標題";
-                  content = columnHeaderRenderers?.name
-                    ? (nameRenderer as (p: { expandCollapseNode: React.ReactNode; defaultLabel: string }) => React.ReactNode)({ expandCollapseNode, defaultLabel: taskTitle })
-                    : taskTitleHeaderRender!({ expandCollapseNode, titleText: taskTitle });
-                } else {
-                  content = nameRenderer;
-                }
-                if (content) return content;
-              }
-              return (
-                <React.Fragment>
-                  {expandCollapseNode}
-                  <span>{i18n?.taskTitle || "任務標題"}</span>
-                </React.Fragment>
-              );
-            })()}
-          </div>
-          {handle("name")}
-        </div>
-        <div
-          className={styles.ganttTable_HeaderSeparator}
-          style={{
-            height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
-            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
-          }}
-        />
-        
-        {/* 狀態列 */}
-        <div
-          className={styles.ganttTable_HeaderItem}
-          style={{
-            minWidth: statusColumnWidth ?? "100px",
-            maxWidth: statusColumnWidth ?? "100px",
-            textAlign: 'center',
-            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
-            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
-            ...(tableStyles?.headerCell || {}),
-          }}
-        >
-          {(() => {
-            const custom = renderHeader('status', i18n?.status || '狀態');
-            if (typeof custom === 'string') return <span>{custom}</span>;
-            return custom;
-          })()}
-          {handle("status")}
-        </div>
-        <div
-          className={styles.ganttTable_HeaderSeparator}
-          style={{
-            height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
-            marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
-          }}
-        />
-        
-        {/* 負責人列 */}
-        <div
-          className={styles.ganttTable_HeaderItem}
-          style={{
-            minWidth: assigneeColumnWidth ?? "100px",
-            maxWidth: assigneeColumnWidth ?? "100px",
-            textAlign: 'center',
-            ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
-            ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-            ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
-            ...(tableStyles?.headerCell || {}),
-          }}
-        >
-          {(() => {
-            const custom = renderHeader('assignee', i18n?.assignee || '負責人');
-            if (typeof custom === 'string') return <span>{custom}</span>;
-            return custom;
-          })()}
-          {handle("assignee")}
-        </div>
-        {showOperationsColumn && (
-          <React.Fragment>
-            <div
-              className={styles.ganttTable_HeaderSeparator}
-              style={{
-                height: (tableStyles?.headerHeight ?? headerHeight) * 0.5,
-                marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.25,
-              }}
-            />
-            {/* 操作列 */}
+
+        {/* 数据列（由 columns 驱动） */}
+        {resolvedColumns.map((col, i) => (
+          <React.Fragment key={col.key}>
+            {i > 0 && separator}
             <div
               className={styles.ganttTable_HeaderItem}
-              style={{
-                minWidth: operationsColumnWidth ?? "120px",
-                maxWidth: operationsColumnWidth ?? "120px",
-                textAlign: 'center',
-                ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
-                ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
-                ...(tableStyles?.headerCell || {}),
-              }}
+              style={commonCellStyle(col)}
             >
-              {(() => {
-                const custom = renderHeader('operations', operationsColumnLabel ?? "操作");
-                if (typeof custom === 'string') return <span>{custom}</span>;
-                return custom;
-              })()}
-              {handle("operations")}
+              {col.key === "name" ? (
+                // name 列：始终包含展开/折叠节点
+                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                  {col.renderTitle ? col.renderTitle() : (() => {
+                    const nameRenderer = columnHeaderRenderers?.name ?? taskTitleHeaderRender;
+                    if (nameRenderer) {
+                      const taskTitle = String(col.title ?? i18n?.taskTitle ?? "任務標題");
+                      const content = typeof nameRenderer === "function"
+                        ? columnHeaderRenderers?.name
+                          ? (nameRenderer as (p: { expandCollapseNode: React.ReactNode; defaultLabel: string }) => React.ReactNode)({ expandCollapseNode, defaultLabel: taskTitle })
+                          : taskTitleHeaderRender!({ expandCollapseNode, titleText: taskTitle })
+                        : nameRenderer;
+                      if (content) return <React.Fragment>{content}</React.Fragment>;
+                    }
+                    return (
+                      <React.Fragment>
+                        {expandCollapseNode}
+                        <span>{col.title ?? i18n?.taskTitle ?? "任務標題"}</span>
+                      </React.Fragment>
+                    );
+                  })()}
+                </div>
+              ) : (
+                renderColTitle(col)
+              )}
+              {handle(col.key)}
             </div>
           </React.Fragment>
-        )}
+        ))}
       </div>
     </div>
   );

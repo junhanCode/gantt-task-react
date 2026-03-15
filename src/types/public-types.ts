@@ -304,16 +304,45 @@ export interface StylingOption {
   }>;
 }
 
-export interface ColumnConfig {
-  /** 列的唯一标识 */
+export interface GanttColumnConfig {
+  /**
+   * 列的唯一标识。内置列 key（见下方说明）会自动读取对应 Task 字段并提供默认渲染；
+   * 其他任意 key 视为自定义列，需通过 render 提供单元格内容。
+   *
+   * 内置 key（default 视图）：name | plannedStart | plannedEnd | plannedDuration | actualStart | actualEnd | operations
+   * 内置 key（oaTask 视图）：name | status | assignee | creator | operations
+   */
   key: string;
-  /** 列标题 */
-  label: string;
-  /** 列宽度 */
+  /** 列标题文字或节点 */
+  title?: React.ReactNode;
+  /** 列宽度，如 "150px"。不传时使用全局 listCellWidth */
   width?: string;
-  /** 是否显示 */
+  /** 是否隐藏该列，默认 false */
+  hidden?: boolean;
+  /** 单元格对齐方式，默认 'left' */
+  align?: 'left' | 'center' | 'right';
+  /**
+   * 自定义单元格渲染函数。
+   * - value：该字段在 Task 上的原始值（内置列已自动提取，自定义列为 task[key]，不在 Task 类型上则为 undefined）
+   * - task：完整 Task 对象
+   * - index：行索引
+   * 注意：name 列的树形展开/折叠图标始终保留，render 只替换文字部分。
+   */
+  render?: (value: any, task: Task, index: number) => React.ReactNode;
+  /**
+   * 自定义列头渲染，返回值完全替换默认列头内容（含 title 文字）。
+   * 对于 oaTask 视图的 name 列，默认列头包含展开/折叠全部按钮，
+   * 使用 renderTitle 后需自行处理该交互（可通过 columnHeaderRenderers.name 获得 expandCollapseNode）。
+   */
+  renderTitle?: () => React.ReactNode;
+}
+
+/** @deprecated 请使用 GanttColumnConfig */
+export interface ColumnConfig {
+  key: string;
+  label: string;
+  width?: string;
   visible?: boolean;
-  /** 自定义标题渲染 */
   renderHeader?: (props: { label: string; width?: string }) => React.ReactNode;
 }
 
@@ -371,8 +400,13 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   oaTaskViewMode?: OATaskViewMode;
   /** oaTask模式切换视图模式的回调 */
   onOATaskViewModeChange?: (mode: OATaskViewMode) => void;
-  /** 列配置（用于显示/隐藏和自定义标题） */
-  columns?: ColumnConfig[];
+  /**
+   * 列配置数组（仿 Ant Design Table columns）。
+   * 传入后以此数组驱动左侧任务列表的列顺序、显示/隐藏、列宽、列头与单元格渲染，
+   * 不传时保持原有列布局（向后兼容）。
+   * 可混合内置列与完全自定义列，详见 GanttColumnConfig。
+   */
+  columns?: GanttColumnConfig[];
   /** 自定义判断任务是否可以拖动/调整的函数
    * @param task 任务对象
    * @param action 操作类型：'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress'

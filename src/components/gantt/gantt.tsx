@@ -102,7 +102,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   onTaskDragEnd,
   onTaskDragComplete,
   onRenderComplete,
-  // @ts-expect-error - Reserved for future column configuration feature
   columns,
   columnRenderers,
   columnEllipsisMaxChars,
@@ -1135,6 +1134,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     onDateChange,
     tableStyles,
     resizableColumns,
+    columns,
   };
   return (
     <div ref={ganttContainerRef}>

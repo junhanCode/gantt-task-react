@@ -1,7 +1,8 @@
 import React, { useMemo } from "react";
 import styles from "./task-list-table.module.css";
-import { Task } from "../../types/public-types";
+import { Task, GanttColumnConfig } from "../../types/public-types";
 import { getVirtualRange, shouldUseVirtualScroll } from "../../helpers/virtual-scroll-helper";
+import { getColumnValue } from "../../helpers/column-helper";
 
 export const OATaskListTable: React.FC<{
   rowHeight: number;
@@ -26,6 +27,8 @@ export const OATaskListTable: React.FC<{
   statusColumnWidth?: string;
   /** 负责人列宽度（拖拽调整后传入） */
   assigneeColumnWidth?: string;
+  /** 统一列配置数组（由 task-list.tsx 传入，已合并列宽状态） */
+  columns?: GanttColumnConfig[];
   columnRenderers?: Partial<{
     unread: (task: Task, meta: { value: boolean; displayValue: React.ReactNode }) => React.ReactNode;
     name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
@@ -90,6 +93,7 @@ export const OATaskListTable: React.FC<{
   showOperationsColumn = true,
   statusColumnWidth,
   assigneeColumnWidth,
+  columns,
   columnRenderers,
   columnEllipsisMaxChars,
   onCellOverflow,
@@ -166,7 +170,21 @@ export const OATaskListTable: React.FC<{
     ? (tasks.length - virtualRange.endIndex - 1) * rowHeight
     : 0;
 
-  const colCount = 6;
+  // 遗留模式默认列（不含系统列 rowSelection/unread）
+  const legacyColumns: GanttColumnConfig[] = [
+    { key: "name",       width: nameColumnWidth ?? rowWidth, align: "left"   },
+    { key: "status",     width: statusColumnWidth   ?? "100px", align: "center" },
+    { key: "assignee",   width: assigneeColumnWidth ?? "100px", align: "center" },
+    ...(showOperationsColumn
+      ? [{ key: "operations", width: operationsColumnWidth ?? "120px", align: "center" as const }]
+      : []),
+  ];
+
+  const resolvedColumns = columns ?? legacyColumns;
+
+  // 系统列数量（rowSelection + unread）
+  const systemColCount = (rowSelection ? 1 : 0) + (unreadColumn?.show ? 1 : 0);
+  const colCount = systemColCount + resolvedColumns.length;
 
   const getEllipsisData = (column: "name" | "status" | "assignee" | "unread", rawValue?: string | any) => {
     // 处理 status 可能是 StatusInfo 对象的情况
@@ -206,10 +224,9 @@ export const OATaskListTable: React.FC<{
       <colgroup>
         {rowSelection && <col style={{ width: rowSelection.columnWidth || "50px" }} />}
         {unreadColumn?.show && <col style={{ width: unreadColumn.width || "40px" }} />}
-        <col style={{ width: nameColumnWidth || rowWidth }} />
-        <col style={{ width: statusColumnWidth ?? "100px" }} />
-        <col style={{ width: assigneeColumnWidth ?? "100px" }} />
-        {showOperationsColumn && <col style={{ width: operationsColumnWidth ?? "120px" }} />}
+        {resolvedColumns.map((col) => (
+          <col key={col.key} style={{ width: col.width }} />
+        ))}
       </colgroup>
       <tbody>
       {topSpacerHeight > 0 && (
@@ -316,183 +333,144 @@ export const OATaskListTable: React.FC<{
                 </td>
               );
             })()}
-            {/* 任務標題列 */}
-            {(() => {
-              const meta = getEllipsisData("name", t.name);
-              if (meta.isOverflow && onCellOverflow) {
-                onCellOverflow({ column: "name", task: t });
-              }
-              const content = columnRenderers?.name
-                ? columnRenderers.name(t, meta)
-                : meta.displayValue;
-              return (
-                <td
-                  className={styles.taskListCell}
-                  style={{
-                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                    ...(tableStyles?.cell || {}),
-                  }}
-                  title={t.name}
-                >
-                  <div className={styles.taskListNameWrapper}>
-                    <div
-                      className={
-                        expanderContent
-                          ? styles.taskListExpander
-                          : styles.taskListEmptyExpander
-                      }
-                      onClick={() => onExpanderClick(t)}
-                    >
-                      {expanderContent}
+            {/* 数据列（由 resolvedColumns 驱动） */}
+            {resolvedColumns.map((col) => {
+              const baseCellStyle: React.CSSProperties = {
+                textAlign: col.align ?? "left",
+                ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
+                ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
+                ...(tableStyles?.cell || {}),
+              };
+
+              // ── name 列 ──────────────────────────────────────────────────
+              if (col.key === "name") {
+                const meta = getEllipsisData("name", t.name);
+                if (meta.isOverflow && onCellOverflow) onCellOverflow({ column: "name", task: t });
+                const content = col.render
+                  ? col.render(t.name, t, index)
+                  : columnRenderers?.name
+                  ? columnRenderers.name(t, meta)
+                  : meta.displayValue;
+                return (
+                  <td key="name" className={styles.taskListCell} style={{ ...baseCellStyle, textAlign: "left" }} title={t.name}>
+                    <div className={styles.taskListNameWrapper}>
+                      <div
+                        className={expanderContent ? styles.taskListExpander : styles.taskListEmptyExpander}
+                        onClick={() => onExpanderClick(t)}
+                      >
+                        {expanderContent}
+                      </div>
+                      <div className={styles.taskListNameText}>{content}</div>
                     </div>
-                    <div className={styles.taskListNameText}>{content}</div>
-                  </div>
-                </td>
-              );
-            })()}
-            
-            {/* 狀態列 */}
-            {(() => {
+                  </td>
+                );
+              }
+
+              // ── status 列 ────────────────────────────────────────────────
+              if (col.key === "status") {
                 const meta = getEllipsisData("status", t.status);
-                if (meta.isOverflow && onCellOverflow) {
-                  onCellOverflow({ column: "status", task: t });
-                }
-                // 獲取狀態的字符串表示和顏色
-                const statusText = typeof t.status === "string" 
-                  ? t.status 
-                  : t.status && typeof t.status === "object" 
-                    ? t.status.description 
-                    : "";
+                if (meta.isOverflow && onCellOverflow) onCellOverflow({ column: "status", task: t });
+                const statusText = typeof t.status === "string"
+                  ? t.status
+                  : t.status && typeof t.status === "object" ? t.status.description : "";
                 const statusColor = typeof t.status === "string"
                   ? statusColors[t.status] || "#E6E6E6"
-                  : t.status && typeof t.status === "object" && t.status.color
-                    ? t.status.color
-                    : "#E6E6E6";
-                    
-                const defaultNode = statusText && (
+                  : t.status && typeof t.status === "object" && t.status.color ? t.status.color : "#E6E6E6";
+                const defaultNode = statusText ? (
                   <span
                     style={{
-                      display: "inline-block",
-                      padding: "2px 8px",
-                      borderRadius: "4px",
-                      backgroundColor: statusColor,
-                      color: statusText === "掛起中" ? "#666" : "#000",
-                      fontSize: "12px",
-                      maxWidth: "100%",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
+                      display: "inline-block", padding: "2px 8px", borderRadius: "4px",
+                      backgroundColor: statusColor, color: statusText === "掛起中" ? "#666" : "#000",
+                      fontSize: "12px", maxWidth: "100%", whiteSpace: "nowrap",
+                      overflow: "hidden", textOverflow: "ellipsis",
                     }}
                     title={statusText}
                   >
                     {meta.displayValue}
                   </span>
+                ) : null;
+                const content = col.render
+                  ? col.render(t.status, t, index)
+                  : columnRenderers?.status
+                  ? columnRenderers.status(t, meta)
+                  : defaultNode;
+                return (
+                  <td key="status" className={styles.taskListCell} style={baseCellStyle}>
+                    {content}
+                  </td>
                 );
-              const content = columnRenderers?.status
-                ? columnRenderers.status(t, meta)
-                : defaultNode;
-              return (
-                <td
-                  className={styles.taskListCell}
-                  style={{
-                    textAlign: "center",
-                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                    ...(tableStyles?.cell || {}),
-                  }}
-                >
-                  {content}
-                </td>
-              );
-            })()}
-            
-            {/* 負責人列 */}
-            {(() => {
+              }
+
+              // ── assignee 列 ──────────────────────────────────────────────
+              if (col.key === "assignee") {
                 const meta = getEllipsisData("assignee", t.assignee || "-");
-                if (meta.isOverflow && onCellOverflow) {
-                  onCellOverflow({ column: "assignee", task: t });
-                }
-              const content = columnRenderers?.assignee
-                ? columnRenderers.assignee(t, meta)
-                : (
-                  <span
-                    style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
-                    title={meta.value}
-                  >
-                    {meta.displayValue || "-"}
-                  </span>
+                if (meta.isOverflow && onCellOverflow) onCellOverflow({ column: "assignee", task: t });
+                const content = col.render
+                  ? col.render(t.assignee, t, index)
+                  : columnRenderers?.assignee
+                  ? columnRenderers.assignee(t, meta)
+                  : (
+                    <span
+                      style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                      title={meta.value}
+                    >
+                      {meta.displayValue || "-"}
+                    </span>
+                  );
+                return (
+                  <td key="assignee" className={styles.taskListCell} style={baseCellStyle}>
+                    {content}
+                  </td>
                 );
+              }
+
+              // ── creator 列（内置，默认文本展示） ───────────────────────
+              if (col.key === "creator") {
+                const value = t.creator;
+                const content = col.render
+                  ? col.render(value, t, index)
+                  : (
+                    <span
+                      style={{ display: "inline-block", maxWidth: "100%", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                      title={value}
+                    >
+                      {value || "-"}
+                    </span>
+                  );
+                return (
+                  <td key="creator" className={styles.taskListCell} style={baseCellStyle}>
+                    {content}
+                  </td>
+                );
+              }
+
+              // ── operations 列 ────────────────────────────────────────────
+              if (col.key === "operations") {
+                return (
+                  <td key="operations" className={styles.taskListCell} style={baseCellStyle}>
+                    {col.render ? col.render(undefined, t, index)
+                      : columnRenderers?.operations ? columnRenderers.operations(t)
+                      : (
+                        <div className={styles.operationsContainer}>
+                          {onAddTask && <span className={styles.addIcon} onClick={(e) => { e.stopPropagation(); onAddTask(t); }} title="新增子任務">+</span>}
+                          {onEditTask && <span className={styles.actionIcon} onClick={(e) => { e.stopPropagation(); onEditTask(t); }} title="編輯">✎</span>}
+                          {onDeleteTask && <span className={styles.actionIcon} onClick={(e) => { e.stopPropagation(); onDeleteTask(t); }} title="刪除">×</span>}
+                        </div>
+                      )}
+                  </td>
+                );
+              }
+
+              // ── 完全自定义列 ─────────────────────────────────────────────
+              const value = getColumnValue(col.key, t);
               return (
-                <td
-                  className={styles.taskListCell}
-                  style={{
-                    textAlign: "center",
-                    ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                    ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                    ...(tableStyles?.cell || {}),
-                  }}
-                >
-                  {content}
+                <td key={col.key} className={styles.taskListCell} style={baseCellStyle}>
+                  {col.render
+                    ? col.render(value, t, index)
+                    : (value != null ? String(value) : "")}
                 </td>
               );
-            })()}
-            
-            {/* 操作列 */}
-            {showOperationsColumn && (
-              <td
-                className={styles.taskListCell}
-                style={{
-                  textAlign: "center",
-                  ...(tableStyles?.cellPadding ? { padding: tableStyles.cellPadding } : {}),
-                  ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
-                  ...(tableStyles?.cell || {}),
-                }}
-              >
-                {columnRenderers?.operations ? (
-                  columnRenderers.operations(t)
-                ) : (
-                  <div className={styles.operationsContainer}>
-                    {onAddTask && (
-                      <span
-                        className={styles.addIcon}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onAddTask(t);
-                        }}
-                        title="新增子任務"
-                      >
-                        +
-                      </span>
-                    )}
-                    {onEditTask && (
-                      <span
-                        className={styles.actionIcon}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditTask(t);
-                        }}
-                        title="編輯"
-                      >
-                        ✎
-                      </span>
-                    )}
-                    {onDeleteTask && (
-                      <span
-                        className={styles.actionIcon}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteTask(t);
-                        }}
-                        title="刪除"
-                      >
-                        ×
-                      </span>
-                    )}
-                  </div>
-                )}
-              </td>
-            )}
+            })}
           </tr>
         );
       })}

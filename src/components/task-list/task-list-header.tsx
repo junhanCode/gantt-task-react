@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./task-list-header.module.css";
+import { GanttColumnConfig } from "../../types/public-types";
 
 /** 可拖拽的列 key */
 type ColKey = "name" | "plannedStart" | "plannedEnd" | "plannedDuration" | "actualStart" | "actualEnd" | "operations";
@@ -67,6 +68,8 @@ TaskListHeaderDefault: React.FC<{
   collapseIcon?: React.ReactNode;
   /** 列宽拖拽回调，传入列 key 和新宽度（px） */
   onColumnResize?: (colKey: string, newWidthPx: number) => void;
+  /** 统一列配置数组（由 task-list.tsx 传入，已合并列宽状态） */
+  columns?: GanttColumnConfig[];
   tableStyles?: {
     headerHeight?: number;
     height?: number | string;
@@ -95,48 +98,55 @@ TaskListHeaderDefault: React.FC<{
   operationsColumnWidth, 
   operationsColumnLabel,
   onColumnResize,
+  columns,
   tableStyles,
 }) => {
-  const label = {
-    plannedStart: timeColumnLabels?.plannedStart ?? "Planned Start",
-    plannedEnd: timeColumnLabels?.plannedEnd ?? "Planned End",
-    plannedDuration: timeColumnLabels?.plannedDuration ?? "Duration (Days)",
-    actualStart: timeColumnLabels?.actualStart ?? "Actual Start",
-    actualEnd: timeColumnLabels?.actualEnd ?? "Actual End",
-  };
-  const width = {
-    name: nameColumnWidth ?? rowWidth,
-    plannedStart: timeColumnWidths?.plannedStart ?? rowWidth,
-    plannedEnd: timeColumnWidths?.plannedEnd ?? rowWidth,
-    plannedDuration: timeColumnWidths?.plannedDuration ?? "100px",
-    actualStart: timeColumnWidths?.actualStart ?? rowWidth,
-    actualEnd: timeColumnWidths?.actualEnd ?? rowWidth,
-    operations: operationsColumnWidth ?? "120px",
-  };
+  // 若传入了统一 columns，使用它；否则从遗留 props 构建默认列
+  const resolvedColumns: GanttColumnConfig[] = columns ?? [
+    { key: "name",             title: "Item",                                                    width: nameColumnWidth ?? rowWidth },
+    { key: "plannedStart",     title: timeColumnLabels?.plannedStart     ?? "Planned Start",     width: timeColumnWidths?.plannedStart     ?? rowWidth,  align: "center" },
+    { key: "plannedEnd",       title: timeColumnLabels?.plannedEnd       ?? "Planned End",       width: timeColumnWidths?.plannedEnd       ?? rowWidth,  align: "center" },
+    { key: "plannedDuration",  title: timeColumnLabels?.plannedDuration  ?? "Duration (Days)",   width: timeColumnWidths?.plannedDuration  ?? "100px",   align: "center" },
+    { key: "actualStart",      title: timeColumnLabels?.actualStart      ?? "Actual Start",      width: timeColumnWidths?.actualStart      ?? rowWidth,  align: "center" },
+    { key: "actualEnd",        title: timeColumnLabels?.actualEnd        ?? "Actual End",        width: timeColumnWidths?.actualEnd        ?? rowWidth,  align: "center" },
+    { key: "operations",       title: operationsColumnLabel              ?? "操作",              width: operationsColumnWidth              ?? "120px",   align: "center" },
+  ];
 
-  const commonCellStyle = (w: string): React.CSSProperties => ({
-    minWidth: w,
-    maxWidth: w,
-    ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding } : {}),
+  const hPx = tableStyles?.headerHeight ?? headerHeight;
+
+  const commonCellStyle = (col: GanttColumnConfig): React.CSSProperties => ({
+    minWidth: col.width,
+    maxWidth: col.width,
+    textAlign: col.align ?? "left",
+    ...(tableStyles?.headerCellPadding ?? tableStyles?.cellPadding
+      ? { padding: tableStyles?.headerCellPadding ?? tableStyles?.cellPadding }
+      : {}),
     ...(tableStyles?.borderColor ? { borderRightColor: tableStyles.borderColor } : {}),
     ...(tableStyles?.headerTextColor ? { color: tableStyles.headerTextColor } : {}),
     ...(tableStyles?.headerCell || {}),
   });
 
-  const handle = (colKey: ColKey) =>
+  const handle = (colKey: string) =>
     onColumnResize ? (
       <div
         className={styles.resizeHandle}
-        onMouseDown={(e) => startResize(e, colKey, onColumnResize)}
+        onMouseDown={(e) => startResize(e, colKey as ColKey, onColumnResize)}
       />
     ) : null;
+
+  const separator = (
+    <div
+      className={styles.ganttTable_HeaderSeparator}
+      style={{ height: hPx * 0.6, marginTop: hPx * 0.2 }}
+    />
+  );
 
   return (
     <div
       className={styles.ganttTable}
       style={{
-        fontFamily: fontFamily,
-        fontSize: fontSize,
+        fontFamily,
+        fontSize,
         paddingRight: headerGutterRight ?? 0,
         ...(tableStyles?.borderColor ? {
           borderColor: tableStyles.borderColor,
@@ -151,56 +161,19 @@ TaskListHeaderDefault: React.FC<{
       <div
         className={styles.ganttTable_Header}
         style={{
-          height: (tableStyles?.headerHeight ?? headerHeight) - 2,
+          height: hPx - 2,
           ...(tableStyles?.headerBackgroundColor ? { backgroundColor: tableStyles.headerBackgroundColor } : {}),
         }}
       >
-        <div className={styles.ganttTable_HeaderItem} style={commonCellStyle(width.name)}>
-          <span>Item</span>
-          {handle("name")}
-        </div>
-        <div className={styles.ganttTable_HeaderSeparator}
-          style={{ height: (tableStyles?.headerHeight ?? headerHeight) * 0.6, marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2 }}
-        />
-        <div className={styles.ganttTable_HeaderItem} style={{ ...commonCellStyle(width.plannedStart), textAlign: "center" }}>
-          &nbsp;{label.plannedStart}
-          {handle("plannedStart")}
-        </div>
-        <div className={styles.ganttTable_HeaderSeparator}
-          style={{ height: (tableStyles?.headerHeight ?? headerHeight) * 0.6, marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2 }}
-        />
-        <div className={styles.ganttTable_HeaderItem} style={{ ...commonCellStyle(width.plannedEnd), textAlign: "center" }}>
-          &nbsp;{label.plannedEnd}
-          {handle("plannedEnd")}
-        </div>
-        <div className={styles.ganttTable_HeaderSeparator}
-          style={{ height: (tableStyles?.headerHeight ?? headerHeight) * 0.6, marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2 }}
-        />
-        <div className={styles.ganttTable_HeaderItem} style={{ ...commonCellStyle(width.plannedDuration), textAlign: "center" }}>
-          &nbsp;{label.plannedDuration}
-          {handle("plannedDuration")}
-        </div>
-        <div className={styles.ganttTable_HeaderSeparator}
-          style={{ height: (tableStyles?.headerHeight ?? headerHeight) * 0.6, marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2 }}
-        />
-        <div className={styles.ganttTable_HeaderItem} style={{ ...commonCellStyle(width.actualStart), textAlign: "center" }}>
-          &nbsp;{label.actualStart}
-          {handle("actualStart")}
-        </div>
-        <div className={styles.ganttTable_HeaderSeparator}
-          style={{ height: (tableStyles?.headerHeight ?? headerHeight) * 0.6, marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2 }}
-        />
-        <div className={styles.ganttTable_HeaderItem} style={{ ...commonCellStyle(width.actualEnd), textAlign: "center" }}>
-          &nbsp;{label.actualEnd}
-          {handle("actualEnd")}
-        </div>
-        <div className={styles.ganttTable_HeaderSeparator}
-          style={{ height: (tableStyles?.headerHeight ?? headerHeight) * 0.6, marginTop: (tableStyles?.headerHeight ?? headerHeight) * 0.2 }}
-        />
-        <div className={styles.ganttTable_HeaderItem} style={{ ...commonCellStyle(width.operations), textAlign: "center" }}>
-          &nbsp;{operationsColumnLabel ?? "操作"}
-          {handle("operations")}
-        </div>
+        {resolvedColumns.map((col, i) => (
+          <React.Fragment key={col.key}>
+            {i > 0 && separator}
+            <div className={styles.ganttTable_HeaderItem} style={commonCellStyle(col)}>
+              {col.renderTitle ? col.renderTitle() : <span>&nbsp;{col.title}</span>}
+              {handle(col.key)}
+            </div>
+          </React.Fragment>
+        ))}
       </div>
     </div>
   );
