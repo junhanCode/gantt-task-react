@@ -17,6 +17,10 @@ export type TooltipProps = {
   rowHeight: number;
   fontSize: string;
   fontFamily: string;
+  /** 鼠标相对于甘特容器的 X 坐标 */
+  mouseX: number;
+  /** 鼠标相对于甘特容器的 Y 坐标 */
+  mouseY: number;
   TooltipContent: React.FC<{
     task: Task;
     fontSize: string;
@@ -26,125 +30,82 @@ export type TooltipProps = {
 export const Tooltip: React.FC<TooltipProps> = ({
   task,
   rowHeight,
-  rtl,
-  svgContainerHeight,
-  svgContainerWidth,
-  scrollX,
   scrollY,
-  arrowIndent,
   fontSize,
   fontFamily,
   headerHeight,
-  taskListWidth,
   TooltipContent,
+  mouseX,
+  mouseY,
 }) => {
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [relatedY, setRelatedY] = useState(0);
   const [relatedX, setRelatedX] = useState(0);
   useEffect(() => {
-    if (tooltipRef.current) {
-      const tooltipHeight = tooltipRef.current.offsetHeight * 1.1;
-      const tooltipWidth = tooltipRef.current.offsetWidth * 1.1;
+    if (!tooltipRef.current) return;
 
-      const rowTop = task.index * rowHeight - scrollY + headerHeight;
-      const gap = 8;
-      // 悬浮框不覆盖任务条：优先放在任务条上方，空间不足时放下方
-      let newRelatedY = rowTop - tooltipHeight - gap;
-      if (newRelatedY < 0) {
-        newRelatedY = rowTop + rowHeight + gap;
-      }
-      let newRelatedX: number;
-      if (rtl) {
-        newRelatedX = task.x1 - arrowIndent * 1.5 - tooltipWidth - scrollX;
-        if (newRelatedX < 0) {
-          newRelatedX = task.x2 + arrowIndent * 1.5 - scrollX;
-        }
-        const tooltipLeftmostPoint = tooltipWidth + newRelatedX;
-        if (tooltipLeftmostPoint > svgContainerWidth) {
-          newRelatedX = svgContainerWidth - tooltipWidth;
-          newRelatedY += rowHeight;
-        }
+    const tooltipHeight = tooltipRef.current.offsetHeight;
+    const tooltipWidth = tooltipRef.current.offsetWidth;
+    const CURSOR_OFFSET = 14;
+    const EDGE_MARGIN = 8;
+
+    // 以鼠标为锚点，默认出现在右下方
+    let newX = mouseX + CURSOR_OFFSET;
+    let newY = mouseY + CURSOR_OFFSET;
+
+    // 计算被悬停任务条的行范围，避免覆盖该行
+    const taskRowTop = task.index * rowHeight - scrollY + headerHeight;
+    const taskRowBottom = taskRowTop + rowHeight;
+
+    // 若弹框与任务条行垂直重叠，优先放到行上方；空间不足则放下方
+    const wouldOverlapRow =
+      newY < taskRowBottom && newY + tooltipHeight > taskRowTop;
+    if (wouldOverlapRow) {
+      const aboveY = taskRowTop - tooltipHeight - CURSOR_OFFSET;
+      if (aboveY >= 0) {
+        newY = aboveY;
       } else {
-        newRelatedX = task.x2 + arrowIndent * 1.5 + taskListWidth - scrollX;
-        const tooltipLeftmostPoint = tooltipWidth + newRelatedX;
-        const fullChartWidth = taskListWidth + svgContainerWidth;
-        if (tooltipLeftmostPoint > fullChartWidth) {
-          newRelatedX =
-            task.x1 +
-            taskListWidth -
-            arrowIndent * 1.5 -
-            scrollX -
-            tooltipWidth;
-        }
-        if (newRelatedX < taskListWidth) {
-          newRelatedX = svgContainerWidth + taskListWidth - tooltipWidth;
-          newRelatedY += rowHeight;
-        }
+        newY = taskRowBottom + CURSOR_OFFSET;
       }
-      const tooltipLowerPoint = tooltipHeight + newRelatedY - scrollY;
-      if (tooltipLowerPoint > svgContainerHeight - scrollY) {
-        newRelatedY = svgContainerHeight - tooltipHeight;
-      }
-
-      // 最後一層保護：確保懸浮框在瀏覽器可視區內（避免太靠右或超出視窗）
-      const parentEl = tooltipRef.current.parentElement;
-      if (parentEl) {
-        const parentRect = parentEl.getBoundingClientRect();
-        const viewportWidth =
-          window.innerWidth || document.documentElement.clientWidth;
-        const viewportHeight =
-          window.innerHeight || document.documentElement.clientHeight;
-        const margin = 8;
-
-        let screenLeft = parentRect.left + newRelatedX;
-        let screenTop = parentRect.top + newRelatedY;
-
-        // 右側溢出：往左移動
-        if (screenLeft + tooltipWidth > viewportWidth - margin) {
-          const diff =
-            screenLeft + tooltipWidth - (viewportWidth - margin);
-          newRelatedX -= diff;
-          screenLeft -= diff;
-        }
-
-        // 左側溢出：往右移動
-        if (screenLeft < margin) {
-          const diff = margin - screenLeft;
-          newRelatedX += diff;
-          screenLeft += diff;
-        }
-
-        // 底部溢出：往上移動
-        if (screenTop + tooltipHeight > viewportHeight - margin) {
-          const diff =
-            screenTop + tooltipHeight - (viewportHeight - margin);
-          newRelatedY -= diff;
-          screenTop -= diff;
-        }
-
-        // 頂部溢出：往下移動
-        if (screenTop < margin) {
-          const diff = margin - screenTop;
-          newRelatedY += diff;
-          screenTop += diff;
-        }
-      }
-
-      setRelatedY(newRelatedY);
-      setRelatedX(newRelatedX);
     }
+
+    // 视口边界保护
+    const parentEl = tooltipRef.current.parentElement;
+    if (parentEl) {
+      const parentRect = parentEl.getBoundingClientRect();
+      const viewportWidth =
+        window.innerWidth || document.documentElement.clientWidth;
+      const viewportHeight =
+        window.innerHeight || document.documentElement.clientHeight;
+
+      // 右侧溢出：翻转到鼠标左侧
+      if (parentRect.left + newX + tooltipWidth > viewportWidth - EDGE_MARGIN) {
+        newX = mouseX - tooltipWidth - CURSOR_OFFSET;
+      }
+      // 左侧溢出：贴左边
+      if (parentRect.left + newX < EDGE_MARGIN) {
+        newX = EDGE_MARGIN - parentRect.left;
+      }
+      // 底部溢出：翻转到鼠标上方
+      if (parentRect.top + newY + tooltipHeight > viewportHeight - EDGE_MARGIN) {
+        newY = mouseY - tooltipHeight - CURSOR_OFFSET;
+      }
+      // 顶部溢出：贴顶部
+      if (parentRect.top + newY < EDGE_MARGIN) {
+        newY = EDGE_MARGIN - parentRect.top;
+      }
+    }
+
+    setRelatedX(newX);
+    setRelatedY(newY);
   }, [
     tooltipRef,
     task,
-    arrowIndent,
-    scrollX,
+    mouseX,
+    mouseY,
     scrollY,
     headerHeight,
-    taskListWidth,
     rowHeight,
-    svgContainerHeight,
-    svgContainerWidth,
-    rtl,
   ]);
 
   return (

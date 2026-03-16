@@ -184,7 +184,10 @@ export interface StylingOption {
   listCellWidth?: string;
   /** 左侧任务列表总宽度（如 "500px"），不传则根据列宽自动计算 */
   listWidth?: string;
-  /** 独立配置名称列宽，不传则使用 listCellWidth */
+  /**
+   * @deprecated 请使用 `columns: [{ key: 'name', width: '...' }]` 代替
+   * 独立配置名称列宽，不传则使用 listCellWidth
+   */
   nameColumnWidth?: string;
   rowHeight?: number;
   ganttHeight?: number;
@@ -225,7 +228,11 @@ export interface StylingOption {
   gridBorderWidth?: number;
   /** 时间刻度边框颜色，默认#e6e4e4 */
   gridBorderColor?: string;
-  /** 左侧四个时间列标题自定义 */
+  /**
+   * @deprecated 请使用 `columns` 数组中对应列的 `title` 字段代替，例如：
+   * `columns: [{ key: 'plannedStart', title: '计划开始' }, { key: 'plannedEnd', title: '计划截止' }]`
+   * 左侧四个时间列标题自定义
+   */
   timeColumnLabels?: {
     plannedStart?: string;
     plannedEnd?: string;
@@ -233,7 +240,11 @@ export interface StylingOption {
     actualStart?: string;
     actualEnd?: string;
   };
-  /** 左侧四个时间列列宽（例如 "155px"），不传则使用 listCellWidth */
+  /**
+   * @deprecated 请使用 `columns` 数组中对应列的 `width` 字段代替，例如：
+   * `columns: [{ key: 'plannedStart', width: '170px' }, { key: 'plannedEnd', width: '170px' }]`
+   * 左侧四个时间列列宽（例如 "155px"），不传则使用 listCellWidth
+   */
   timeColumnWidths?: {
     plannedStart?: string;
     plannedEnd?: string;
@@ -365,11 +376,20 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     onConfirm: (taskData: Partial<Task>) => void;
   }>;
   onDeleteTask?: (task: Task) => void;
+  /** @deprecated 请使用 `columns: [{ key: 'operations', width: '...' }]` 代替 */
   operationsColumnWidth?: string;
+  /** @deprecated 请使用 `columns: [{ key: 'operations', title: '...' }]` 代替 */
   operationsColumnLabel?: string;
-  /** 是否显示操作列，默认true */
+  /**
+   * @deprecated 请使用 `columns: [{ key: 'operations', hidden: true }]` 代替
+   * 是否显示操作列，默认 true
+   */
   showOperationsColumn?: boolean;
-  /** 自定义列渲染（类似 antd columns.render） */
+  /**
+   * @deprecated `name` / `status` / `assignee` / `operations` 字段请改用
+   * `columns: [{ key: 'name', render: (value, task) => ... }]` 等方式代替。
+   * 注意：`unread` 列暂未纳入 `columns` 系统，仍需通过此字段自定义。
+   */
   columnRenderers?: Partial<{
     unread: (task: Task, meta: { value: boolean; displayValue: React.ReactNode }) => React.ReactNode;
     name: (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => React.ReactNode;
@@ -423,7 +443,10 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     rowKey?: keyof Task | ((record: Task) => string);
     /** 自定义列表选择框宽度，默认 "50px" */
     columnWidth?: string;
-    /** 自定义多选列表头，支持 React 格式如 <div>全选</div>、字符串、或渲染函数 (props) => ReactNode */
+    /**
+     * @deprecated 请使用 `columnHeaderRenderers.rowSelection` 代替，功能完全相同
+     * 自定义多选列表头，支持 React 格式如 <div>全选</div>、字符串、或渲染函数 (props) => ReactNode
+     */
     columnTitle?: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
     /** 是否显示全选复选框，默认 true */
     showSelectAll?: boolean;
@@ -433,8 +456,9 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     checkboxBorderColor?: string;
   };
   /**
-   * 任务标题列的表头自定义渲染。传入函数，返回表头内容（可包含图标，点击时自行处理如调接口）。
-   * 入参提供默认的展开/折叠节点和标题文案，可自由排列并追加自己的图标等。
+   * @deprecated 请使用 `columnHeaderRenderers.name` 代替，入参签名更统一：
+   * `columnHeaderRenderers: { name: ({ expandCollapseNode, defaultLabel }) => ReactNode }`
+   * 任务标题列的表头自定义渲染。
    */
   taskTitleHeaderRender?: (props: {
     expandCollapseNode: React.ReactNode;
@@ -443,19 +467,31 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   /**
    * 表头列自定义渲染（类似 Ant Design Table columns[].title）。
    * 支持 ReactNode 或渲染函数，未指定的列使用默认标题。
+   *
+   * 说明：`name` / `status` / `assignee` / `operations` 字段可改用
+   * `columns: [{ key: 'xxx', renderTitle: () => ... }]` 代替；
+   * `name` 字段因需传入 `expandCollapseNode`，无法通过 `columns[].renderTitle` 获得，
+   * 因此 `columnHeaderRenderers.name` 仍为自定义任务标题列头的推荐方式。
+   * `rowSelection` / `unread` 字段暂无 columns 替代，保持不变。
    */
   columnHeaderRenderers?: Partial<{
     /** 多选列表头 */
     rowSelection: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
     /** 未读列表头 */
     unread: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
-    /** 任务标题列表头（含展开/折叠节点） */
+    /** 任务标题列表头（含展开/折叠节点）。推荐用此字段而非 taskTitleHeaderRender */
     name: React.ReactNode | ((props: { expandCollapseNode: React.ReactNode; defaultLabel: string }) => React.ReactNode);
-    /** 状态列表头 */
+    /**
+     * @deprecated 请使用 `columns: [{ key: 'status', renderTitle: () => ... }]` 代替
+     */
     status: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
-    /** 负责人列表头 */
+    /**
+     * @deprecated 请使用 `columns: [{ key: 'assignee', renderTitle: () => ... }]` 代替
+     */
     assignee: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
-    /** 操作列表头 */
+    /**
+     * @deprecated 请使用 `columns: [{ key: 'operations', renderTitle: () => ... }]` 代替
+     */
     operations: React.ReactNode | ((props: { defaultLabel: string }) => React.ReactNode);
   }>;
   /**

@@ -263,6 +263,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
 
   const [scrollY, setScrollY] = useState(0);
   const [scrollX, setScrollX] = useState(-1);
+  const [tooltipMousePos, setTooltipMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Refs for drag auto-scroll
   const autoScrollRAFRef = useRef<number | null>(null);
@@ -1141,6 +1142,11 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       <div
         className={styles.wrapper}
         onKeyDown={handleKeyDown}
+        onMouseMove={(e) => {
+          if (!wrapperRef.current) return;
+          const rect = wrapperRef.current.getBoundingClientRect();
+          setTooltipMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+        }}
         onMouseLeave={() => {
           // 僅在懸浮狀態下，鼠標離開整個甘特區域時延時關閉 tooltip（便於移入懸浮框）
           if (ganttEvent.action === "mouseenter") {
@@ -1233,6 +1239,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
                 TooltipContent={resolvedTooltipContent}
                 rtl={rtl}
                 svgWidth={svgWidth}
+                mouseX={tooltipMousePos.x}
+                mouseY={tooltipMousePos.y}
               />
             </div>
           </div>

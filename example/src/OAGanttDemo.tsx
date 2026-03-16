@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Gantt, Task, ViewMode, OATaskViewMode, flattenTaskTree } from "gantt-task-react";
+import { Gantt, Task, ViewMode, OATaskViewMode, GanttColumnConfig, flattenTaskTree } from "gantt-task-react";
 import { initTasksTree } from "./helper";
 import "gantt-task-react/dist/index.css";
 import {
@@ -365,6 +365,77 @@ const OAGanttDemo: React.FC = () => {
 
   const ganttHeight = useCalcHeight(328);
 
+  // 列配置：替代 nameColumnWidth / timeColumnLabels / timeColumnWidths /
+  // columnRenderers.{name,status,assignee} / operationsColumnWidth /
+  // operationsColumnLabel / showOperationsColumn / columnHeaderRenderers.{status,assignee}
+  const columns: GanttColumnConfig[] = [
+    {
+      key: "name",
+      width: "500px",
+      render: (_, task) => {
+        const taskAny = task as any;
+        const projectTags: string[] = taskAny.projectTags || [];
+        const prefix = projectTags.map((p: string) => `【${p}】`).join("");
+        return (
+          <div className={styles.taskTitle}>
+            <span title={`${prefix}${task.name}`}>
+              {prefix}
+              {task.name}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "status",
+      renderTitle: () => <span>状态</span>,
+      render: (_, task) => {
+        const statusObj = task.status as { color: string; description: string };
+        return (
+          <span style={{ color: statusObj?.color }}>
+            {statusObj?.description || ""}
+          </span>
+        );
+      },
+    },
+    {
+      key: "assignee",
+      renderTitle: () => <span>负责人</span>,
+      render: (value, task) => (
+        <Tooltip title={undefined}>
+          <span>{(value as string) || task.assignee || ""}</span>
+        </Tooltip>
+      ),
+    },
+    {
+      key: "plannedStart",
+      title: "Planned Start",
+      width: "170px",
+    },
+    {
+      key: "plannedEnd",
+      title: "Planned End",
+      width: "170px",
+    },
+    {
+      key: "actualStart",
+      title: "Actual Start",
+      width: "170px",
+    },
+    {
+      key: "actualEnd",
+      title: "Actual End",
+      width: "170px",
+    },
+    {
+      key: "operations",
+      title: "操作",
+      width: "120px",
+      align: "center",
+      hidden: true,
+    },
+  ];
+
   if (loading) {
     return (
       <div style={{ padding: 40, textAlign: "center", color: "#666" }}>
@@ -386,43 +457,11 @@ const OAGanttDemo: React.FC = () => {
           }
           onExpanderClick={handleExpanderClick}
           listCellWidth="140px"
-          nameColumnWidth="500px"
           viewType="oaTask"
-          timeColumnLabels={{
-            plannedStart: "Planned Start",
-            plannedEnd: "Planned End",
-            actualStart: "Actual Start",
-            actualEnd: "Actual End",
-          }}
+          columns={columns}
           headerHeight={41}
           rowHeight={42}
           columnRenderers={{
-            name: (task: Task) => {
-              const taskAny = task as any;
-              const projectTags: string[] = taskAny.projectTags || [];
-              const prefix = projectTags.map((p: string) => `【${p}】`).join("");
-              return (
-                <div className={styles.taskTitle}>
-                  <span title={`${prefix}${task.name}`}>
-                    {prefix}
-                    {task.name}
-                  </span>
-                </div>
-              );
-            },
-            status: (task: Task) => {
-              const statusObj = task.status as { color: string; description: string };
-              return (
-                <span style={{ color: statusObj?.color }}>
-                  {statusObj?.description || ""}
-                </span>
-              );
-            },
-            assignee: (task: Task, meta: any) => (
-              <Tooltip title={meta?.isOverflow ? meta?.displayValue : undefined}>
-                <span>{meta?.displayValue || task.assignee}</span>
-              </Tooltip>
-            ),
             unread: (task: Task) => {
               const taskAny = task as any;
               if (!taskAny.unread) return null;
@@ -437,16 +476,8 @@ const OAGanttDemo: React.FC = () => {
             },
           }}
           isTaskDraggable={isTaskDraggable}
-          timeColumnWidths={{
-            plannedStart: "170px",
-            plannedEnd: "170px",
-            actualStart: "170px",
-            actualEnd: "170px",
-          }}
           ganttHeight={ganttHeight}
           columnWidth={columnWidth}
-          operationsColumnWidth="120px"
-          operationsColumnLabel="操作"
           expandIcon={
             <CaretDownOutlined
               style={{ marginRight: "4px", fontSize: "14px" }}
@@ -457,7 +488,6 @@ const OAGanttDemo: React.FC = () => {
               style={{ marginRight: "4px", fontSize: "14px" }}
             />
           }
-          showOperationsColumn={false}
           showArrows={false}
           oaTaskViewMode={oaTaskViewMode}
           onOATaskViewModeChange={(mode) => {
@@ -489,27 +519,7 @@ const OAGanttDemo: React.FC = () => {
             columnWidth: "32px",
             showSelectAll: true,
             checkboxBorderColor: "#E1E1E1",
-            columnTitle: (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className={styles.checkboxCtn}
-              >
-                <Dropdown
-                  menu={{
-                    items: getSelectionItems().map((item) => ({
-                      key: item.key,
-                      label: item.text,
-                      onClick: () => item.onSelect(),
-                    })),
-                  }}
-                  trigger={["click"]}
-                  placement="bottomLeft"
-                >
-                  <DownOutlined className={styles.DownIcon} />
-                </Dropdown>
-              </div>
-            ),
-          } as any}
+          }}
           gridBorderWidth={1}
           gridBorderColor="#f0f0f0"
           unreadColumn={{
@@ -517,35 +527,6 @@ const OAGanttDemo: React.FC = () => {
             width: "20px",
             title: " ",
           }}
-          taskTitleHeaderRender={({ expandCollapseNode }: any) => (
-            <>
-              <div className={styles.expandCollapseNode}>{expandCollapseNode}</div>
-              <div className={styles.taskTitleText}>任务标题</div>
-              <div className={styles.cleanIcon}>
-                {!noUnread ? (
-                  <Tooltip title="暂无未读消息">
-                    <Button
-                      type="text"
-                      style={{ color: "#808080", fontSize: "12px" }}
-                    >
-                      🗑️
-                    </Button>
-                  </Tooltip>
-                ) : (
-                  <Tooltip title="标记全部已读">
-                    <Button
-                      loading={readAllLoading}
-                      type="text"
-                      style={{ fontSize: "12px" }}
-                      onClick={handleMarkAllAsRead}
-                    >
-                      🗑️
-                    </Button>
-                  </Tooltip>
-                )}
-              </div>
-            </>
-          )}
           timelineHeaderCellRender={({ date, defaultLabel, level, oaTaskViewMode: oaMode }: any) => {
             let displayLabel = defaultLabel;
             let tooltipText = "";
@@ -603,8 +584,52 @@ const OAGanttDemo: React.FC = () => {
             cellPadding: "4px",
           }}
           columnHeaderRenderers={{
-            status: () => <span>状态</span>,
-            assignee: () => <span>负责人</span>,
+            rowSelection: (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className={styles.checkboxCtn}
+              >
+                <Dropdown
+                  menu={{
+                    items: getSelectionItems().map((item) => ({
+                      key: item.key,
+                      label: item.text,
+                      onClick: () => item.onSelect(),
+                    })),
+                  }}
+                  trigger={["click"]}
+                  placement="bottomLeft"
+                >
+                  <DownOutlined className={styles.DownIcon} />
+                </Dropdown>
+              </div>
+            ),
+            name: ({ expandCollapseNode }: any) => (
+              <>
+                <div className={styles.expandCollapseNode}>{expandCollapseNode}</div>
+                <div className={styles.taskTitleText}>任务标题</div>
+                <div className={styles.cleanIcon}>
+                  {!noUnread ? (
+                    <Tooltip title="暂无未读消息">
+                      <Button type="text" style={{ color: "#808080", fontSize: "12px" }}>
+                        🗑️
+                      </Button>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip title="标记全部已读">
+                      <Button
+                        loading={readAllLoading}
+                        type="text"
+                        style={{ fontSize: "12px" }}
+                        onClick={handleMarkAllAsRead}
+                      >
+                        🗑️
+                      </Button>
+                    </Tooltip>
+                  )}
+                </div>
+              </>
+            ),
           }}
         />
       </div>

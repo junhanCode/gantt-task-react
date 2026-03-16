@@ -2,7 +2,7 @@ import React from "react";
 import GanttChartDemo from "./GanttChartDemo";
 import OAGanttDemo from "./OAGanttDemo";
 import ColumnsDemo from "./ColumnsDemo";
-import { Task, ViewMode, Gantt } from "gantt-task-react";
+import { Task, ViewMode, Gantt, GanttColumnConfig } from "gantt-task-react";
 import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
@@ -705,6 +705,112 @@ const App = () => {
     setSelectedEditTask(null);
   };
 
+  // 列配置：替代 nameColumnWidth prop / timeColumnLabels / timeColumnWidths /
+  // columnRenderers.{name,status,operations} / operationsColumnWidth /
+  // operationsColumnLabel / showOperationsColumn /
+  // columnHeaderRenderers.{status,assignee,operations} / taskTitleHeaderRender
+  const columns: GanttColumnConfig[] = [
+    {
+      key: "name",
+      width: `${nameColumnWidth}px`,
+      render: (value, task) => {
+        if (useTitleCell) {
+          const record = { ...(task as any), id: task.id };
+          return (
+            <TitleCell
+              value={task.name}
+              record={record}
+              expandedRowKeys={expandedTaskKeys}
+              onRead={handleTaskRead}
+              onAdd={(taskId) => {
+                const taskToAdd = tasks.find(t => t.id === taskId);
+                if (taskToAdd) handleAddTask(taskToAdd);
+              }}
+              onCheck={(rec, operate) => {
+                console.log("查看任务:", rec, operate);
+                handleEditTask(rec);
+              }}
+              onExpand={handleTaskExpand}
+            />
+          );
+        }
+        return (
+          <span
+            style={{
+              color: "#1677ff",
+              display: "inline-block",
+              maxWidth: "100%",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+            title={task.name}
+          >
+            {value as string}
+          </span>
+        );
+      },
+    },
+    {
+      key: "status",
+      renderTitle: () => (
+        <span title="任务状态列">
+          狀態
+          <span style={{ marginLeft: 4, color: "#1890ff", cursor: "pointer" }}>ⓘ</span>
+        </span>
+      ),
+      render: (_, task) => {
+        if (task.status && typeof task.status === "object") {
+          const statusObj = task.status as { color: string; description: string };
+          return <span style={{ color: statusObj.color }}>{statusObj.description}</span>;
+        }
+        return <span>{String(task.status || "")}</span>;
+      },
+    },
+    {
+      key: "assignee",
+      renderTitle: () => <span title="负责人列">負責人</span>,
+    },
+    {
+      key: "plannedStart",
+      title: "Planned Start",
+      width: "170px",
+    },
+    {
+      key: "plannedEnd",
+      title: "Planned End",
+      width: "170px",
+    },
+    {
+      key: "plannedDuration",
+      title: "Duration (Days)",
+      width: "120px",
+    },
+    {
+      key: "actualStart",
+      title: "Actual Start",
+      width: "170px",
+    },
+    {
+      key: "actualEnd",
+      title: "Actual End",
+      width: "170px",
+    },
+    {
+      key: "operations",
+      title: "操作",
+      width: "140px",
+      align: "center",
+      renderTitle: () => <span title="操作列">操作</span>,
+      render: (_, task) => (
+        <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
+          <a onClick={(e) => { e.preventDefault(); handleEditTask(task); }}>编辑</a>
+          <a onClick={(e) => { e.preventDefault(); handleAddTask(task); }}>新增子任务</a>
+        </div>
+      ),
+    },
+  ];
+
   // 拖动结束事件处理器 - 模拟异步API调用
   const handleTaskDragEnd = async (task: Task) => {
     console.log("Task drag ended:", task);
@@ -1227,7 +1333,7 @@ const App = () => {
         </div>
         <div><strong>1️⃣ 复选框颜色自定义：</strong> 使用上方的颜色选择器可以自定义多选框的颜色（当前：{checkboxBorderColor}）</div>
         <div><strong>2️⃣ 时间自动规范化：</strong> 任务的结束时间会自动设为当天23:59:59，条形图占满整格（无需配置，自动生效）</div>
-        <div><strong>3️⃣ 任务标题列表头：</strong> 通过 taskTitleHeaderRender 自定义表头内容（可加图标），点击表头 ℹ️ 可调接口等</div>
+        <div><strong>3️⃣ 任务标题列表头：</strong> 通过 columnHeaderRenderers.name 自定义表头内容（可加图标），点击表头 ℹ️ 可调接口等</div>
         <div><strong>4️⃣ TitleCell 自定义渲染：</strong> 
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: 8 }}>
             <input
@@ -1248,7 +1354,7 @@ const App = () => {
             显示未读列（在任务名左侧，用红色 * 表示未读）
           </label>
         </div>
-        <div><strong>6️⃣ 表头自定义渲染 columnHeaderRenderers：</strong> 类似 Ant Design 表格，可自定义状态/负责人/操作等列表头（如状态列带 ⓘ 图标）</div>
+        <div><strong>6️⃣ 表头自定义渲染：</strong> 通过 columns[].renderTitle 或 columnHeaderRenderers.name（含 expandCollapseNode）自定义各列表头（如状态列带 ⓘ 图标）</div>
         <div><strong>7️⃣ 时间轴标题自定义 timelineHeaderCellRender：</strong> 可自定义时间轴每个格子的渲染（支持日/周/月模式，通过 level 参数区分上下层）</div>
         <div><strong>8️⃣ 多选列自定义 columnTitle：</strong> rowSelection.columnTitle 可自定义多选列表头（如「全选」）</div>
         <div><strong>9️⃣ 水平滚动修复：</strong> 滚动水平滚动条时，起始时间轴不再跳动（内部修复）</div>
@@ -1495,26 +1601,12 @@ const App = () => {
         onExpanderClick={handleExpanderClick}
         onBatchExpanderClick={handleBatchExpanderClick}
         listCellWidth={isChecked ? "140px" : ""}
-        nameColumnWidth={`${nameColumnWidth}px`}
+        columns={columns}
         // 自定义时间刻度边框
         gridBorderWidth={1}
         gridBorderColor="#f0f0f0"
         // 语言设置
         language={language}
-        timeColumnLabels={{  // [i18n] 时间列标题
-          plannedStart: "Planned Start",
-          plannedEnd: "Planned End",
-          plannedDuration: "Duration (Days)",
-          actualStart: "Actual Start",
-          actualEnd: "Actual End",
-        }}
-        timeColumnWidths={{
-          plannedStart: "170px",
-          plannedEnd: "170px",
-          plannedDuration: "120px",
-          actualStart: "170px",
-          actualEnd: "170px",
-        }}
         ganttHeight={298}
         columnWidth={columnWidth}
         // 自定义左侧表头高度：42px
@@ -1524,10 +1616,6 @@ const App = () => {
         onAddTask={handleAddTask}
         onEditTask={handleEditTask}
         onDeleteTask={handleDeleteTask}
-        // 演示操作列默认渲染，及自定义渲染能力
-        operationsColumnWidth="140px"
-        operationsColumnLabel="操作"  // [i18n]
-        showOperationsColumn={true}
         // 演示箭头开关
         showArrows={showArrows}
         // 显示悬浮信息框开关
@@ -1575,79 +1663,6 @@ const App = () => {
               </span>
             );
           },
-          name: useTitleCell 
-            ? (task: Task) => {
-                // 将 Task 转换为 TitleCell 需要的 record 格式
-                const record = {
-                  ...(task as any),
-                  id: task.id,
-                };
-                return (
-                  <TitleCell
-                    value={task.name}
-                    record={record}
-                    expandedRowKeys={expandedTaskKeys}
-                    onRead={handleTaskRead}
-                    onAdd={(taskId) => {
-                      const taskToAdd = tasks.find(t => t.id === taskId);
-                      if (taskToAdd) handleAddTask(taskToAdd);
-                    }}
-                    onCheck={(rec, operate) => {
-                      console.log("查看任务:", rec, operate);
-                      handleEditTask(rec);
-                    }}
-                    onExpand={handleTaskExpand}
-                  />
-                );
-              }
-            : (task: Task, meta: { value: string; displayValue: string; isOverflow: boolean; maxLength: number }) => (
-                <span
-                  style={{ 
-                    color: "#1677ff",
-                    display: "inline-block",
-                    maxWidth: "100%",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis"
-                  }}
-                  title={task.name}
-                >
-                  {meta.displayValue}
-                </span>
-              ),
-          status: (task: Task) => {
-            // 如果 status 是对象，渲染带颜色的文本
-            if (task.status && typeof task.status === 'object') {
-              const statusObj = task.status as { color: string; description: string };
-              return (
-                <span style={{ color: statusObj.color }}>
-                  {statusObj.description}
-                </span>
-              );
-            }
-            // 否则直接返回状态文本
-            return <span>{String(task.status || '')}</span>;
-          },
-          operations: (task: Task) => (
-            <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-              <a
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleEditTask(task);
-                }}
-              >
-                编辑
-              </a>
-              <a
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleAddTask(task);
-                }}
-              >
-                新增子任务
-              </a>
-            </div>
-          ),
         }}
         // onCellOverflow={({ column, task }: { column: "name" | "status" | "assignee"; task: Task }) => {
         //   console.log("列内容溢出:", column, "任务:", task.name);
@@ -1660,33 +1675,42 @@ const App = () => {
         onOATaskViewModeChange={(mode) => {
           setOATaskViewMode(mode as any);
         }}
-        // [i18n] 多选列：columnTitle "全选"
+        // [i18n] 多选列
         rowSelection={
           showRowSelection
-            ? ({
+            ? {
                 selectedRowKeys,
                 onChange: handleRowSelectionChange,
                 rowKey: "id",
                 columnWidth: "50px",
-                columnTitle: <div>全选</div>,
                 showSelectAll: true,
                 checkboxBorderColor,
-              } as any)
+              }
             : undefined
         }
-        // [i18n] 表头：status/assignee/operations 的 defaultLabel（狀態、負責人、操作）
         columnHeaderRenderers={{
-          status: ({ defaultLabel }) => (
-            <span title="任务状态列">
-              {defaultLabel}
-              <span style={{ marginLeft: 4, color: '#1890ff', cursor: 'pointer' }}>ⓘ</span>
-            </span>
-          ),
-          assignee: ({ defaultLabel }) => (
-            <span title="负责人列">{defaultLabel}</span>
-          ),
-          operations: ({ defaultLabel }) => (
-            <span title="操作列">{defaultLabel}</span>
+          rowSelection: <div>全选</div>,
+          name: ({ expandCollapseNode, defaultLabel }: any) => (
+            <>
+              {expandCollapseNode}
+              <span>{defaultLabel}</span>
+              <span
+                onClick={(e) => {
+                  e.stopPropagation();
+                  Modal.info({
+                    title: '任务标题列表头图标',
+                    content: '点击了表头图标，可在此处调接口或执行其他操作。',
+                  });
+                }}
+                style={{ marginLeft: 8, cursor: 'pointer', color: '#1890ff', display: 'inline-flex', alignItems: 'center' }}
+                title="点击调接口"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M8 5 L8 9 M8 11 L8 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </span>
+            </>
           ),
         }}
         // [i18n] 时间轴：日期格式 "X日"、周格式 defaultLabel "第X周"
@@ -1754,29 +1778,6 @@ const App = () => {
             </text>
           );
         }}
-        // [i18n] 任务标题列表头：titleText "任務標題"
-        taskTitleHeaderRender={({ expandCollapseNode, titleText }) => (
-          <>
-            {expandCollapseNode}
-            <span>{titleText}</span>
-            <span
-              onClick={(e) => {
-                e.stopPropagation();
-                Modal.info({
-                  title: '任务标题列表头图标',
-                  content: '点击了表头图标，可在此处调接口或执行其他操作。',
-                });
-              }}
-              style={{ marginLeft: 8, cursor: 'pointer', color: '#1890ff', display: 'inline-flex', alignItems: 'center' }}
-              title="点击调接口"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M8 5 L8 9 M8 11 L8 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </span>
-          </>
-        )}
         // [i18n] 未读列：title
         unreadColumn={{
           show: showUnreadColumn,

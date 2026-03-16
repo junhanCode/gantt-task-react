@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Gantt, Task, ViewMode, OATaskViewMode } from "gantt-task-react";
+import { Gantt, Task, ViewMode, OATaskViewMode, GanttColumnConfig } from "gantt-task-react";
 import { initTasks, generateScrollTestTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
 import {
@@ -320,6 +320,69 @@ const GanttChart: React.FC = () => {
     [currentUser]
   );
 
+  // 列配置：用 columns 数组统一管理列顺序、宽度、标题与单元格渲染
+  // （替代原 nameColumnWidth / timeColumnLabels / timeColumnWidths /
+  //   columnRenderers.{name,status,assignee,operations} /
+  //   operationsColumnWidth / operationsColumnLabel / showOperationsColumn /
+  //   columnHeaderRenderers.{status,assignee}）
+  const columns: GanttColumnConfig[] = [
+    {
+      key: "name",
+      width: "500px",
+      render: (_, task) => (
+        <div className={styles.taskTitle}>
+          <span>{task.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      renderTitle: () => <span>状态</span>,
+      render: (_, task) => {
+        const statusObj = task.status as { color: string; description: string };
+        return (
+          <span style={{ color: statusObj?.color }}>
+            {statusObj?.description || ""}
+          </span>
+        );
+      },
+    },
+    {
+      key: "assignee",
+      renderTitle: () => <span>负责人</span>,
+      render: (value, task) => (
+        <span>{(value as string) || task.assignee || ""}</span>
+      ),
+    },
+    {
+      key: "plannedStart",
+      title: "Planned Start",
+      width: "170px",
+    },
+    {
+      key: "plannedEnd",
+      title: "Planned End",
+      width: "170px",
+    },
+    {
+      key: "actualStart",
+      title: "Actual Start",
+      width: "170px",
+    },
+    {
+      key: "actualEnd",
+      title: "Actual End",
+      width: "170px",
+    },
+    {
+      key: "operations",
+      title: "操作",
+      width: "120px",
+      align: "center",
+      hidden: true,
+    },
+  ];
+
   // 拖动结束事件处理器
   const handleTaskDragEnd = async (task: Task) => {
     console.log("Task drag ended:", task);
@@ -362,14 +425,8 @@ const GanttChart: React.FC = () => {
           onSelect={handleSelect}
           onExpanderClick={handleExpanderClick}
           listCellWidth="140px"
-          nameColumnWidth="500px"
           viewType="oaTask"
-          timeColumnLabels={{
-            plannedStart: "Planned Start",
-            plannedEnd: "Planned End",
-            actualStart: "Actual Start",
-            actualEnd: "Actual End",
-          }}
+          columns={columns}
           timelineHeaderCellRender={({ date, defaultLabel, level, oaTaskViewMode }: any) => {
             let displayLabel = defaultLabel;
             let tooltipText = '';
@@ -436,29 +493,6 @@ const GanttChart: React.FC = () => {
           headerHeight={41}
           rowHeight={42}
           columnRenderers={{
-            name: (task: Task) => {
-              return (
-                <div className={styles.taskTitle}>
-                  <span>{task.name}</span>
-                </div>
-              );
-            },
-            status: (task: Task) => {
-              const statusObj = task.status as {
-                color: string;
-                description: string;
-              };
-              return (
-                <span style={{ color: statusObj?.color }}>
-                  {statusObj?.description || ""}
-                </span>
-              );
-            },
-            assignee: (task: Task, meta: any) => (
-              <Tooltip title={meta?.isOverflow ? meta?.displayValue : undefined}>
-                <span>{meta?.displayValue || task.assignee}</span>
-              </Tooltip>
-            ),
             unread: (task: Task) => {
               const taskAny = task as any;
               if (!taskAny.unread) return null;
@@ -473,16 +507,8 @@ const GanttChart: React.FC = () => {
             },
           }}
           isTaskDraggable={isTaskDraggable}
-          timeColumnWidths={{
-            plannedStart: "170px",
-            plannedEnd: "170px",
-            actualStart: "170px",
-            actualEnd: "170px",
-          }}
           ganttHeight={useCalcHeight(328)}
           columnWidth={columnWidth}
-          operationsColumnWidth="120px"
-          operationsColumnLabel="操作"
           expandIcon={
             <CaretDownOutlined
               style={{ marginRight: "4px", fontSize: "14px" }}
@@ -493,7 +519,6 @@ const GanttChart: React.FC = () => {
               style={{ marginRight: "4px", fontSize: "14px" }}
             />
           }
-          showOperationsColumn={false}
           showArrows={false}
           oaTaskViewMode={oaTaskViewMode}
           onOATaskViewModeChange={(mode) => {
@@ -526,7 +551,20 @@ const GanttChart: React.FC = () => {
             columnWidth: "32px",
             showSelectAll: true,
             checkboxBorderColor: "#E1E1E1",
-            columnTitle: (
+          }}
+          gridBorderWidth={1}
+          gridBorderColor="#f0f0f0"
+          unreadColumn={{
+            show: true,
+            width: "20px",
+            title: " ",
+          }}
+          tableStyles={{
+            headerHeight: 41.5,
+            cellPadding: "4px",
+          }}
+          columnHeaderRenderers={{
+            rowSelection: (
               <div onClick={(e) => e.stopPropagation()} className={styles.checkboxCtn}>
                 <Dropdown
                   menu={{
@@ -543,45 +581,25 @@ const GanttChart: React.FC = () => {
                 </Dropdown>
               </div>
             ),
-          }}
-          gridBorderWidth={1}
-          gridBorderColor="#f0f0f0"
-          unreadColumn={{
-            show: true,
-            width: "20px",
-            title: " ",
-          }}
-          taskTitleHeaderRender={({ expandCollapseNode }: any) => (
-            <>
-              <div className={styles.expandCollapseNode}>{expandCollapseNode}</div>
-              <div className={styles.taskTitleText}>任务标题</div>
-              <div className={styles.cleanIcon}>
-                <Tooltip title="标记全部已读">
-                  <Button
-                    type="text"
-                    style={{ fontSize: "12px" }}
-                    onClick={() => {
-                      // 标记所有任务为已读
-                      setTasks(tasks.map(t => ({ ...t, unread: false } as any)));
-                      message.success("已标记全部已读");
-                    }}
-                  >
-                    🗑️
-                  </Button>
-                </Tooltip>
-              </div>
-            </>
-          )}
-          tableStyles={{
-            headerHeight: 41.5,
-            cellPadding: "4px",
-          }}
-          columnHeaderRenderers={{
-            status: () => (
-              <span>状态</span>
-            ),
-            assignee: () => (
-              <span>负责人</span>
+            name: ({ expandCollapseNode }: any) => (
+              <>
+                <div className={styles.expandCollapseNode}>{expandCollapseNode}</div>
+                <div className={styles.taskTitleText}>任务标题</div>
+                <div className={styles.cleanIcon}>
+                  <Tooltip title="标记全部已读">
+                    <Button
+                      type="text"
+                      style={{ fontSize: "12px" }}
+                      onClick={() => {
+                        setTasks(tasks.map(t => ({ ...t, unread: false } as any)));
+                        message.success("已标记全部已读");
+                      }}
+                    >
+                      🗑️
+                    </Button>
+                  </Tooltip>
+                </div>
+              </>
             ),
           }}
         />
