@@ -7,6 +7,7 @@ import {
   Tooltip,
   Dropdown,
   Radio,
+  Switch,
   message,
 } from "antd";
 import {
@@ -67,6 +68,7 @@ const OAGanttDemo: React.FC = () => {
   const [readAllLoading, setReadAllLoading] = React.useState(false);
   const [oaTaskViewMode, setOATaskViewMode] =
     React.useState<OATaskViewMode>("日");
+  const [useCustomBarColor, setUseCustomBarColor] = React.useState(false);
 
   // 从树形数据派生出平铺列表，用于 cascade 多选逻辑
   const flatTasks = useMemo(() => flattenTaskTree(tasks), [tasks]);
@@ -320,6 +322,37 @@ const OAGanttDemo: React.FC = () => {
     [currentUser]
   );
 
+  // 自定义任务条形图颜色：优先使用 status.color（服务端字段），其次按优先级映射
+  const getTaskBarColor = React.useCallback(
+    (task: Task): string | null => {
+      if (!useCustomBarColor) return null;
+
+      const taskAny = task as any;
+
+      // 1. 优先使用 status.color（StatusInfo 对象中服务端定义的颜色）
+      if (taskAny.statusInfoVo?.color) {
+        return taskAny.statusInfoVo.color;
+      }
+      if (typeof task.status === "object" && (task.status as any)?.color) {
+        return (task.status as any).color;
+      }
+
+      // 2. 按优先级（高/中/低）返回颜色
+      const priorityColorMap: Record<string, string> = {
+        高: "#FF6B6B",
+        中: "#4ECDC4",
+        低: "#95E1D3",
+      };
+      if (taskAny.priority && priorityColorMap[taskAny.priority]) {
+        return priorityColorMap[taskAny.priority];
+      }
+
+      // 3. 返回 null，使用内置状态色
+      return null;
+    },
+    [useCustomBarColor]
+  );
+
   // 模拟拖动后保存接口（90% 成功率）
   const handleTaskDragEnd = async (task: Task): Promise<boolean> => {
     console.log("Task drag ended:", task);
@@ -476,6 +509,7 @@ const OAGanttDemo: React.FC = () => {
             },
           }}
           isTaskDraggable={isTaskDraggable}
+          getTaskBarColor={getTaskBarColor}
           ganttHeight={ganttHeight}
           columnWidth={columnWidth}
           expandIcon={
@@ -670,6 +704,15 @@ const OAGanttDemo: React.FC = () => {
           <Button size="small" type="dashed" onClick={loadData}>
             重新加载数据
           </Button>
+
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#555" }}>
+            <Switch
+              size="small"
+              checked={useCustomBarColor}
+              onChange={setUseCustomBarColor}
+            />
+            自定义条形图颜色
+          </span>
 
           <span style={{ color: "#1890ff", fontSize: "12px" }}>
             已选择：{selectedRowKeys.length} 个

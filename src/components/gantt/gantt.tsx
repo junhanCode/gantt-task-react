@@ -109,6 +109,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   tableStyles,
   resizableColumns = false,
   isTaskDraggable,
+  getTaskBarColor,
   rowSelection,
   unreadColumn,
   /** 任务标题列表头自定义渲染 */
@@ -1015,6 +1016,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     enableTaskDrag,
     enableTaskResize,
     isTaskDraggable,
+    getTaskBarColor,
     setGanttEvent,
     setFailedTask,
     setSelectedTask: handleSelectedTask,

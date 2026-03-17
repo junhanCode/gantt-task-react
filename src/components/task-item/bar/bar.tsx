@@ -14,6 +14,7 @@ export const Bar: React.FC<TaskItemProps> = ({
   enableTaskDrag = false,
   enableTaskResize = true,
   isTaskDraggable,
+  getTaskBarColor,
 }) => {
   // oaTask模式使用OABarDisplay（单条形图，基于plannedStart和plannedEnd）
   if (viewType === "oaTask") {
@@ -21,6 +22,7 @@ export const Bar: React.FC<TaskItemProps> = ({
     const plannedEnd = task.plannedEnd || task.end;
     const actualStart = task.actualStart || task.start;
     const isDraggable = isDateChangeable && enableTaskDrag;
+    const customBarColor = getTaskBarColor ? getTaskBarColor(task) : undefined;
     return (
       <g className={`${styles.barWrapper} ${isDraggable ? styles.draggable : ''}`} tabIndex={0}>
         <OABarDisplay
@@ -39,6 +41,7 @@ export const Bar: React.FC<TaskItemProps> = ({
           todayX={task.todayX}
           isSelected={isSelected}
           delayColor={task.styles?.delayColor}
+          customBarColor={customBarColor}
           onMouseDown={e => {
             isDateChangeable && enableTaskDrag && onEventStart("move", task, e);
           }}

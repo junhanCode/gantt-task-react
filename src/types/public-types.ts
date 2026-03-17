@@ -1,14 +1,12 @@
 export enum ViewMode {
-  Hour = "Hour",
-  QuarterDay = "Quarter Day",
-  HalfDay = "Half Day",
   Day = "Day",
+  /** 班次模式：每 6 小时一个刻度，D1(0:00) / D2(6:00) / N1(12:00) / N2(18:00) */
+  DayShift = "DayShift",
   /** ISO-8601 week */
   Week = "Week",
   Month = "Month",
   QuarterYear = "QuarterYear",
   Year = "Year",
-  DayShift = "DayShift",
 }
 export type TaskType = "task" | "milestone" | "project";
 export type TaskStatus = "待驗收" | "處理中" | "掛起中" | "待確認" | "已完成" | "已撤销";
@@ -433,6 +431,14 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
    * @returns 返回true表示允许该操作，false表示禁止
    */
   isTaskDraggable?: (task: Task, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
+  /**
+   * 自定义任务条形图基色回调。
+   * 优先级高于内置状态色映射表，返回 null/undefined 则回退到默认逻辑。
+   * 支持 hex / rgb / rgba 格式，例如 "#FF5733"、"rgb(255,87,51)"、"rgba(255,87,51,0.8)"。
+   * @param task 完整任务对象
+   * @returns 颜色字符串，或 null/undefined（使用默认色）
+   */
+  getTaskBarColor?: (task: Task) => string | null | undefined;
   /** 多选列配置 */
   rowSelection?: {
     /** 指定选中项的 key 数组，需要和 rowKey 配合使用 */

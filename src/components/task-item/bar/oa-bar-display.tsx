@@ -27,6 +27,8 @@ type OABarDisplayProps = {
   delayDaysFormat?: (days: number) => string;
   /** 延期段背景色，默认 #fbc2d5 */
   delayColor?: string;
+  /** 自定义基色，优先级高于内置状态色表，传 null/undefined 时回退到默认逻辑 */
+  customBarColor?: string | null;
 };
 
 const DEFAULT_DELAY_COLOR = "#fbc2d5";
@@ -72,6 +74,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   onMouseDown,
   delayDaysFormat,
   delayColor = DEFAULT_DELAY_COLOR,
+  customBarColor,
 }) => {
   const safeWidth = Math.max(0, width || 0);
 
@@ -104,6 +107,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   };
 
   const baseColor =
+    customBarColor ||
     (statusDescription && statusColors[statusDescription as TaskStatus]) ||
     "#E6E6E6";
 

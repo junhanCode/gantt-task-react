@@ -34,6 +34,7 @@ export type TaskGanttContentProps = {
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
   isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
+  getTaskBarColor?: (task: BarTask) => string | null | undefined;
   setGanttEvent: (value: GanttEvent) => void;
   setFailedTask: (value: BarTask | null) => void;
   setSelectedTask: (taskId: string) => void;
@@ -64,6 +65,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   enableTaskDrag = false,
   enableTaskResize = true,
   isTaskDraggable,
+  getTaskBarColor,
   setGanttEvent,
   setFailedTask,
   setSelectedTask,
@@ -411,6 +413,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               rtl={rtl}
               viewType={viewType}
               isTaskDraggable={isTaskDraggable}
+              getTaskBarColor={getTaskBarColor}
             />
           );
         })}

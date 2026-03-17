@@ -21,6 +21,7 @@ export type TaskItemProps = {
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
   isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
+  getTaskBarColor?: (task: BarTask) => string | null | undefined;
   onEventStart: (
     action: GanttContentMoveAction,
     selectedTask: BarTask,

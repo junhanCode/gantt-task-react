@@ -134,24 +134,6 @@ export const ganttDateRange = (
       newEndDate = startOfDate(newEndDate, "day");
       newEndDate = addToDate(newEndDate, 10, "day");
       break;
-    case ViewMode.QuarterDay:
-      newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -10, "day");
-      newEndDate = startOfDate(newEndDate, "day");
-      newEndDate = addToDate(newEndDate, 10, "day");
-      break;
-    case ViewMode.HalfDay:
-      newStartDate = startOfDate(newStartDate, "day");
-      newStartDate = addToDate(newStartDate, -10, "day");
-      newEndDate = startOfDate(newEndDate, "day");
-      newEndDate = addToDate(newEndDate, 10, "day");
-      break;
-    case ViewMode.Hour:
-      newStartDate = startOfDate(newStartDate, "hour");
-      newStartDate = addToDate(newStartDate, -10, "hour");
-      newEndDate = startOfDate(newEndDate, "day");
-      newEndDate = addToDate(newEndDate, 10, "day");
-      break;
   }
 
   // 如果今天晚于时间轴右边界，则将右边界延伸至今天后十天
@@ -192,17 +174,8 @@ export const seedDates = (
         currentDate = addToDate(currentDate, 1, "day");
         break;
       case ViewMode.DayShift:
-        // 每个“刻度”代表一个班次，以 6 小时为步进（D1 0:00，D2 6:00，N1 12:00，N2 18:00）
+        // 每个刻度代表一个班次，以 6 小时为步进（D1 0:00，D2 6:00，N1 12:00，N2 18:00）
         currentDate = addToDate(currentDate, 6, "hour");
-        break;
-      case ViewMode.HalfDay:
-        currentDate = addToDate(currentDate, 12, "hour");
-        break;
-      case ViewMode.QuarterDay:
-        currentDate = addToDate(currentDate, 6, "hour");
-        break;
-      case ViewMode.Hour:
-        currentDate = addToDate(currentDate, 1, "hour");
         break;
     }
     dates.push(currentDate);

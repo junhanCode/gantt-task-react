@@ -584,7 +584,7 @@ const App = () => {
   } else if (view === ViewMode.Day) {
     columnWidth = 80; // 日模式使用80px列宽
   } else if (view === ViewMode.DayShift) {
-    columnWidth = 20; // DayShift模式（4个班次）使用较小的列宽
+    columnWidth = 40; // 班次模式：每6小时一列，宽度较窄
   }
 
   const handleTaskChange = (task: Task) => {

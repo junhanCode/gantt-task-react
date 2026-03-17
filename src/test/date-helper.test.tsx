@@ -35,21 +35,6 @@ describe("seed date", () => {
     ).toEqual([new Date(2020, 5, 28), new Date(2020, 6, 28)]);
   });
 
-  test("quarterly", () => {
-    expect(
-      seedDates(
-        new Date(2020, 5, 28),
-        new Date(2020, 5, 29),
-        ViewMode.QuarterDay
-      )
-    ).toEqual([
-      new Date(2020, 5, 28, 0, 0),
-      new Date(2020, 5, 28, 6, 0),
-      new Date(2020, 5, 28, 12, 0),
-      new Date(2020, 5, 28, 18, 0),
-      new Date(2020, 5, 29, 0, 0),
-    ]);
-  });
 });
 
 describe("add to date", () => {
