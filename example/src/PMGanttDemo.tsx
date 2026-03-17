@@ -11,6 +11,8 @@
  */
 import React, { useRef, useState } from "react";
 import { Gantt, Task, ViewMode, GanttColumnConfig } from "gantt-task-react";
+import { Modal, Form, Input, DatePicker, message } from "antd";
+import type { Dayjs } from "dayjs";
 import "gantt-task-react/dist/index.css";
 
 // ─── 原始数据结构（与后端接口字段一一对应）────────────────────
@@ -274,6 +276,103 @@ const PMGanttDemo: React.FC = () => {
   const [tasks, setTasks]         = useState<Task[]>(() => buildTasks(MOCK_DATA));
   const [viewMode, setViewMode]   = useState("日");
 
+  // 行编辑弹框相关状态
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm();
+
+  const handleRowDoubleClick = (task: Task) => {
+    // 只允许对子任务（工序行）编辑，父级 project 行不弹
+    if (task.type !== "task") return;
+
+    setEditingTask(task);
+
+    const t: any = task;
+    const initialValues: {
+      name: string;
+      planStartRaw?: Dayjs;
+      planEndRaw?: Dayjs;
+      actualStartRaw?: Dayjs;
+      actualEndRaw?: Dayjs;
+    } = {
+      name: t.name?.replace(/^📍\s*/, "") || "",
+    };
+
+    if (t.planStartRaw) initialValues.planStartRaw = (t.planStartRaw as Dayjs) || undefined;
+    if (t.planEndRaw) initialValues.planEndRaw = (t.planEndRaw as Dayjs) || undefined;
+    if (t.actualStartRaw) initialValues.actualStartRaw = (t.actualStartRaw as Dayjs) || undefined;
+    if (t.actualEndRaw) initialValues.actualEndRaw = (t.actualEndRaw as Dayjs) || undefined;
+
+    form.setFieldsValue(initialValues);
+    setEditModalOpen(true);
+  };
+
+  const handleEditCancel = () => {
+    setEditModalOpen(false);
+    setEditingTask(null);
+    form.resetFields();
+  };
+
+  const handleEditOk = async () => {
+    if (!editingTask) return;
+
+    try {
+      const values = await form.validateFields();
+      setSaving(true);
+
+      const toDate = (v?: Dayjs) => (v ? v.toDate() : undefined);
+
+      const updatedTask: Task = {
+        ...editingTask,
+        name: `📍 ${values.name}`,
+        plannedStart: toDate(values.planStartRaw),
+        plannedEnd: toDate(values.planEndRaw),
+        actualStart: toDate(values.actualStartRaw),
+        actualEnd: toDate(values.actualEndRaw),
+      };
+
+      const hasAnyTime =
+        !!updatedTask.plannedStart ||
+        !!updatedTask.plannedEnd ||
+        !!(updatedTask as any).planStartRaw ||
+        !!(updatedTask as any).planEndRaw ||
+        !!updatedTask.actualStart ||
+        !!updatedTask.actualEnd;
+
+      const newTaskAny: any = {
+        ...updatedTask,
+        planStartRaw: updatedTask.plannedStart,
+        planEndRaw: updatedTask.plannedEnd,
+        actualStartRaw: updatedTask.actualStart,
+        actualEndRaw: updatedTask.actualEnd,
+        styles: {
+          ...(updatedTask.styles || {}),
+          backgroundColor: hasAnyTime ? "#FFF3E0" : "transparent",
+          progressColor: hasAnyTime ? "#FF9800" : "transparent",
+          backgroundSelectedColor: hasAnyTime ? "#FFE0B2" : "transparent",
+        },
+        progress: updatedTask.actualEnd ? 100 : 0,
+      };
+
+      // 模拟接口调用
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      setTasks(prev =>
+        prev.map(t => (t.id === updatedTask.id ? (newTaskAny as Task) : t)),
+      );
+
+      message.success("已保存任务编辑");
+      setEditModalOpen(false);
+      setEditingTask(null);
+      form.resetFields();
+    } catch (e) {
+      // 校验失败直接返回
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // 🔍 调试：输出第一条任务的四个时间字段，确认是否为 undefined
   console.log(
     "[PMGanttDemo debug] first task times =",
@@ -291,6 +390,34 @@ const PMGanttDemo: React.FC = () => {
   const handleTaskChange = (task: Task) => {
     setTasks(prev => prev.map(t => t.id === task.id ? task : t));
   };
+
+  const columns: GanttColumnConfig[] = [
+    {
+      key: "name",
+      title: "任務名稱",
+      width: "180px",
+      render: (_v, task) => {
+        const t = task as Task;
+        const isTask = t.type === "task";
+        return (
+          <span
+            style={{
+              fontSize: 13,
+              cursor: isTask ? "pointer" : "default",
+            }}
+            onDoubleClick={() => {
+              if (isTask) {
+                handleRowDoubleClick(t);
+              }
+            }}
+          >
+            {t.name}
+          </span>
+        );
+      },
+    },
+    ...COLUMNS.slice(1),
+  ];
 
   return (
     <div style={{ padding: "16px 0" }}>
@@ -344,7 +471,7 @@ const PMGanttDemo: React.FC = () => {
         ganttHeight={460}
         columnWidth={modeToColWidth(viewMode)}
         rowHeight={44}
-        columns={COLUMNS}
+        columns={columns}
         resizableColumns
         language="zh-TW"
         showArrows
@@ -355,6 +482,10 @@ const PMGanttDemo: React.FC = () => {
           headerTextColor: "#595959",
           rowBackgroundColor: "#ffffff",
           rowEvenBackgroundColor: "#f9f9f9",
+          row: (rowIndex: number) => ({
+            cursor: "pointer",
+            backgroundColor: rowIndex % 2 === 0 ? "#ffffff" : "#f9f9f9",
+          }),
         }}
         barActualColor="#4CAF50"
         barActualSelectedColor="#45a049"
@@ -370,11 +501,56 @@ const PMGanttDemo: React.FC = () => {
         arrowColor="#999"
         todayColor="rgba(255,0,0,0.1)"
         onExpanderClick={handleExpanderClick}
+        onDoubleClick={handleRowDoubleClick}
         onDateChange={handleTaskChange}
         onProgressChange={handleTaskChange}
         gridBorderWidth={1}
         gridBorderColor="#f0f0f0"
       />
+
+      <Modal
+        title="编辑任务"
+        open={editModalOpen}
+        onOk={handleEditOk}
+        onCancel={handleEditCancel}
+        okButtonProps={{ loading: saving }}
+        destroyOnClose
+      >
+        <Form
+          form={form}
+          layout="vertical"
+        >
+          <Form.Item
+            name="name"
+            label="任务名称"
+            rules={[{ required: true, message: "请输入任务名称" }]}
+          >
+            <Input placeholder="请输入任务名称" />
+          </Form.Item>
+
+          <Form.Item label="计划时间">
+            <div style={{ display: "flex", gap: 8 }}>
+              <Form.Item name="planStartRaw" style={{ flex: 1, marginBottom: 0 }}>
+                <DatePicker style={{ width: "100%" }} placeholder="计划开始" />
+              </Form.Item>
+              <Form.Item name="planEndRaw" style={{ flex: 1, marginBottom: 0 }}>
+                <DatePicker style={{ width: "100%" }} placeholder="计划结束" />
+              </Form.Item>
+            </div>
+          </Form.Item>
+
+          <Form.Item label="实际时间">
+            <div style={{ display: "flex", gap: 8 }}>
+              <Form.Item name="actualStartRaw" style={{ flex: 1, marginBottom: 0 }}>
+                <DatePicker style={{ width: "100%" }} placeholder="实际开始" />
+              </Form.Item>
+              <Form.Item name="actualEndRaw" style={{ flex: 1, marginBottom: 0 }}>
+                <DatePicker style={{ width: "100%" }} placeholder="实际结束" />
+              </Form.Item>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };
