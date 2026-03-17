@@ -1,0 +1,382 @@
+/**
+ * PMGanttDemo — 项目管理甘特图简约示例
+ *
+ * 功能展示：
+ *  - 站点 (project) / 工序 (task) 两级结构
+ *  - 计划 / 实际 开始·截止日期列
+ *  - 延期天数自动计算列（红色标注）
+ *  - 条形图区分计划色、实际色、延期色
+ *  - 视图切换：日 / 周 / 月 / 年
+ *  - 滚动到今天
+ */
+import React, { useRef, useState } from "react";
+import { Gantt, Task, ViewMode, GanttColumnConfig } from "gantt-task-react";
+import "gantt-task-react/dist/index.css";
+
+// ─── 原始数据结构（与后端接口字段一一对应）────────────────────
+
+interface DateFields {
+  planStart: string;
+  planEnd: string;
+  actualStart: string;
+  actualEnd: string;
+}
+
+interface StationItem extends DateFields {
+  stationId: number;
+  stationItemId: number;
+  stationItemName: string;
+}
+
+interface StationData {
+  stationInfo: { stationId: number; stationName: string } & DateFields;
+  stationItems: StationItem[];
+}
+
+// ─── 写死的 Mock 数据（与原始业务数据完全一致，日期为空字符串）──
+
+const MOCK_DATA: StationData[] = [
+  {
+    stationInfo: { stationId: 19, stationName: "1", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+    stationItems: [
+      { stationId: 19, stationItemId: 55, stationItemName: "1",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+      { stationId: 19, stationItemId: 56, stationItemName: "2",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+      { stationId: 19, stationItemId: 57, stationItemName: "33", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+    ],
+  },
+  {
+    stationInfo: { stationId: 20, stationName: "2", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+    stationItems: [
+      { stationId: 20, stationItemId: 58, stationItemName: "1",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+      { stationId: 20, stationItemId: 59, stationItemName: "2",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+      { stationId: 20, stationItemId: 60, stationItemName: "33", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+    ],
+  },
+  {
+    stationInfo: { stationId: 21, stationName: "11", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+    stationItems: [
+      { stationId: 21, stationItemId: 61, stationItemName: "1",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+      { stationId: 21, stationItemId: 62, stationItemName: "2",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+      { stationId: 21, stationItemId: 63, stationItemName: "33", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+    ],
+  },
+];
+
+
+
+// ─── 工具函数 ─────────────────────────────────────────────────
+
+/** 将日期字符串解析为 Date；为空时返回 undefined */
+const parseDate = (s: string): Date | undefined => {
+  if (!s) return undefined;
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? undefined : d;
+};
+
+// ─── 数据转换 ─────────────────────────────────────────────────
+//
+// 规则（纯映射为主，尽量不“造”数据）：
+//  • 子任务（stationItems）是真正的甘特任务行，名称 = stationItemName
+//  • 优先使用接口里的 planStart/planEnd/actualStart/actualEnd
+//  • 如果接口日期缺失，仅在必要时做一个最小兜底：
+//      - start = 第一条有值的日期（actualStart > plannedStart）或今天
+//      - end   = 第一条有值的结束日期（actualEnd > plannedEnd）或 start + 1 天
+//  • 父任务（stationInfo）仅做分组，start/end = 所有子任务最小开始 / 最大结束，
+//    如果子任务没有任何有效日期，父任务就不画条，只保留一行（用今天为 start/end）
+
+const buildTasks = (data: StationData[]): Task[] => {
+  const result: Task[] = [];
+  const ONE_DAY = 24 * 60 * 60 * 1000;
+
+  data.forEach(station => {
+    const parentId = `station-${station.stationInfo.stationId}`;
+
+    const children: Task[] = station.stationItems.map(item => {
+      // 原始时间字段（只做解析，不做推算），完全映射你的 plan/actual 字段
+      const rawPlannedStart = parseDate(item.planStart);
+      const rawPlannedEnd   = parseDate(item.planEnd);
+      const rawActualStart  = parseDate(item.actualStart);
+      const rawActualEnd    = parseDate(item.actualEnd);
+
+      const hasAnyTime = !!(rawPlannedStart || rawPlannedEnd || rawActualStart || rawActualEnd);
+
+      // 甘特内部必须有 start/end 才能正常渲染：
+      //  - 有时间：按真实时间计算 start/end（优先 actual，再用 planned）
+      //  - 全为空：用今天/明天兜底，但把条形图颜色设为透明，只当“占位行”
+      const start =
+        rawActualStart ||
+        rawPlannedStart ||
+        new Date(); // 都没有时兜底今天
+
+      const end =
+        rawActualEnd ||
+        rawPlannedEnd ||
+        new Date(start.getTime() + ONE_DAY); // 至少 1 天
+
+      const child: Task = {
+        id: `item-${item.stationItemId}`,
+        name: `📍 ${item.stationItemName}`,
+        type: "task",
+        start,
+        end,
+        // 这里的 planned/actual 字段只保留“原始值”（可能为 undefined），不给它补时间
+        plannedStart: rawPlannedStart,
+        plannedEnd: rawPlannedEnd,
+        actualStart: rawActualStart,
+        actualEnd: rawActualEnd,
+        // 简单按是否有 actualEnd 给一个进度示意：有 actualEnd 认为 100%，否则 0%
+        progress: rawActualEnd ? 100 : 0,
+        project: parentId,
+        styles: {
+          // 有时间 → 正常配色；全空 → 条形图透明，只展示表格行
+          backgroundColor: hasAnyTime ? "#FFF3E0" : "transparent",
+          progressColor: hasAnyTime ? "#FF9800" : "transparent",
+          backgroundSelectedColor: hasAnyTime ? "#FFE0B2" : "transparent",
+        },
+      };
+
+      // 额外挂在 Task 上的“原始时间字段”，仅供表格列渲染使用（通过 any 绕开类型检查）
+      (child as any).planStartRaw = rawPlannedStart || undefined;
+      (child as any).planEndRaw = rawPlannedEnd || undefined;
+      (child as any).actualStartRaw = rawActualStart || undefined;
+      (child as any).actualEndRaw = rawActualEnd || undefined;
+
+      return child;
+    });
+
+    // 计算父任务的时间范围（根据子任务）
+    let minStart: Date | undefined;
+    let maxEnd: Date | undefined;
+    children.forEach(t => {
+      if (!minStart || t.start.getTime() < minStart.getTime()) {
+        minStart = t.start;
+      }
+      if (!maxEnd || t.end.getTime() > maxEnd.getTime()) {
+        maxEnd = t.end;
+      }
+    });
+
+    const now = new Date();
+    const parent: Task = {
+      id: parentId,
+      name: `🏭 ${station.stationInfo.stationName}`,
+      type: "project",
+      start: minStart || now,
+      end: maxEnd || new Date(now.getTime() + ONE_DAY),
+      progress: 0,
+      hideChildren: false,
+      styles: {
+        backgroundColor: "#E3F2FD",
+        progressColor: "#2196F3",
+        backgroundSelectedColor: "#BBDEFB",
+      },
+    };
+
+    result.push(parent, ...children);
+  });
+
+  return result;
+};
+
+// ─── 辅助函数 ─────────────────────────────────────────────────
+
+const fmtDate = (v: unknown): string => {
+  if (!v) return "-";
+  const d = v instanceof Date ? v : new Date(v as string);
+  return isNaN(d.getTime()) ? "-" : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+};
+
+const VIEW_MODES: { label: string; mode: string }[] = [
+  { label: "日", mode: "日" },
+  { label: "周", mode: "周" },
+  { label: "月", mode: "月" },
+  { label: "年", mode: "年" },
+];
+
+const modeToViewMode = (m: string): ViewMode => {
+  switch (m) {
+    case "周": return ViewMode.Week;
+    case "月": return ViewMode.Month;
+    case "年": return ViewMode.QuarterYear;
+    default:   return ViewMode.Day;
+  }
+};
+
+const modeToColWidth = (m: string): number => {
+  switch (m) {
+    case "年": return 350;
+    case "月": return 300;
+    case "周": return 250;
+    default:   return 65;
+  }
+};
+
+// ─── 列配置 ───────────────────────────────────────────────────
+
+const COLUMNS: GanttColumnConfig[] = [
+  { key: "name",        title: "任務名稱",  width: "180px" },
+  {
+    key: "planStartRaw", title: "計劃開始", width: "110px", align: "center",
+    render: (_v, task) => {
+      const t = task as any;
+      return <span style={{ fontSize: 12 }}>{fmtDate(t.planStartRaw)}</span>;
+    },
+  },
+  {
+    key: "planEndRaw",   title: "計劃截止", width: "110px", align: "center",
+    render: (_v, task) => {
+      const t = task as any;
+      return <span style={{ fontSize: 12 }}>{fmtDate(t.planEndRaw)}</span>;
+    },
+  },
+  {
+    key: "actualStartRaw",  title: "實際開始", width: "110px", align: "center",
+    render: (_v, task) => {
+      const t = task as any;
+      return <span style={{ fontSize: 12 }}>{fmtDate(t.actualStartRaw)}</span>;
+    },
+  },
+  {
+    key: "actualEndRaw",    title: "實際截止", width: "110px", align: "center",
+    render: (_v, task) => {
+      const t = task as any;
+      return <span style={{ fontSize: 12 }}>{fmtDate(t.actualEndRaw)}</span>;
+    },
+  },
+  {
+    key: "delayDays",    title: "延期時間", width: "90px",  align: "center",
+    render: (_v, task) => {
+      const t = task as any;
+      const pe = t.planEndRaw ? new Date(t.planEndRaw).getTime() : 0;
+      const ae = t.actualEndRaw ? new Date(t.actualEndRaw).getTime() : 0;
+      const days = Math.ceil(Math.max(0, ae - pe) / 86400_000);
+      return (
+        <span style={{
+          fontSize: 12,
+          fontWeight: days > 0 ? "bold" : "normal",
+          color: days > 0 ? "#f5222d" : "#52c41a",
+        }}>
+          {days > 0 ? `+${days}天` : "-"}
+        </span>
+      );
+    },
+  },
+  {
+    key: "progress", title: "進度", width: "70px", align: "center",
+    render: (v) => <span style={{ fontSize: 11, color: "#8c8c8c" }}>{v as number}%</span>,
+  },
+];
+
+// ─── 主组件 ───────────────────────────────────────────────────
+
+const PMGanttDemo: React.FC = () => {
+  const ganttRef = useRef<any>(null);
+  const [tasks, setTasks]         = useState<Task[]>(() => buildTasks(MOCK_DATA));
+  const [viewMode, setViewMode]   = useState("日");
+
+  // 🔍 调试：输出第一条任务的四个时间字段，确认是否为 undefined
+  console.log(
+    "[PMGanttDemo debug] first task times =",
+    tasks[0]?.name,
+    "plannedStart:", tasks[0]?.plannedStart,
+    "plannedEnd:", tasks[0]?.plannedEnd,
+    "actualStart:", tasks[0]?.actualStart,
+    "actualEnd:", tasks[0]?.actualEnd,
+  );
+
+  const handleExpanderClick = (task: Task) => {
+    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, hideChildren: !t.hideChildren } : t));
+  };
+
+  const handleTaskChange = (task: Task) => {
+    setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+  };
+
+  return (
+    <div style={{ padding: "16px 0" }}>
+      {/* 工具栏 */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        {VIEW_MODES.map(({ label, mode }) => (
+          <button
+            key={mode}
+            onClick={() => setViewMode(mode)}
+            style={{
+              padding: "4px 14px",
+              border: "1px solid",
+              borderRadius: 4,
+              cursor: "pointer",
+              fontSize: 13,
+              background: viewMode === mode ? "#1677ff" : "#fff",
+              borderColor: viewMode === mode ? "#1677ff" : "#d9d9d9",
+              color: viewMode === mode ? "#fff" : "#333",
+              transition: "all .2s",
+            }}
+          >
+            {label}
+          </button>
+        ))}
+
+        <button
+          onClick={() => ganttRef.current?.scrollToDate(new Date(), { align: "center", animate: true })}
+          style={{
+            marginLeft: 8,
+            padding: "4px 14px",
+            border: "1px solid #d9d9d9",
+            borderRadius: 4,
+            cursor: "pointer",
+            fontSize: 13,
+            background: "#fff",
+            color: "#333",
+          }}
+        >
+          今天
+        </button>
+      </div>
+
+      {/* 甘特图 */}
+      <Gantt
+        ref={ganttRef}
+        tasks={tasks}
+        viewMode={modeToViewMode(viewMode)}
+        viewType="oaTask"
+        oaTaskViewMode={viewMode as any}
+        listCellWidth="155px"
+        ganttHeight={460}
+        columnWidth={modeToColWidth(viewMode)}
+        rowHeight={44}
+        columns={COLUMNS}
+        resizableColumns
+        language="zh-TW"
+        showArrows
+        showTooltip
+        tableStyles={{
+          borderColor: "#f0f0f0",
+          headerBackgroundColor: "#fafafa",
+          headerTextColor: "#595959",
+          rowBackgroundColor: "#ffffff",
+          rowEvenBackgroundColor: "#f9f9f9",
+        }}
+        barActualColor="#4CAF50"
+        barActualSelectedColor="#45a049"
+        barDelayColor="#FF9800"
+        barBackgroundColor="#e0e0e0"
+        barBackgroundSelectedColor="#d0d0d0"
+        barProgressColor="#2196F3"
+        barProgressSelectedColor="#1976D2"
+        projectBackgroundColor="#e0e0e0"
+        projectBackgroundSelectedColor="#d0d0d0"
+        projectProgressColor="#2196F3"
+        projectProgressSelectedColor="#1976D2"
+        arrowColor="#999"
+        todayColor="rgba(255,0,0,0.1)"
+        onExpanderClick={handleExpanderClick}
+        onDateChange={handleTaskChange}
+        onProgressChange={handleTaskChange}
+        gridBorderWidth={1}
+        gridBorderColor="#f0f0f0"
+      />
+    </div>
+  );
+};
+
+export default PMGanttDemo;

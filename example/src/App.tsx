@@ -2,6 +2,7 @@ import React from "react";
 import GanttChartDemo from "./GanttChartDemo";
 import OAGanttDemo from "./OAGanttDemo";
 import ColumnsDemo from "./ColumnsDemo";
+import PMGanttDemo from "./PMGanttDemo";
 import { Task, ViewMode, Gantt, GanttColumnConfig } from "gantt-task-react";
 import { ViewSwitcher } from "./components/view-switcher";
 import { getStartEndDateForProject, initTasks } from "./helper";
@@ -985,7 +986,7 @@ const App = () => {
   };
 
   // 添加演示模式切换
-  const [demoMode, setDemoMode] = React.useState<'original' | 'new' | 'oa' | 'columns'>('columns');
+  const [demoMode, setDemoMode] = React.useState<'original' | 'new' | 'oa' | 'columns' | 'pm'>('pm');
 
   return (
     <div className="Wrapper">
@@ -1001,6 +1002,13 @@ const App = () => {
           🎯 演示模式切换
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <Button
+            type={demoMode === 'pm' ? 'primary' : 'default'}
+            onClick={() => setDemoMode('pm')}
+            style={demoMode === 'pm' ? { background: '#722ed1', borderColor: '#722ed1' } : {}}
+          >
+            PM 甘特图演示
+          </Button>
           <Button 
             type={demoMode === 'columns' ? 'primary' : 'default'}
             onClick={() => setDemoMode('columns')}
@@ -1027,12 +1035,14 @@ const App = () => {
             原始完整演示
           </Button>
           <span style={{ color: '#666', fontSize: '12px' }}>
-            当前模式：{demoMode === 'columns' ? 'columns 列配置演示（新功能）' : demoMode === 'oa' ? 'OA任务模式（接口模拟）' : demoMode === 'new' ? '新版 OA 任务模式（带周视图）' : '原始完整演示'}
+            当前模式：{demoMode === 'pm' ? 'PM 甘特图演示（简约）' : demoMode === 'columns' ? 'columns 列配置演示（新功能）' : demoMode === 'oa' ? 'OA任务模式（接口模拟）' : demoMode === 'new' ? '新版 OA 任务模式（带周视图）' : '原始完整演示'}
           </span>
         </div>
       </div>
 
-      {demoMode === 'columns' ? (
+      {demoMode === 'pm' ? (
+        <PMGanttDemo />
+      ) : demoMode === 'columns' ? (
         <ColumnsDemo />
       ) : demoMode === 'oa' ? (
         <OAGanttDemo />
