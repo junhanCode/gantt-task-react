@@ -391,33 +391,66 @@ const PMGanttDemo: React.FC = () => {
     setTasks(prev => prev.map(t => t.id === task.id ? task : t));
   };
 
-  const columns: GanttColumnConfig[] = [
-    {
-      key: "name",
-      title: "任務名稱",
-      width: "180px",
-      render: (_v, task) => {
-        const t = task as Task;
-        const isTask = t.type === "task";
+  const columns: GanttColumnConfig[] = COLUMNS.map((col, index) => {
+    // 第一列需要显示 name 文本，其它列复用原来的 render
+    if (index === 0) {
+      return {
+        ...col,
+        render: (_v, task) => {
+          const t = task as Task;
+          const isTask = t.type === "task";
+          return (
+            <span
+              style={{
+                display: "block",
+                width: "100%",
+                height: "100%",
+                fontSize: 13,
+                cursor: isTask ? "pointer" : "default",
+              }}
+              onDoubleClick={() => {
+                if (isTask) {
+                  handleRowDoubleClick(t);
+                }
+              }}
+            >
+              {t.name}
+            </span>
+          );
+        },
+      };
+    }
+
+    // 其他列：用原始渲染内容包一层，占满单元格，并挂同一个双击事件
+    return {
+      ...col,
+      render: (v: unknown, task: Task, colIndex: number) => {
+        const isTask = task.type === "task";
+        const inner =
+          typeof col.render === "function"
+            ? col.render(v, task, colIndex)
+            : (v as React.ReactNode);
+
         return (
           <span
             style={{
-              fontSize: 13,
+              display: "block",
+              width: "100%",
+              height: "100%",
               cursor: isTask ? "pointer" : "default",
             }}
             onDoubleClick={() => {
               if (isTask) {
-                handleRowDoubleClick(t);
+                handleRowDoubleClick(task);
               }
             }}
           >
-            {t.name}
+            {inner}
           </span>
         );
       },
-    },
-    ...COLUMNS.slice(1),
-  ];
+    };
+  });
 
   return (
     <div style={{ padding: "16px 0" }}>
