@@ -378,6 +378,283 @@ export const Calendar: React.FC<CalendarProps> = ({
     return [topValues, bottomValues];
   };
 
+  const getCalendarValuesForDayShift = () => {
+    const bgValues: ReactChild[] = [];
+    const textValues: ReactChild[] = [];
+    const dates = dateSetup.dates;
+    const topDefaultHeight = headerHeight / 3;
+    const totalWidth = columnWidth * dates.length;
+
+    const shiftName = (date: Date) => {
+      const hour = date.getHours();
+      if (hour % 24 === 0) return "D1";
+      if (hour % 24 === 6) return "D2";
+      if (hour % 24 === 12) return "N1";
+      return "N2";
+    };
+
+    for (let i = 0; i < dates.length; i++) {
+      const date = dates[i];
+      const isNewDay = i === 0 || date.getDate() !== dates[i - 1].getDate();
+      const isSunday = date.getDay() === 0;
+
+      if (isNewDay) {
+        const daySpan = 4;
+        const xStart = columnWidth * i;
+        const xCenter = xStart + columnWidth * daySpan * 0.5;
+        const topValue = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+
+        if (isSunday) {
+          bgValues.push(
+            <rect
+              key={`sunbg-${date.getTime()}`}
+              x={xStart}
+              y={0}
+              width={daySpan * columnWidth}
+              height={headerHeight}
+              className={styles.calendarSunBg}
+            />
+          );
+        }
+
+        textValues.push(
+          <g key={`day-${date.toDateString()}`}>
+            <TopPartOfCalendar
+              value={topValue}
+              x1Line={xStart + daySpan * columnWidth}
+              y1Line={0}
+              y2Line={headerHeight}
+              xText={xCenter}
+              yText={topDefaultHeight * 0.75}
+            />
+          </g>
+        );
+
+        const midValue = getLocalDayOfWeek(date, locale, "short");
+        textValues.push(
+          <text
+            key={`dow-day-${date.getTime()}`}
+            y={topDefaultHeight + topDefaultHeight * 0.75}
+            x={xCenter}
+            className={styles.calendarTopText}
+          >
+            {midValue}
+          </text>
+        );
+      }
+
+      const sName = shiftName(date);
+      const isNight = sName === "N1" || sName === "N2";
+
+      if (isNight) {
+        bgValues.push(
+          <rect
+            key={`shiftbg-${date.getTime()}`}
+            x={columnWidth * i}
+            y={topDefaultHeight * 2}
+            width={columnWidth}
+            height={topDefaultHeight}
+            className={styles.calendarShiftNightBg}
+          />
+        );
+      }
+
+      bgValues.push(
+        <line
+          key={`vsep-bottom-${i}`}
+          x1={columnWidth * i}
+          y1={topDefaultHeight * 2}
+          x2={columnWidth * i}
+          y2={headerHeight}
+          className={styles.calendarTopTick}
+        />
+      );
+
+      if (i % 4 === 0) {
+        bgValues.push(
+          <line
+            key={`vsep-daystart-${i}`}
+            x1={columnWidth * i}
+            y1={0}
+            x2={columnWidth * i}
+            y2={headerHeight}
+            className={styles.calendarTopTick}
+          />
+        );
+      }
+
+      textValues.push(
+        <text
+          key={`shifttext-${date.getTime()}`}
+          y={topDefaultHeight * 2 + topDefaultHeight * 0.75}
+          x={columnWidth * i + columnWidth * 0.5}
+          className={isNight ? styles.calendarShiftNightText : styles.calendarBottomText}
+        >
+          {sName}
+        </text>
+      );
+    }
+
+    bgValues.push(
+      <line
+        key="hsep-1"
+        x1={0}
+        y1={topDefaultHeight}
+        x2={totalWidth}
+        y2={topDefaultHeight}
+        className={styles.calendarTopTick}
+      />,
+      <line
+        key="hsep-2"
+        x1={0}
+        y1={topDefaultHeight * 2}
+        x2={totalWidth}
+        y2={topDefaultHeight * 2}
+        className={styles.calendarTopTick}
+      />
+    );
+
+    return [textValues, bgValues];
+  };
+
+  const getCalendarValuesForDayShiftDN = () => {
+    const bgValues: ReactChild[] = [];
+    const textValues: ReactChild[] = [];
+    const dates = dateSetup.dates;
+    const topDefaultHeight = headerHeight / 3;
+    const totalWidth = columnWidth * dates.length;
+
+    const shiftName = (date: Date) => {
+      const hour = date.getHours();
+      // 0:00 ~ 12:00 视为白班 D，12:00 ~ 24:00 视为夜班 N
+      return (hour % 24) < 12 ? "D" : "N";
+    };
+
+    for (let i = 0; i < dates.length; i++) {
+      const date = dates[i];
+      const isNewDay = i === 0 || date.getDate() !== dates[i - 1].getDate();
+      const isSunday = date.getDay() === 0;
+
+      if (isNewDay) {
+        const daySpan = 2; // D / N 两个班
+        const xStart = columnWidth * i;
+        const xCenter = xStart + columnWidth * daySpan * 0.5;
+        const topValue = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+
+        if (isSunday) {
+          bgValues.push(
+            <rect
+              key={`sunbg-dn-${date.getTime()}`}
+              x={xStart}
+              y={0}
+              width={daySpan * columnWidth}
+              height={headerHeight}
+              className={styles.calendarSunBg}
+            />
+          );
+        }
+
+        textValues.push(
+          <g key={`day-dn-${date.toDateString()}`}>
+            <TopPartOfCalendar
+              value={topValue}
+              x1Line={xStart + daySpan * columnWidth}
+              y1Line={0}
+              y2Line={headerHeight}
+              xText={xCenter}
+              yText={topDefaultHeight * 0.75}
+            />
+          </g>
+        );
+
+        const midValue = getLocalDayOfWeek(date, locale, "short");
+        textValues.push(
+          <text
+            key={`dow-dn-day-${date.getTime()}`}
+            y={topDefaultHeight + topDefaultHeight * 0.75}
+            x={xCenter}
+            className={styles.calendarTopText}
+          >
+            {midValue}
+          </text>
+        );
+      }
+
+      const sName = shiftName(date);
+      const isNight = sName === "N";
+
+      if (isNight) {
+        bgValues.push(
+          <rect
+            key={`shiftbg-dn-${date.getTime()}`}
+            x={columnWidth * i}
+            y={topDefaultHeight * 2}
+            width={columnWidth}
+            height={topDefaultHeight}
+            className={styles.calendarShiftNightBg}
+          />
+        );
+      }
+
+      bgValues.push(
+        <line
+          key={`vsep-bottom-dn-${i}`}
+          x1={columnWidth * i}
+          y1={topDefaultHeight * 2}
+          x2={columnWidth * i}
+          y2={headerHeight}
+          className={styles.calendarTopTick}
+        />
+      );
+
+      // 每天起始处加一条全高分隔线
+      if (isNewDay) {
+        bgValues.push(
+          <line
+            key={`vsep-daystart-dn-${i}`}
+            x1={columnWidth * i}
+            y1={0}
+            x2={columnWidth * i}
+            y2={headerHeight}
+            className={styles.calendarTopTick}
+          />
+        );
+      }
+
+      textValues.push(
+        <text
+          key={`shifttext-dn-${date.getTime()}`}
+          y={topDefaultHeight * 2 + topDefaultHeight * 0.75}
+          x={columnWidth * i + columnWidth * 0.5}
+          className={isNight ? styles.calendarShiftNightText : styles.calendarBottomText}
+        >
+          {sName}
+        </text>
+      );
+    }
+
+    bgValues.push(
+      <line
+        key="hsep-dn-1"
+        x1={0}
+        y1={topDefaultHeight}
+        x2={totalWidth}
+        y2={topDefaultHeight}
+        className={styles.calendarTopTick}
+      />,
+      <line
+        key="hsep-dn-2"
+        x1={0}
+        y1={topDefaultHeight * 2}
+        x2={totalWidth}
+        y2={topDefaultHeight * 2}
+        className={styles.calendarTopTick}
+      />
+    );
+
+    return [textValues, bgValues];
+  };
+
   // oaTask模式的时间轴渲染
   const getOATaskCalendarValues = () => {
     const topValues: ReactChild[] = [];
@@ -1129,6 +1406,12 @@ export const Calendar: React.FC<CalendarProps> = ({
         break;
       case ViewMode.Day:
         [topValues, bottomValues] = getCalendarValuesForDay();
+        break;
+      case ViewMode.DayShift:
+        [topValues, bottomValues] = getCalendarValuesForDayShift();
+        break;
+      case ViewMode.DayShiftDN:
+        [topValues, bottomValues] = getCalendarValuesForDayShiftDN();
         break;
     }
   }

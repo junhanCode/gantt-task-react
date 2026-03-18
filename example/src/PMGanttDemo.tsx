@@ -188,27 +188,28 @@ const fmtDate = (v: unknown): string => {
   return isNaN(d.getTime()) ? "-" : `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 };
 
-const VIEW_MODES: { label: string; mode: string }[] = [
-  { label: "日", mode: "日" },
-  { label: "周", mode: "周" },
-  { label: "月", mode: "月" },
-  { label: "年", mode: "年" },
+type DemoViewKey = "日" | "周" | "月" | "季" | "年" | "班次6H" | "班次D/N";
+
+const VIEW_MODES: { label: string; key: DemoViewKey; viewMode: ViewMode; oaMode: "日" | "周" | "月" | "季" | "年" }[] = [
+  { label: "日",      key: "日",      viewMode: ViewMode.Day,         oaMode: "日" },
+  { label: "周",      key: "周",      viewMode: ViewMode.Week,        oaMode: "周" },
+  { label: "月",      key: "月",      viewMode: ViewMode.Month,       oaMode: "月" },
+  { label: "季",      key: "季",      viewMode: ViewMode.QuarterYear, oaMode: "季" },
+  { label: "年",      key: "年",      viewMode: ViewMode.Year,        oaMode: "年" },
+  // 班次模式：时间轴用 DayShift / DayShiftDN，对齐 forProjectManage 的表现方式
+  { label: "班次6H",  key: "班次6H",  viewMode: ViewMode.DayShift,    oaMode: "日" },
+  { label: "班次D/N", key: "班次D/N", viewMode: "DayShiftDN" as ViewMode, oaMode: "日" },
 ];
 
-const modeToViewMode = (m: string): ViewMode => {
-  switch (m) {
-    case "周": return ViewMode.Week;
-    case "月": return ViewMode.Month;
-    case "年": return ViewMode.QuarterYear;
-    default:   return ViewMode.Day;
-  }
-};
-
-const modeToColWidth = (m: string): number => {
+const modeToColWidth = (m: DemoViewKey): number => {
   switch (m) {
     case "年": return 350;
+    case "季": return 320;
     case "月": return 300;
     case "周": return 250;
+    case "班次6H":
+    case "班次D/N":
+      return 80;
     default:   return 65;
   }
 };
@@ -274,7 +275,9 @@ const COLUMNS: GanttColumnConfig[] = [
 const PMGanttDemo: React.FC = () => {
   const ganttRef = useRef<any>(null);
   const [tasks, setTasks]         = useState<Task[]>(() => buildTasks(MOCK_DATA));
-  const [viewMode, setViewMode]   = useState("日");
+  const [viewModeKey, setViewModeKey]   = useState<DemoViewKey>("日");
+  const currentView = VIEW_MODES.find(v => v.key === viewModeKey) || VIEW_MODES[0];
+  const isShiftView = viewModeKey === "班次6H" || viewModeKey === "班次D/N";
 
   // 行编辑弹框相关状态
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -456,19 +459,19 @@ const PMGanttDemo: React.FC = () => {
     <div style={{ padding: "16px 0" }}>
       {/* 工具栏 */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        {VIEW_MODES.map(({ label, mode }) => (
+        {VIEW_MODES.map(({ label, key }) => (
           <button
-            key={mode}
-            onClick={() => setViewMode(mode)}
+            key={key}
+            onClick={() => setViewModeKey(key)}
             style={{
               padding: "4px 14px",
               border: "1px solid",
               borderRadius: 4,
               cursor: "pointer",
               fontSize: 13,
-              background: viewMode === mode ? "#1677ff" : "#fff",
-              borderColor: viewMode === mode ? "#1677ff" : "#d9d9d9",
-              color: viewMode === mode ? "#fff" : "#333",
+              background: viewModeKey === key ? "#1677ff" : "#fff",
+              borderColor: viewModeKey === key ? "#1677ff" : "#d9d9d9",
+              color: viewModeKey === key ? "#fff" : "#333",
               transition: "all .2s",
             }}
           >
@@ -497,12 +500,13 @@ const PMGanttDemo: React.FC = () => {
       <Gantt
         ref={ganttRef}
         tasks={tasks}
-        viewMode={modeToViewMode(viewMode)}
-        viewType="oaTask"
-        oaTaskViewMode={viewMode as any}
+        // 班次视图走 forProjectManage 的 DayShift 头部表现（默认视图）
+        viewMode={currentView.viewMode}
+        viewType={isShiftView ? "default" : "oaTask"}
+        oaTaskViewMode={isShiftView ? undefined : (currentView.oaMode as any)}
         listCellWidth="155px"
         ganttHeight={460}
-        columnWidth={modeToColWidth(viewMode)}
+        columnWidth={modeToColWidth(viewModeKey)}
         rowHeight={44}
         columns={columns}
         resizableColumns

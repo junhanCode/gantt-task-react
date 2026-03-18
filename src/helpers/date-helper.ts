@@ -129,6 +129,7 @@ export const ganttDateRange = (
       newEndDate = addToDate(newEndDate, 10, "day");
       break;
     case ViewMode.DayShift:
+    case ViewMode.DayShiftDN:
       newStartDate = startOfDate(newStartDate, "day");
       newStartDate = addToDate(newStartDate, -10, "day");
       newEndDate = startOfDate(newEndDate, "day");
@@ -176,6 +177,14 @@ export const seedDates = (
       case ViewMode.DayShift:
         // 每个刻度代表一个班次，以 6 小时为步进（D1 0:00，D2 6:00，N1 12:00，N2 18:00）
         currentDate = addToDate(currentDate, 6, "hour");
+        break;
+      case ViewMode.DayShiftDN:
+        // D/N 班次：每个刻度代表 12 小时（D 0:00，N 12:00）
+        currentDate = addToDate(currentDate, 12, "hour");
+        break;
+      default:
+        // 未知模式（含旧 dist 未包含的 DayShiftDN）按 12 小时步进，避免死循环
+        currentDate = addToDate(currentDate, 12, "hour");
         break;
     }
     dates.push(currentDate);

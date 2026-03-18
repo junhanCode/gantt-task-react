@@ -2,6 +2,8 @@ export enum ViewMode {
   Day = "Day",
   /** 班次模式：每 6 小时一个刻度，D1(0:00) / D2(6:00) / N1(12:00) / N2(18:00) */
   DayShift = "DayShift",
+  /** D/N 班次模式：每 12 小时一个刻度，D(0:00) / N(12:00) */
+  DayShiftDN = "DayShiftDN",
   /** ISO-8601 week */
   Week = "Week",
   Month = "Month",
