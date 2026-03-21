@@ -518,11 +518,9 @@ const PMGanttDemo: React.FC = () => {
           headerBackgroundColor: "#fafafa",
           headerTextColor: "#595959",
           rowBackgroundColor: "#ffffff",
-          rowEvenBackgroundColor: "#f9f9f9",
-          row: (rowIndex: number) => ({
-            cursor: "pointer",
-            backgroundColor: rowIndex % 2 === 0 ? "#ffffff" : "#f9f9f9",
-          }),
+          // 与 rowBackgroundColor 相同，避免库内奇偶行交替色（斑马线）
+          rowEvenBackgroundColor: "#ffffff",
+          row: () => ({ cursor: "pointer" }),
         }}
         barActualColor="#4CAF50"
         barActualSelectedColor="#45a049"

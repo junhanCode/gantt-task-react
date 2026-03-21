@@ -6,14 +6,6 @@
   fill: #fafafa;
 }
 
-.gridRowChild {
-  fill: #f8fcfe;
-}
-
-.gridRowChild:hover {
-  fill: #fafafa;
-}
-
 .gridRowLine {
   stroke: #ebeff2;
   stroke-width: 0.5;

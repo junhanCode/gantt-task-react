@@ -86,7 +86,7 @@
 }
 
 .wrapper :global(.taskGantte) tbody tr[data-child-task="true"] {
-  background-color: #F8FCFE;
+  /* background-color: #F8FCFE; */
 }
 
 .wrapper :global(.taskGantte) tbody input[type="checkbox"] {
