@@ -14,6 +14,11 @@ export const Bar: React.FC<TaskItemProps> = ({
   isTaskDraggable,
   getTaskBarColor,
 }) => {
+  // 无明确计划起止则不画条（仍保留左侧表格行）
+  if (task.plannedStart == null || task.plannedEnd == null) {
+    return null;
+  }
+
   const plannedStart = task.plannedStart || task.start;
   const plannedEnd = task.plannedEnd || task.end;
   const actualStart = task.actualStart || task.start;

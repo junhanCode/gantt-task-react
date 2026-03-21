@@ -14,6 +14,8 @@ const tasks: Task[] = [
     type: "task",
     start: new Date(2024, 1, 1),
     end: new Date(2024, 1, 15),
+    plannedStart: new Date(2024, 1, 1),
+    plannedEnd: new Date(2024, 1, 15),
     progress: 45,
   },
   {
@@ -22,6 +24,8 @@ const tasks: Task[] = [
     type: "task",
     start: new Date(2024, 1, 10),
     end: new Date(2024, 1, 28),
+    plannedStart: new Date(2024, 1, 10),
+    plannedEnd: new Date(2024, 1, 28),
     progress: 60,
   },
 ];

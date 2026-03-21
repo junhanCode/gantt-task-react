@@ -42,7 +42,9 @@ export interface Task {
   start: Date;
   end: Date;
   // 计划与实际时间（可选，兼容旧数据）
+  /** 与 plannedEnd 同时存在时才会在时间轴上绘制条形 */
   plannedStart?: Date;
+  /** 与 plannedStart 同时存在时才会在时间轴上绘制条形 */
   plannedEnd?: Date;
   actualStart?: Date;
   actualEnd?: Date;
