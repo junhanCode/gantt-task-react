@@ -17,10 +17,6 @@ export type StatusInfo = {
   description: string;
   color: string;
 };
-export type ViewType = "default" | "oaTask";
-// OA 视图模式：日 / 周 / 月 / 年
-export type OATaskViewMode = "日" | "周" | "月" | "季" | "年";
-
 /**
  * 时间轴单位标签（直接配置周/月/季等显示单位，无需走 i18n 或 timelineHeaderCellRender）。
  * 例如：周显示为 "WK 01"、"Week 01"、"W 01"；月显示为 "M1"、"MON1"。
@@ -159,6 +155,8 @@ export interface EventOption {
 
 export interface DisplayOption {
   viewMode?: ViewMode;
+  /** ref.switchViewMode 等场景下通知外部更新受控的 viewMode */
+  onViewModeChange?: (mode: ViewMode) => void;
   viewDate?: Date;
   preStepsCount?: number;
   /**
@@ -413,13 +411,6 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
   // 自定义展开/折叠图标
   expandIcon?: React.ReactNode;
   collapseIcon?: React.ReactNode;
-  // 新增配置
-  /** 视图类型，支持 "default" 和 "oaTask" */
-  viewType?: ViewType;
-  /** oaTask模式下的视图模式（日、周、月、年） */
-  oaTaskViewMode?: OATaskViewMode;
-  /** oaTask模式切换视图模式的回调 */
-  onOATaskViewModeChange?: (mode: OATaskViewMode) => void;
   /**
    * 列配置数组（仿 Ant Design Table columns）。
    * 传入后以此数组驱动左侧任务列表的列顺序、显示/隐藏、列宽、列头与单元格渲染，
@@ -520,7 +511,6 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
     level: 'top' | 'bottom';
     defaultLabel: string;
     viewMode: ViewMode;
-    oaTaskViewMode?: OATaskViewMode;
     locale: string;
     /** 用于定位的 x 坐标（列中心） */
     x: number;
@@ -574,9 +564,9 @@ export interface GanttRef {
    */
   scrollToToday: (options?: ScrollTodayOptions) => void;
   /**
-   * 切换时间轴模式（用于oaTask模式）
+   * 切换时间轴刻度模式（与 props.viewMode 一致）
    */
-  switchViewMode?: (mode: OATaskViewMode) => void;
+  switchViewMode?: (mode: ViewMode) => void;
   /**
    * 全屏查看
    */

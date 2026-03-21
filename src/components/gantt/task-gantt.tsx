@@ -121,7 +121,6 @@ export const TaskGantt: React.FC<TaskGanttProps> = ({
             dates={gridProps.dates}
             columnWidth={gridProps.columnWidth}
             todayLineWidth={gridProps.todayLineWidth}
-            viewType={gridProps.viewType}
             totalHeight={gridHeight}
           />
           {dragIndicators.map((ind, i) => {

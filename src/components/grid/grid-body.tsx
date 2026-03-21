@@ -1,5 +1,5 @@
 import React, { ReactChild, useMemo } from "react";
-import { Task, ViewType } from "../../types/public-types";
+import { Task } from "../../types/public-types";
 import { getVirtualRange, shouldUseVirtualScroll } from "../../helpers/virtual-scroll-helper";
 import styles from "./grid.module.css";
 
@@ -13,7 +13,6 @@ export type GridBodyProps = {
   todayColor?: string;
   todayLineWidth?: number;
   rtl: boolean;
-  viewType?: ViewType;
   scrollY?: number;
   containerHeight?: number;
   gridBorderWidth?: number;
@@ -26,7 +25,6 @@ export type TodayOverlayProps = {
   dates: Date[];
   columnWidth: number;
   todayLineWidth?: number;
-  viewType?: ViewType;
   totalHeight: number;
 };
 
@@ -34,12 +32,11 @@ export const TodayOverlay: React.FC<TodayOverlayProps> = ({
   dates,
   columnWidth,
   todayLineWidth = 1,
-  viewType = "default",
   totalHeight,
 }) => {
   const now = new Date();
 
-  if (viewType !== "oaTask" || !dates || dates.length < 2) return null;
+  if (!dates || dates.length < 2) return null;
 
   const idx = dates.findIndex((d, i) =>
     now.valueOf() >= d.valueOf() &&

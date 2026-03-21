@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Gantt, Task, ViewMode, OATaskViewMode, GanttColumnConfig, flattenTaskTree } from "gantt-task-react";
+import { Gantt, Task, ViewMode, GanttColumnConfig, flattenTaskTree } from "gantt-task-react";
 import { initTasksTree } from "./helper";
 import "gantt-task-react/dist/index.css";
 import {
@@ -66,8 +66,6 @@ const OAGanttDemo: React.FC = () => {
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
   const [noUnread, setNoUnread] = React.useState(false);
   const [readAllLoading, setReadAllLoading] = React.useState(false);
-  const [oaTaskViewMode, setOATaskViewMode] =
-    React.useState<OATaskViewMode>("日");
   const [useCustomBarColor, setUseCustomBarColor] = React.useState(false);
 
   // 从树形数据派生出平铺列表，用于 cascade 多选逻辑
@@ -98,28 +96,6 @@ const OAGanttDemo: React.FC = () => {
   useEffect(() => {
     loadData();
   }, [loadData]);
-
-  // 视图模式同步
-  useEffect(() => {
-    let mode: OATaskViewMode;
-    switch (view) {
-      case ViewMode.Day:
-        mode = "日";
-        break;
-      case ViewMode.Week:
-        mode = "周";
-        break;
-      case ViewMode.Month:
-        mode = "月";
-        break;
-      case ViewMode.QuarterYear:
-        mode = "年";
-        break;
-      default:
-        mode = "日";
-    }
-    setOATaskViewMode(mode);
-  }, [view]);
 
   // 列宽配置
   let columnWidth = 35;
@@ -490,7 +466,6 @@ const OAGanttDemo: React.FC = () => {
           }
           onExpanderClick={handleExpanderClick}
           listCellWidth="140px"
-          viewType="oaTask"
           columns={columns}
           headerHeight={41}
           rowHeight={42}
@@ -523,26 +498,7 @@ const OAGanttDemo: React.FC = () => {
             />
           }
           showArrows={false}
-          oaTaskViewMode={oaTaskViewMode}
-          onOATaskViewModeChange={(mode) => {
-            switch (mode) {
-              case "日":
-                setView(ViewMode.Day);
-                break;
-              case "周":
-                setView(ViewMode.Week);
-                break;
-              case "月":
-                setView(ViewMode.Month);
-                break;
-              case "年":
-                setView(ViewMode.QuarterYear);
-                break;
-              default:
-                setView(ViewMode.Day);
-            }
-            setOATaskViewMode(mode);
-          }}
+          onViewModeChange={(mode) => setView(mode)}
           showTooltip={true}
           onDateChange={handleTaskChange}
           onTaskDragEnd={handleTaskDragEnd}
@@ -561,11 +517,11 @@ const OAGanttDemo: React.FC = () => {
             width: "20px",
             title: " ",
           }}
-          timelineHeaderCellRender={({ date, defaultLabel, level, oaTaskViewMode: oaMode }: any) => {
+          timelineHeaderCellRender={({ date, defaultLabel, level, viewMode: vm }: any) => {
             let displayLabel = defaultLabel;
             let tooltipText = "";
 
-            if (oaMode === "日") {
+            if (vm === ViewMode.Day) {
               if (level === "top") {
                 const weekNum = dayjs(date).week();
                 const weekStr = weekNum.toString().padStart(2, "0");
@@ -579,7 +535,7 @@ const OAGanttDemo: React.FC = () => {
               }
             }
 
-            if (oaMode === "周") {
+            if (vm === ViewMode.Week) {
               if (level === "top") {
                 const year = date.getFullYear();
                 const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -594,7 +550,7 @@ const OAGanttDemo: React.FC = () => {
               }
             }
 
-            if (oaMode === "月" && level === "bottom") {
+            if (vm === ViewMode.Month && level === "bottom") {
               const month = date.getMonth() + 1;
               displayLabel = `M${month}`;
               tooltipText = dayjs(date).format("YYYY年M月");

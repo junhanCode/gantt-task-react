@@ -289,9 +289,7 @@ const ColumnsDemo: React.FC = () => {
       ) : (
         <Gantt
           tasks={tasks}
-          viewType="oaTask"
           viewMode={ViewMode.Day}
-          oaTaskViewMode="日"
           listCellWidth="155px"
           ganttHeight={420}
           columnWidth={35}

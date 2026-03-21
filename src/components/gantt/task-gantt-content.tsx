@@ -30,7 +30,6 @@ export type TaskGanttContentProps = {
   fontSize: string;
   fontFamily: string;
   rtl: boolean;
-  viewType?: "default" | "oaTask";
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
   isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
@@ -61,7 +60,6 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   fontFamily,
   fontSize,
   rtl,
-  viewType = "default",
   enableTaskDrag = false,
   enableTaskResize = true,
   isTaskDraggable,
@@ -411,7 +409,6 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               key={task.id}
               isSelected={!!selectedTask && task.id === selectedTask.id}
               rtl={rtl}
-              viewType={viewType}
               isTaskDraggable={isTaskDraggable}
               getTaskBarColor={getTaskBarColor}
             />

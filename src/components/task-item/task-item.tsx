@@ -2,9 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { BarTask } from "../../types/bar-task";
 import { GanttContentMoveAction } from "../../types/gantt-task-actions";
 import { Bar } from "./bar/bar";
-import { BarSmall } from "./bar/bar-small";
-import { Milestone } from "./milestone/milestone";
-import { Project } from "./project/project";
 import style from "./task-list.module.css";
 
 export type TaskItemProps = {
@@ -17,7 +14,6 @@ export type TaskItemProps = {
   isSelected: boolean;
   rtl: boolean;
   hideTaskName?: boolean;
-  viewType?: "default" | "oaTask";
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
   isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
@@ -36,7 +32,6 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
     arrowIndent,
     isDelete,
     taskHeight,
-    isSelected,
     rtl,
     hideTaskName = true,
     onEventStart,
@@ -45,34 +40,9 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
     ...props,
   };
   const textRef = useRef<SVGTextElement>(null);
-  const [taskItem, setTaskItem] = useState<JSX.Element>(<div />);
   const [isTextInside, setIsTextInside] = useState(true);
   const [isTextOverflow, setIsTextOverflow] = useState(false);
   const [displayText, setDisplayText] = useState(task.name);
-
-  useEffect(() => {
-    // oaTask模式下，所有任务类型都使用Bar组件（单条显示）
-    if (props.viewType === "oaTask") {
-      setTaskItem(<Bar {...props} viewType={props.viewType} />);
-      return;
-    }
-    
-    switch (task.typeInternal) {
-      case "milestone":
-        setTaskItem(<Milestone {...props} />);
-        break;
-      case "project":
-        setTaskItem(<Project {...props} />);
-        break;
-      case "smalltask":
-        setTaskItem(<BarSmall {...props} />);
-        break;
-      default:
-        setTaskItem(<Bar {...props} viewType={props.viewType} />);
-        break;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task, isSelected, props.viewType]);
 
   useEffect(() => {
     if (textRef.current) {
@@ -144,7 +114,7 @@ export const TaskItem: React.FC<TaskItemProps> = props => {
         onEventStart("select", task);
       }}
     >
-      {taskItem}
+      <Bar {...props} />
       {/* 如果hideTaskName为true，则不显示任务名文字 */}
       {!hideTaskName && isTextInside && (
         <g>

@@ -7,7 +7,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import { ViewMode, GanttProps, Task, GanttRef, OATaskViewMode, ScrollTodayOptions } from "../../types/public-types";
+import { ViewMode, GanttProps, Task, GanttRef, ScrollTodayOptions } from "../../types/public-types";
 import { GridProps } from "../grid/grid";
 import { ganttDateRange, seedDates } from "../../helpers/date-helper";
 import { CalendarProps } from "../calendar/calendar";
@@ -16,7 +16,7 @@ import { TaskListHeaderDefault } from "../task-list/task-list-header";
 import { TaskListTableDefault } from "../task-list/task-list-table";
 import { OATaskListHeader } from "../task-list/oa-task-list-header";
 import { OATaskListTable } from "../task-list/oa-task-list-table";
-import { StandardTooltipContent, OATooltipContent, Tooltip } from "../other/tooltip";
+import { OATooltipContent, Tooltip } from "../other/tooltip";
 import { VerticalScroll } from "../other/vertical-scroll";
 import { TaskListProps, TaskList } from "../task-list/task-list";
 import { TaskGantt } from "./task-gantt";
@@ -93,9 +93,7 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   nameColumnWidth,
   timeColumnLabels,
   timeColumnWidths,
-  viewType = "default",
-  oaTaskViewMode = "日",
-  onOATaskViewModeChange,
+  onViewModeChange,
   language = 'zh-TW',
   enableTaskDrag = false,
   enableTaskResize = true,
@@ -121,14 +119,11 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const taskListRef = useRef<HTMLDivElement>(null);
   const ganttContainerRef = useRef<HTMLDivElement>(null);
-  const [currentOATaskViewMode, setCurrentOATaskViewMode] = useState<OATaskViewMode>(oaTaskViewMode);
   // @ts-expect-error - Reserved for future fullscreen state tracking
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isFullscreen, setIsFullscreen] = useState(false);
   
-  // 根据 viewType 选择默认 tooltip 内容组件
-  const resolvedTooltipContent =
-    TooltipContent ?? (viewType === "oaTask" ? OATooltipContent : StandardTooltipContent);
+  const resolvedTooltipContent = TooltipContent ?? OATooltipContent;
 
   // 获取国际化文本
   const i18n = useMemo(() => getI18nTexts(language), [language]);
@@ -141,12 +136,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     return { viewMode, dates: seedDates(startDate, endDate, viewMode) };
   });
 
-  // 同步外部传入的oaTaskViewMode
-  useEffect(() => {
-    if (viewType === "oaTask" && oaTaskViewMode !== currentOATaskViewMode) {
-      setCurrentOATaskViewMode(oaTaskViewMode);
-    }
-  }, [oaTaskViewMode, viewType, currentOATaskViewMode]);
   const [currentViewDate, setCurrentViewDate] = useState<Date | undefined>(
     undefined
   );
@@ -351,13 +340,8 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
       if (finalX > svgWidth) finalX = svgWidth;
       setScrollX(finalX);
     },
-    switchViewMode: (mode: OATaskViewMode) => {
-      if (viewType === "oaTask") {
-        setCurrentOATaskViewMode(mode);
-        if (onOATaskViewModeChange) {
-          onOATaskViewModeChange(mode);
-        }
-      }
+    switchViewMode: (mode: ViewMode) => {
+      onViewModeChange?.(mode);
     },
     enterFullscreen: () => {
       if (ganttContainerRef.current) {
@@ -971,7 +955,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     todayColor,
     todayLineWidth,
     rtl,
-    viewType,
     scrollY,
     containerHeight: ganttHeight || undefined,
     gridBorderWidth,
@@ -987,8 +970,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     fontFamily,
     fontSize,
     rtl,
-    viewType,
-    oaTaskViewMode: currentOATaskViewMode,
     timelineUnitLabels,
     timelineHeaderCellRender,
     gridBorderWidth,
@@ -1012,7 +993,6 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     hideTaskName,
     svgWidth,
     rtl,
-    viewType,
     enableTaskDrag,
     enableTaskResize,
     isTaskDraggable,
@@ -1085,52 +1065,54 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     onToggleTaskList: handleToggleTaskList,
     expandIcon,
     collapseIcon,
-    TaskListHeader: viewType === "oaTask" 
-      ? (props: any) => {
-          const headerProps = {
-            ...props,
-            expandAllLeafTasks,
-            onToggleExpandAll: handleToggleExpandAll,
-            operationsColumnWidth,
-            operationsColumnLabel: operationsColumnLabel || i18n.operations,
-            showOperationsColumn,
-            rowSelection,
-            unreadColumn,
-            allSelected,
-            indeterminate,
-            onSelectAll: handleSelectAll,
-            taskTitleHeaderRender,
-            columnHeaderRenderers,
-            i18n,
-          };
-          return <OATaskListHeader {...headerProps} />;
-        }
-      : TaskListHeader,
-    TaskListTable: viewType === "oaTask" 
-      ? (props: any) => {
-          const tablePropsData = {
-            ...props,
-            allTasks: flattenedTasks,
-            expandAllLeafTasks,
-            onToggleExpandAll: handleToggleExpandAll,
-            operationsColumnWidth,
-            showOperationsColumn,
-            onAddTask,
-            onEditTask,
-            onDeleteTask,
-            columnRenderers,
-            columnEllipsisMaxChars,
-            onCellOverflow,
-            rowSelection: rowSelection ? {
-              ...rowSelection,
-              selectedRowKeys,
-              onChange: handleRowSelectionChange,
-            } : undefined,
-            unreadColumn,
-          };
-          return <OATaskListTable {...tablePropsData} />;
-        }
-      : TaskListTable,
+    TaskListHeader: (props: any) => {
+      if (TaskListHeader !== TaskListHeaderDefault) {
+        return <TaskListHeader {...props} />;
+      }
+      const headerProps = {
+        ...props,
+        expandAllLeafTasks,
+        onToggleExpandAll: handleToggleExpandAll,
+        operationsColumnWidth,
+        operationsColumnLabel: operationsColumnLabel || i18n.operations,
+        showOperationsColumn,
+        rowSelection,
+        unreadColumn,
+        allSelected,
+        indeterminate,
+        onSelectAll: handleSelectAll,
+        taskTitleHeaderRender,
+        columnHeaderRenderers,
+        i18n,
+      };
+      return <OATaskListHeader {...headerProps} />;
+    },
+    TaskListTable: (props: any) => {
+      if (TaskListTable !== TaskListTableDefault) {
+        return <TaskListTable {...props} />;
+      }
+      const tablePropsData = {
+        ...props,
+        allTasks: flattenedTasks,
+        expandAllLeafTasks,
+        onToggleExpandAll: handleToggleExpandAll,
+        operationsColumnWidth,
+        showOperationsColumn,
+        onAddTask,
+        onEditTask,
+        onDeleteTask,
+        columnRenderers,
+        columnEllipsisMaxChars,
+        onCellOverflow,
+        rowSelection: rowSelection ? {
+          ...rowSelection,
+          selectedRowKeys,
+          onChange: handleRowSelectionChange,
+        } : undefined,
+        unreadColumn,
+      };
+      return <OATaskListTable {...tablePropsData} />;
+    },
     nameColumnWidth,
     timeColumnLabels,
     timeColumnWidths,

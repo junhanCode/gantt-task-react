@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { Gantt, Task, ViewMode, OATaskViewMode, GanttColumnConfig } from "gantt-task-react";
+import { Gantt, Task, ViewMode, GanttColumnConfig } from "gantt-task-react";
 import { initTasks, generateScrollTestTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
 import {
@@ -55,39 +55,13 @@ const GanttChart: React.FC = () => {
   const [view, setView] = React.useState<ViewMode>(ViewMode.Day);
   const [tasks, setTasks] = React.useState<Task[]>(initTasks(false, 10, 3));
   const [selectedRowKeys, setSelectedRowKeys] = React.useState<string[]>([]);
-  const [oaTaskViewMode, setOATaskViewMode] =
-    React.useState<OATaskViewMode>("日");
-
-  // 1. 完善视图切换选项（新增周模式）
   const viewOptions = [
     { label: "日", value: ViewMode.Day },
-    { label: "周", value: ViewMode.Week }, // 新增周模式
+    { label: "周", value: ViewMode.Week },
     { label: "月", value: ViewMode.Month },
   ];
 
-  // 2. 修复OA视图模式同步逻辑（新增周模式映射）
-  useEffect(() => {
-    let mode: OATaskViewMode;
-    switch (view) {
-      case ViewMode.Day:
-        mode = "日";
-        break;
-      case ViewMode.Week: // 新增周模式映射
-        mode = "周";
-        break;
-      case ViewMode.Month:
-        mode = "月";
-        break;
-      case ViewMode.QuarterYear:
-        mode = "年";
-        break;
-      default:
-        mode = "日";
-    }
-    setOATaskViewMode(mode);
-  }, [view]);
-
-  // 3. 优化列宽配置（为周模式设置合理的列宽）
+  // 列宽随 viewMode
   let columnWidth = 35;
   if (view === ViewMode.QuarterYear) {
     columnWidth = 100;
@@ -425,14 +399,12 @@ const GanttChart: React.FC = () => {
           onSelect={handleSelect}
           onExpanderClick={handleExpanderClick}
           listCellWidth="140px"
-          viewType="oaTask"
           columns={columns}
-          timelineHeaderCellRender={({ date, defaultLabel, level, oaTaskViewMode }: any) => {
+          timelineHeaderCellRender={({ date, defaultLabel, level, viewMode: vm }: any) => {
             let displayLabel = defaultLabel;
             let tooltipText = '';
             
-            // 日模式：顶部显示周标签 "WK 01"，底部显示日期数字
-            if (oaTaskViewMode === "日") {
+            if (vm === ViewMode.Day) {
               if (level === "top") {
                 // 顶部：周标签，悬浮提示显示该周起止日期
                 const weekNum = dayjs(date).week();
@@ -449,7 +421,7 @@ const GanttChart: React.FC = () => {
             }
             
             // 周模式：顶部显示年月 "2025 01M"，底部显示周标签 "WK01"
-            if (oaTaskViewMode === "周") {
+            if (vm === ViewMode.Week) {
               if (level === "top") {
                 // 顶部：年月格式
                 const year = date.getFullYear();
@@ -467,7 +439,7 @@ const GanttChart: React.FC = () => {
             }
             
             // 月模式：底部显示月份 "M1"
-            if (oaTaskViewMode === "月" && level === "bottom") {
+            if (vm === ViewMode.Month && level === "bottom") {
               const month = date.getMonth() + 1;
               displayLabel = `M${month}`;
               // 添加悬浮提示：完整年月
@@ -520,27 +492,7 @@ const GanttChart: React.FC = () => {
             />
           }
           showArrows={false}
-          oaTaskViewMode={oaTaskViewMode}
-          onOATaskViewModeChange={(mode) => {
-            // 4. 反向同步：OA视图模式切换时更新view状态
-            switch (mode) {
-              case "日":
-                setView(ViewMode.Day);
-                break;
-              case "周":
-                setView(ViewMode.Week);
-                break;
-              case "月":
-                setView(ViewMode.Month);
-                break;
-              case "年":
-                setView(ViewMode.QuarterYear);
-                break;
-              default:
-                setView(ViewMode.Day);
-            }
-            setOATaskViewMode(mode);
-          }}
+          onViewModeChange={(mode) => setView(mode)}
           showTooltip={true}
           onDateChange={handleTaskChange}
           onTaskDragEnd={handleTaskDragEnd}

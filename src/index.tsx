@@ -10,8 +10,6 @@ export type {
   DisplayOption,
   EventOption,
   GanttRef,
-  ViewType,
-  OATaskViewMode,
   TimelineUnitLabels,
   TaskStatus,
   GanttColumnConfig,

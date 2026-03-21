@@ -190,15 +190,14 @@ const fmtDate = (v: unknown): string => {
 
 type DemoViewKey = "日" | "周" | "月" | "季" | "年" | "班次6H" | "班次D/N";
 
-const VIEW_MODES: { label: string; key: DemoViewKey; viewMode: ViewMode; oaMode: "日" | "周" | "月" | "季" | "年" }[] = [
-  { label: "日",      key: "日",      viewMode: ViewMode.Day,         oaMode: "日" },
-  { label: "周",      key: "周",      viewMode: ViewMode.Week,        oaMode: "周" },
-  { label: "月",      key: "月",      viewMode: ViewMode.Month,       oaMode: "月" },
-  { label: "季",      key: "季",      viewMode: ViewMode.QuarterYear, oaMode: "季" },
-  { label: "年",      key: "年",      viewMode: ViewMode.Year,        oaMode: "年" },
-  // 班次模式：时间轴用 DayShift / DayShiftDN，对齐 forProjectManage 的表现方式
-  { label: "班次6H",  key: "班次6H",  viewMode: ViewMode.DayShift,    oaMode: "日" },
-  { label: "班次D/N", key: "班次D/N", viewMode: "DayShiftDN" as ViewMode, oaMode: "日" },
+const VIEW_MODES: { label: string; key: DemoViewKey; viewMode: ViewMode }[] = [
+  { label: "日",      key: "日",      viewMode: ViewMode.Day },
+  { label: "周",      key: "周",      viewMode: ViewMode.Week },
+  { label: "月",      key: "月",      viewMode: ViewMode.Month },
+  { label: "季",      key: "季",      viewMode: ViewMode.QuarterYear },
+  { label: "年",      key: "年",      viewMode: ViewMode.Year },
+  { label: "班次6H",  key: "班次6H",  viewMode: ViewMode.DayShift },
+  { label: "班次D/N", key: "班次D/N", viewMode: ViewMode.DayShiftDN },
 ];
 
 const modeToColWidth = (m: DemoViewKey): number => {
@@ -277,8 +276,6 @@ const PMGanttDemo: React.FC = () => {
   const [tasks, setTasks]         = useState<Task[]>(() => buildTasks(MOCK_DATA));
   const [viewModeKey, setViewModeKey]   = useState<DemoViewKey>("日");
   const currentView = VIEW_MODES.find(v => v.key === viewModeKey) || VIEW_MODES[0];
-  const isShiftView = viewModeKey === "班次6H" || viewModeKey === "班次D/N";
-
   // 行编辑弹框相关状态
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -500,10 +497,7 @@ const PMGanttDemo: React.FC = () => {
       <Gantt
         ref={ganttRef}
         tasks={tasks}
-        // 班次视图走 forProjectManage 的 DayShift 头部表现（默认视图）
         viewMode={currentView.viewMode}
-        viewType={isShiftView ? "default" : "oaTask"}
-        oaTaskViewMode={isShiftView ? undefined : (currentView.oaMode as any)}
         listCellWidth="155px"
         ganttHeight={460}
         columnWidth={modeToColWidth(viewModeKey)}

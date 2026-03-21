@@ -1,9 +1,8 @@
 import React, { ReactChild } from "react";
-import { ViewMode, ViewType, OATaskViewMode, TimelineUnitLabels } from "../../types/public-types";
+import { ViewMode, TimelineUnitLabels } from "../../types/public-types";
 import { TopPartOfCalendar } from "./top-part-of-calendar";
 import {
   addToDate,
-  getDaysInMonth,
   getLocalDayOfWeek,
   getLocaleMonth,
   getWeekNumberISO8601,
@@ -23,7 +22,6 @@ export type TimelineHeaderCellRenderProps = {
   level: 'top' | 'bottom';
   defaultLabel: string;
   viewMode: ViewMode;
-  oaTaskViewMode?: OATaskViewMode;
   locale: string;
   x: number;
   y: number;
@@ -40,8 +38,6 @@ export type CalendarProps = {
   columnWidth: number;
   fontFamily: string;
   fontSize: string;
-  viewType?: ViewType;
-  oaTaskViewMode?: OATaskViewMode;
   /** 时间轴单位标签（直接配置周/月/季等，如 week: "WK", month: "M"） */
   timelineUnitLabels?: TimelineUnitLabels;
   /** 时间轴标题自定义渲染（类似 Ant Design 表头） */
@@ -60,8 +56,6 @@ export const Calendar: React.FC<CalendarProps> = ({
   columnWidth,
   fontFamily,
   fontSize,
-  viewType = "default",
-  oaTaskViewMode = "日",
   timelineUnitLabels,
   timelineHeaderCellRender,
   gridBorderColor = "#e6e4e4",
@@ -85,7 +79,6 @@ export const Calendar: React.FC<CalendarProps> = ({
       level,
       defaultLabel,
       viewMode,
-      oaTaskViewMode,
       locale,
       x,
       y,
@@ -139,237 +132,6 @@ export const Calendar: React.FC<CalendarProps> = ({
             y1Line={0}
             y2Line={headerHeight}
             xText={xText}
-            yText={topDefaultHeight * 0.9}
-          />
-        );
-      }
-    }
-    return [topValues, bottomValues];
-  };
-
-  const getCalendarValuesForQuarterYear = () => {
-    const topValues: ReactChild[] = [];
-    const bottomValues: ReactChild[] = [];
-    const topDefaultHeight = headerHeight * 0.5;
-    for (let i = 0; i < dateSetup.dates.length; i++) {
-      const date = dateSetup.dates[i];
-      // const bottomValue = getLocaleMonth(date, locale);
-      const q = Math.floor((date.getMonth() + 3) / 3);
-      const quarter = timelineUnitLabels?.quarter != null
-        ? `${timelineUnitLabels.quarter}${q}`
-        : "Q" + q;
-      bottomValues.push(
-        <text
-          key={date.getTime()}
-          y={headerHeight * 0.8}
-          x={columnWidth * i + columnWidth * 0.5}
-          className={styles.calendarBottomText}
-        >
-          {quarter}
-        </text>
-      );
-      if (
-        i === 0 ||
-        date.getFullYear() !== dateSetup.dates[i - 1].getFullYear()
-      ) {
-        const topValue = date.getFullYear().toString();
-        let xText: number;
-        if (rtl) {
-          xText = (6 + i + date.getMonth() + 1) * columnWidth;
-        } else {
-          xText = (6 + i - date.getMonth()) * columnWidth;
-        }
-        topValues.push(
-          <TopPartOfCalendar
-            key={topValue}
-            value={topValue}
-            x1Line={columnWidth * i}
-            y1Line={0}
-            y2Line={topDefaultHeight}
-            xText={Math.abs(xText)}
-            yText={topDefaultHeight * 0.9}
-          />
-        );
-      }
-    }
-    return [topValues, bottomValues];
-  };
-
-  const getCalendarValuesForMonth = () => {
-    const topValues: ReactChild[] = [];
-    const bottomValues: ReactChild[] = [];
-    const topDefaultHeight = headerHeight * 0.5;
-    for (let i = 0; i < dateSetup.dates.length; i++) {
-      const date = dateSetup.dates[i];
-      const bottomValue = getLocaleMonth(date, locale);
-      const bottomX = columnWidth * i + columnWidth * 0.5;
-      const bottomY = headerHeight * 0.8;
-      const customBottom = renderTimelineCell(date, i, 'bottom', bottomValue, bottomX, bottomY);
-      if (customBottom) {
-        bottomValues.push(
-          <g key={`month-${date.getTime()}`} transform={`translate(${bottomX}, ${bottomY})`}>
-            {customBottom}
-          </g>
-        );
-      } else {
-        bottomValues.push(
-          <text
-            key={bottomValue + date.getFullYear()}
-            y={bottomY}
-            x={bottomX}
-            className={styles.calendarBottomText}
-          >
-            {bottomValue}
-          </text>
-        );
-      }
-      if (
-        i === 0 ||
-        date.getFullYear() !== dateSetup.dates[i - 1].getFullYear()
-      ) {
-        const topValue = date.getFullYear().toString();
-        let xText: number;
-        if (rtl) {
-          xText = (6 + i + date.getMonth() + 1) * columnWidth;
-        } else {
-          xText = (6 + i - date.getMonth()) * columnWidth;
-        }
-        topValues.push(
-          <TopPartOfCalendar
-            key={topValue}
-            value={topValue}
-            x1Line={columnWidth * i}
-            y1Line={0}
-            y2Line={topDefaultHeight}
-            xText={xText}
-            yText={topDefaultHeight * 0.9}
-          />
-        );
-      }
-    }
-    return [topValues, bottomValues];
-  };
-
-  const getCalendarValuesForWeek = () => {
-    const topValues: ReactChild[] = [];
-    const bottomValues: ReactChild[] = [];
-    let weeksCount: number = 1;
-    const topDefaultHeight = headerHeight * 0.5;
-    const dates = dateSetup.dates;
-    for (let i = dates.length - 1; i >= 0; i--) {
-      const date = dates[i];
-      let topValue = "";
-      if (i === 0 || date.getMonth() !== dates[i - 1].getMonth()) {
-        // top
-        topValue = `${getLocaleMonth(date, locale)}, ${date.getFullYear()}`;
-      }
-      // bottom：周数，优先使用 timelineUnitLabels.week（如 "WK 01"）
-      const weekNum = getWeekNumberISO8601(date);
-      const bottomValue = timelineUnitLabels?.week != null
-        ? `${timelineUnitLabels.week} ${weekNum.padStart(2, '0')}`
-        : `W${weekNum}`;
-      const bottomX = columnWidth * (i + +rtl);
-      const bottomY = headerHeight * 0.8;
-      const weekTooltip = `${fmtDate(date)} ~ ${fmtDate(addToDate(date, 6, "day"))}`;
-      const customBottom = renderTimelineCell(date, i, 'bottom', bottomValue, bottomX, bottomY);
-      if (customBottom) {
-        bottomValues.push(
-          <g key={`week-${date.getTime()}`} transform={`translate(${bottomX}, ${bottomY})`}>
-            {customBottom}
-          </g>
-        );
-      } else {
-        bottomValues.push(
-          <g key={date.getTime()}>
-            {/* 透明命中区域，提供悬浮提示 */}
-            <rect
-              x={bottomX - columnWidth * 0.5}
-              y={topDefaultHeight}
-              width={columnWidth}
-              height={headerHeight - topDefaultHeight}
-              fill="transparent"
-            >
-              <title>{weekTooltip}</title>
-            </rect>
-            <text y={bottomY} x={bottomX} className={styles.calendarBottomText}>
-              {bottomValue}
-            </text>
-          </g>
-        );
-      }
-
-      if (topValue) {
-        // if last day is new month
-        if (i !== dates.length - 1) {
-          topValues.push(
-            <TopPartOfCalendar
-              key={topValue}
-              value={topValue}
-              x1Line={columnWidth * i + weeksCount * columnWidth}
-              y1Line={0}
-              y2Line={topDefaultHeight}
-              xText={columnWidth * i + columnWidth * weeksCount * 0.5}
-              yText={topDefaultHeight * 0.9}
-            />
-          );
-        }
-        weeksCount = 0;
-      }
-      weeksCount++;
-    }
-    return [topValues, bottomValues];
-  };
-
-  const getCalendarValuesForDay = () => {
-    const topValues: ReactChild[] = [];
-    const bottomValues: ReactChild[] = [];
-    const topDefaultHeight = headerHeight * 0.5;
-    const dates = dateSetup.dates;
-    for (let i = 0; i < dates.length; i++) {
-      const date = dates[i];
-      const bottomValue = `${getLocalDayOfWeek(date, locale, "short")}, ${date
-        .getDate()
-        .toString()}`;
-      const bottomX = columnWidth * i + columnWidth * 0.5;
-      const bottomY = headerHeight * 0.8;
-      const customBottom = renderTimelineCell(date, i, 'bottom', bottomValue, bottomX, bottomY);
-      if (customBottom) {
-        bottomValues.push(
-          <g key={`day-${date.getTime()}`} transform={`translate(${bottomX}, ${bottomY})`}>
-            {customBottom}
-          </g>
-        );
-      } else {
-        bottomValues.push(
-          <text
-            key={date.getTime()}
-            y={bottomY}
-            x={bottomX}
-            className={styles.calendarBottomText}
-          >
-            {bottomValue}
-          </text>
-        );
-      }
-      if (
-        i + 1 !== dates.length &&
-        date.getMonth() !== dates[i + 1].getMonth()
-      ) {
-        const topValue = getLocaleMonth(date, locale);
-
-        topValues.push(
-          <TopPartOfCalendar
-            key={topValue + date.getFullYear()}
-            value={topValue}
-            x1Line={columnWidth * (i + 1)}
-            y1Line={0}
-            y2Line={topDefaultHeight}
-            xText={
-              columnWidth * (i + 1) -
-              getDaysInMonth(date.getMonth(), date.getFullYear()) *
-                columnWidth *
-                0.5
-            }
             yText={topDefaultHeight * 0.9}
           />
         );
@@ -655,8 +417,8 @@ export const Calendar: React.FC<CalendarProps> = ({
     return [textValues, bgValues];
   };
 
-  // oaTask模式的时间轴渲染
-  const getOATaskCalendarValues = () => {
+  /** 日 / 周 / 月 / 季 双层表头；年与班次在下方 switch 中分支 */
+  const getHierarchicalTimelineCalendarValues = () => {
     const topValues: ReactChild[] = [];
     const bottomValues: ReactChild[] = [];
     const bgValues: ReactChild[] = [];
@@ -676,7 +438,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       />
     );
     
-    if (oaTaskViewMode === "日") {
+    if (dateSetup.viewMode === ViewMode.Day) {
       // 日模式：子母表头，母表头是第xx周，子表头是那周，周日为每周第一天，周日那条置灰色
       const weekMap = new Map<string, { weekNum: string; dates: Date[] }>();
       
@@ -855,7 +617,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           strokeWidth={0.25}
         />
       );
-    } else if (oaTaskViewMode === "月") {
+    } else if (dateSetup.viewMode === ViewMode.Month) {
       // 月模式：母表头是年份，子表头是英文的月
       const monthMap = new Map<string, { year: number; month: number; startIdx: number; endIdx: number }>();
       
@@ -1031,7 +793,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           strokeWidth={0.25}
         />
       );
-    } else if (oaTaskViewMode === "季") {
+    } else if (dateSetup.viewMode === ViewMode.QuarterYear) {
       // 季模式：母表头是年份，子表头是Q1-Q4
       const quarterMap = new Map<string, { year: number; quarter: number; startIdx: number; endIdx: number }>();
       
@@ -1205,7 +967,7 @@ export const Calendar: React.FC<CalendarProps> = ({
           strokeWidth={0.25}
         />
       );
-    } else if (oaTaskViewMode === "周") {
+    } else if (dateSetup.viewMode === ViewMode.Week) {
       // 周模式：母表头是"年份 月份"，子表头是"第X周" / "Week X"
       const yearMonthMap = new Map<string, { year: number; month: number; startIdx: number; endIdx: number }>();
       
@@ -1387,35 +1149,22 @@ export const Calendar: React.FC<CalendarProps> = ({
 
   let topValues: ReactChild[] = [];
   let bottomValues: ReactChild[] = [];
-  
-  if (viewType === "oaTask") {
-    [topValues, bottomValues] = getOATaskCalendarValues();
-  } else {
-    switch (dateSetup.viewMode) {
-      case ViewMode.Year:
-        [topValues, bottomValues] = getCalendarValuesForYear();
-        break;
-      case ViewMode.QuarterYear:
-        [topValues, bottomValues] = getCalendarValuesForQuarterYear();
-        break;
-      case ViewMode.Month:
-        [topValues, bottomValues] = getCalendarValuesForMonth();
-        break;
-      case ViewMode.Week:
-        [topValues, bottomValues] = getCalendarValuesForWeek();
-        break;
-      case ViewMode.Day:
-        [topValues, bottomValues] = getCalendarValuesForDay();
-        break;
-      case ViewMode.DayShift:
-        [topValues, bottomValues] = getCalendarValuesForDayShift();
-        break;
-      case ViewMode.DayShiftDN:
-        [topValues, bottomValues] = getCalendarValuesForDayShiftDN();
-        break;
-    }
+
+  switch (dateSetup.viewMode) {
+    case ViewMode.DayShift:
+      [topValues, bottomValues] = getCalendarValuesForDayShift();
+      break;
+    case ViewMode.DayShiftDN:
+      [topValues, bottomValues] = getCalendarValuesForDayShiftDN();
+      break;
+    case ViewMode.Year:
+      [topValues, bottomValues] = getCalendarValuesForYear();
+      break;
+    default:
+      [topValues, bottomValues] = getHierarchicalTimelineCalendarValues();
+      break;
   }
-  
+
   return (
     <g className="calendar" fontSize={fontSize} fontFamily={fontFamily} style={{ cursor: "pointer" }}>
       <rect

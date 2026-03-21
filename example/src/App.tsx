@@ -376,9 +376,6 @@ const EditTaskModal: React.FC<{
 // Init
 const App = () => {
   const ganttRef = React.useRef<any>(null);
-  const [viewType] = React.useState<"default" | "oaTask">("oaTask");
-  // 在 demo 中放宽类型，支持自定义扩展的视图模式（"日" | "周" | "月" | "年"）
-  const [oaTaskViewMode, setOATaskViewMode] = React.useState<string>("日");
   // 时间轴单位预设：默认(走 i18n) / 短标签(WK,M) / 英文(Week,MON) / 极简(W,M)
   const [timelineUnitPreset, setTimelineUnitPreset] = React.useState<"default" | "short" | "en" | "minimal">("default"); // eslint-disable-line @typescript-eslint/no-unused-vars
   const timelineUnitLabelsPresets = React.useMemo(() => ({ // eslint-disable-line @typescript-eslint/no-unused-vars
@@ -393,30 +390,7 @@ const App = () => {
   const [parentCount, setParentCount] = React.useState(100);
   const [childrenPerParent, setChildrenPerParent] = React.useState(10);
   
-  // 根据oaTaskViewMode设置viewMode
-  const getViewMode = React.useCallback((): ViewMode => {
-    if (viewType === "oaTask") {
-      switch (oaTaskViewMode) {
-        case "日":
-          // 日模式：按天显示
-          return ViewMode.Day;
-        case "周":
-          // 周模式：每列一周
-          return ViewMode.Week;
-        case "月":
-          // 月模式：每列一月
-          return ViewMode.Month;
-        case "年":
-          // 年模式：按季度显示（Q1-Q4）
-          return ViewMode.QuarterYear;
-        default:
-          return ViewMode.Day;
-      }
-    }
-    return ViewMode.Day;
-  }, [oaTaskViewMode, viewType]);
-  
-  const [view, setView] = React.useState<ViewMode>(getViewMode());
+  const [view, setView] = React.useState<ViewMode>(ViewMode.Day);
   const [tasks, setTasks] = React.useState<Task[]>(initTasks(useLargeData, parentCount, childrenPerParent));
   const [isChecked, setIsChecked] = React.useState(true);
   const [showArrows, setShowArrows] = React.useState<boolean>(true);
@@ -457,10 +431,10 @@ const App = () => {
     console.log('✅ Gantt 图表渲染完成！', {
       timestamp: now.toISOString(),
       taskCount: tasks.length,
-      viewMode: oaTaskViewMode,
+      viewMode: view,
       renderCount: renderCount + 1,
     });
-  }, [tasks.length, oaTaskViewMode, renderCount]);
+  }, [tasks.length, view, renderCount]);
   
   // 时间轴格式演示（当前配置的格式）
   const timelineFormatDemo = React.useMemo(() => ({
@@ -568,13 +542,6 @@ const App = () => {
 
   // 为了在 demo 中方便使用最新扩展 props，这里对 Gantt 做一次 any 断言
   
-  // 当oaTaskViewMode改变时，更新viewMode
-  React.useEffect(() => {
-    if (viewType === "oaTask") {
-      setView(getViewMode());
-    }
-  }, [oaTaskViewMode, viewType, getViewMode]);
-
   let columnWidth = 65;
   if (view === ViewMode.Year || view === ViewMode.QuarterYear) {
     columnWidth = 350;
@@ -1453,37 +1420,35 @@ const App = () => {
         <Button size="small" onClick={() => ganttRef.current?.scrollToDate(new Date(), { align: "center" })}>滚动到今天(居中)</Button>
         <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() - 24*3600*1000), { align: "start" })}>滚到昨天(开始)</Button>
         <Button size="small" style={{ marginLeft: 8 }} onClick={() => ganttRef.current?.scrollToDate(new Date(new Date().getTime() + 24*3600*1000), { align: "end" })}>滚到明天(末尾)</Button>
-        {viewType === "oaTask" && (
-        <>
             <Button 
             size="small" 
             style={{ marginLeft: 8 }} 
-            type={oaTaskViewMode === "日" ? "primary" : "default"}
-            onClick={() => setOATaskViewMode("日")}
+            type={view === ViewMode.Day ? "primary" : "default"}
+            onClick={() => setView(ViewMode.Day)}
             >
             日
             </Button>
             <Button 
             size="small" 
             style={{ marginLeft: 8 }} 
-            type={oaTaskViewMode === "周" ? "primary" : "default"}
-            onClick={() => setOATaskViewMode("周")}
+            type={view === ViewMode.Week ? "primary" : "default"}
+            onClick={() => setView(ViewMode.Week)}
             >
             周
             </Button>
             <Button 
             size="small" 
             style={{ marginLeft: 8 }} 
-            type={oaTaskViewMode === "月" ? "primary" : "default"}
-            onClick={() => setOATaskViewMode("月")}
+            type={view === ViewMode.Month ? "primary" : "default"}
+            onClick={() => setView(ViewMode.Month)}
             >
             月
             </Button>
             <Button 
             size="small" 
             style={{ marginLeft: 8 }} 
-            type={oaTaskViewMode === "年" ? "primary" : "default"}
-            onClick={() => setOATaskViewMode("年")}
+            type={view === ViewMode.QuarterYear ? "primary" : "default"}
+            onClick={() => setView(ViewMode.QuarterYear)}
             >
             年
             </Button>
@@ -1522,16 +1487,12 @@ const App = () => {
             >
               English
             </Button>
-          </>
-        )}
       </div>
-      {viewType === "default" && (
-        <ViewSwitcher
-          onViewModeChange={viewMode => setView(viewMode)}
-          onViewListChange={setIsChecked}
-          isChecked={isChecked}
-        />
-      )}
+      <ViewSwitcher
+        onViewModeChange={viewMode => setView(viewMode)}
+        onViewListChange={setIsChecked}
+        isChecked={isChecked}
+      />
       {/* 箭头开关示例 */}
       <div style={{ margin: "8px 0" }}>
         <label style={{ marginRight: 8 }}>显示任务依赖箭头：</label>
@@ -1677,14 +1638,10 @@ const App = () => {
         // onCellOverflow={({ column, task }: { column: "name" | "status" | "assignee"; task: Task }) => {
         //   console.log("列内容溢出:", column, "任务:", task.name);
         // }}
-        viewType={viewType}
-        oaTaskViewMode={oaTaskViewMode as any}
+        onViewModeChange={(mode) => setView(mode)}
         {...(timelineUnitLabelsPresets[timelineUnitPreset] && {
           timelineUnitLabels: timelineUnitLabelsPresets[timelineUnitPreset],
         } as any)}
-        onOATaskViewModeChange={(mode) => {
-          setOATaskViewMode(mode as any);
-        }}
         // [i18n] 多选列
         rowSelection={
           showRowSelection
@@ -1727,48 +1684,37 @@ const App = () => {
         // 日模式下，悬浮底部日期刻度时，显示完整日期，如“2026年2月3日”
         // [i18n] 时间轴：日期格式 "X日"、周格式 defaultLabel "第X周"
         // 当选择了「时间轴单位」预设(非默认)时，直接显示 defaultLabel，便于查看 timelineUnitLabels 效果
-        timelineHeaderCellRender={({ date, defaultLabel, level, oaTaskViewMode }) => {
+        timelineHeaderCellRender={({ date, defaultLabel, level, viewMode: vm }) => {
           const fullDateLabel = dayjs(date).format("YYYY/M/D");
           let displayLabel = defaultLabel;
           const customStyle: React.CSSProperties = { fontSize: 12, fill: "#333", fontWeight: 400 };
-          // 使用时间轴单位预设时，直接显示 defaultLabel（已由 timelineUnitLabels 生成）
           if (timelineUnitPreset !== "default") {
             return (
               <text x={0} y={0} textAnchor="middle" dominantBaseline="middle" style={customStyle}>
-                {oaTaskViewMode === "日" && level === "bottom" && <title>{fullDateLabel}</title>}
+                {vm === ViewMode.Day && level === "bottom" && <title>{fullDateLabel}</title>}
                 {defaultLabel}
               </text>
             );
           }
-          // 根据模式和层级自定义显示内容（默认预设）
-          if (oaTaskViewMode === "日") {
+          if (vm === ViewMode.Day) {
             if (level === "bottom") {
-              // 日模式底部：仅显示日期数字
               displayLabel = `${date.getDate()}`;
             } else {
-              // 日模式顶部：周标签，自定义格式为 "WK23"
-              // defaultLabel 格式为 "Week 23" 或 "第23周"，提取数字部分
               const weekNum = defaultLabel.match(/\d+/)?.[0] || "01";
               displayLabel = `WK${weekNum.padStart(2, '0')}`;
             }
-          } else if (oaTaskViewMode === "周") {
+          } else if (vm === ViewMode.Week) {
             if (level === "bottom") {
-              // 周模式底部：周标签，自定义格式为 "WK01"
-              // defaultLabel 格式为 "Week 01" 或 "第01周"，提取数字部分
               const weekNum = defaultLabel.match(/\d+/)?.[0] || "01";
               displayLabel = `WK${weekNum.padStart(2, '0')}`;
             } else {
-              // 周模式顶部：年月标签，自定义格式为 "2025 06M"
-              // defaultLabel 格式为 "2025 06Mon"，将 "Mon" 替换为 "M"
               displayLabel = defaultLabel.replace(/Mon$/, 'M');
             }
-          } else if (oaTaskViewMode === "月") {
+          } else if (vm === ViewMode.Month) {
             if (level === "bottom") {
-              // 月模式底部：月份标签，可以自定义格式
-              displayLabel = defaultLabel; // 默认是 "M1"，可改为 "1月" 等
+              displayLabel = defaultLabel;
             } else {
-              // 月模式顶部：年份标签
-              displayLabel = defaultLabel; // 默认是年份数字
+              displayLabel = defaultLabel;
             }
           }
           
@@ -1780,8 +1726,7 @@ const App = () => {
               dominantBaseline="middle"
               style={customStyle}
             >
-              {/* 仅在日视图底部刻度上添加悬浮提示 */}
-              {oaTaskViewMode === "日" && level === "bottom" && (
+              {vm === ViewMode.Day && level === "bottom" && (
                 <title>{fullDateLabel}</title>
               )}
               {displayLabel}
