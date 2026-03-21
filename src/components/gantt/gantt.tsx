@@ -913,18 +913,27 @@ export const Gantt = forwardRef<GanttRef, GanttProps>(({
     setSelectedTask(newSelectedTask);
   };
 
-  /** 点击甘特条时：触发外部 onClick */
-  const handleTaskClick = (task: Task) => {
-    onClick?.(task);
+  /**
+   * 将内部 BarTask 回源为外部 Task，避免把 x1/x2/barChildren 等内部字段透出给业务层。
+   * 回源失败时兜底返回当前对象，保持兼容。
+   */
+  const getPublicTaskById = (task: Task): Task => {
+    const publicTask = flattenedTasks.find(t => t.id === task.id);
+    return publicTask ?? task;
   };
 
-  /** 双击甘特条时：定位到任务开始处，然后触发外部 onDoubleClick */
+  /** 点击甘特条时：触发外部 onClick（传回源后的 Task） */
+  const handleTaskClick = (task: Task) => {
+    onClick?.(getPublicTaskById(task));
+  };
+
+  /** 双击甘特条时：定位到任务开始处，然后触发外部 onDoubleClick（传回源后的 Task） */
   const handleTaskDoubleClick = (task: Task) => {
     const barTask = barTasks.find(t => t.id === task.id);
     if (barTask) {
       scrollToTaskStart(barTask);
     }
-    onDoubleClick?.(task);
+    onDoubleClick?.(getPublicTaskById(task));
   };
   const handleExpanderClick = (task: Task) => {
     // 默认未设置 hideChildren 时视为展开态

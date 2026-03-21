@@ -12,7 +12,7 @@
 import React, { useRef, useState } from "react";
 import { Gantt, Task, ViewMode, GanttColumnConfig } from "gantt-task-react";
 import { Modal, Form, Input, DatePicker, message } from "antd";
-import type { Dayjs } from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import "gantt-task-react/dist/index.css";
 
 // ─── 原始数据结构（与后端接口字段一一对应）────────────────────
@@ -307,6 +307,13 @@ const PMGanttDemo: React.FC = () => {
   const isRowEditable = (task: Task) =>
     task.type === "task" || task.type === "project";
 
+  /** Ant Design 5 DatePicker 需要 dayjs；存 Task 里可能是 Date/string，不能直接当 Dayjs 用 */
+  const toFormDayjs = (value: unknown): Dayjs | undefined => {
+    if (value == null || value === "") return undefined;
+    const d = dayjs(value as string | Date | Dayjs);
+    return d.isValid() ? d : undefined;
+  };
+
   const handleRowDoubleClick = (task: Task) => {
     if (!isRowEditable(task)) return;
 
@@ -326,10 +333,14 @@ const PMGanttDemo: React.FC = () => {
           : t.name?.replace(/^📍\s*/, "")) || "",
     };
 
-    if (t.planStartRaw) initialValues.planStartRaw = (t.planStartRaw as Dayjs) || undefined;
-    if (t.planEndRaw) initialValues.planEndRaw = (t.planEndRaw as Dayjs) || undefined;
-    if (t.actualStartRaw) initialValues.actualStartRaw = (t.actualStartRaw as Dayjs) || undefined;
-    if (t.actualEndRaw) initialValues.actualEndRaw = (t.actualEndRaw as Dayjs) || undefined;
+    const ps = toFormDayjs(t.planStartRaw);
+    const pe = toFormDayjs(t.planEndRaw);
+    const as = toFormDayjs(t.actualStartRaw);
+    const ae = toFormDayjs(t.actualEndRaw);
+    if (ps) initialValues.planStartRaw = ps;
+    if (pe) initialValues.planEndRaw = pe;
+    if (as) initialValues.actualStartRaw = as;
+    if (ae) initialValues.actualEndRaw = ae;
 
     form.setFieldsValue(initialValues);
     setEditModalOpen(true);
