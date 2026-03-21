@@ -772,8 +772,8 @@ const App = () => {
       renderTitle: () => <span title="操作列">操作</span>,
       render: (_, task) => (
         <div style={{ display: "flex", justifyContent: "center", gap: 8 }}>
-          <a onClick={(e) => { e.preventDefault(); handleEditTask(task); }}>编辑</a>
-          <a onClick={(e) => { e.preventDefault(); handleAddTask(task); }}>新增子任务</a>
+          <Button type="link" size="small" href="#" onClick={(e) => { e.preventDefault(); handleEditTask(task); }}>编辑</Button>
+          <Button type="link" size="small" href="#" onClick={(e) => { e.preventDefault(); handleAddTask(task); }}>新增子任务</Button>
         </div>
       ),
     },

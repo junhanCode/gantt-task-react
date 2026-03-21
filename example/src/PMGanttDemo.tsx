@@ -159,13 +159,30 @@ const buildTasks = (data: StationData[]): Task[] => {
     });
 
     const now = new Date();
+    const si = station.stationInfo;
+    const parentRawPlannedStart = parseDate(si.planStart);
+    const parentRawPlannedEnd = parseDate(si.planEnd);
+    const parentRawActualStart = parseDate(si.actualStart);
+    const parentRawActualEnd = parseDate(si.actualEnd);
     const parent: Task = {
       id: parentId,
       name: `🏭 ${station.stationInfo.stationName}`,
       type: "project",
-      start: minStart || now,
-      end: maxEnd || new Date(now.getTime() + ONE_DAY),
-      progress: 0,
+      start:
+        parentRawActualStart ||
+        parentRawPlannedStart ||
+        minStart ||
+        now,
+      end:
+        parentRawActualEnd ||
+        parentRawPlannedEnd ||
+        maxEnd ||
+        new Date(now.getTime() + ONE_DAY),
+      plannedStart: parentRawPlannedStart,
+      plannedEnd: parentRawPlannedEnd,
+      actualStart: parentRawActualStart,
+      actualEnd: parentRawActualEnd,
+      progress: parentRawActualEnd ? 100 : 0,
       hideChildren: false,
       styles: {
         backgroundColor: "#E3F2FD",
@@ -173,6 +190,11 @@ const buildTasks = (data: StationData[]): Task[] => {
         backgroundSelectedColor: "#BBDEFB",
       },
     };
+
+    (parent as any).planStartRaw = parentRawPlannedStart || undefined;
+    (parent as any).planEndRaw = parentRawPlannedEnd || undefined;
+    (parent as any).actualStartRaw = parentRawActualStart || undefined;
+    (parent as any).actualEndRaw = parentRawActualEnd || undefined;
 
     result.push(parent, ...children);
   });
@@ -282,9 +304,11 @@ const PMGanttDemo: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
+  const isRowEditable = (task: Task) =>
+    task.type === "task" || task.type === "project";
+
   const handleRowDoubleClick = (task: Task) => {
-    // 只允许对子任务（工序行）编辑，父级 project 行不弹
-    if (task.type !== "task") return;
+    if (!isRowEditable(task)) return;
 
     setEditingTask(task);
 
@@ -296,7 +320,10 @@ const PMGanttDemo: React.FC = () => {
       actualStartRaw?: Dayjs;
       actualEndRaw?: Dayjs;
     } = {
-      name: t.name?.replace(/^📍\s*/, "") || "",
+      name:
+        (task.type === "project"
+          ? t.name?.replace(/^🏭\s*/, "")
+          : t.name?.replace(/^📍\s*/, "")) || "",
     };
 
     if (t.planStartRaw) initialValues.planStartRaw = (t.planStartRaw as Dayjs) || undefined;
@@ -323,9 +350,12 @@ const PMGanttDemo: React.FC = () => {
 
       const toDate = (v?: Dayjs) => (v ? v.toDate() : undefined);
 
+      const isProject = editingTask.type === "project";
+      const namePrefix = isProject ? "🏭 " : "📍 ";
+
       const updatedTask: Task = {
         ...editingTask,
-        name: `📍 ${values.name}`,
+        name: `${namePrefix}${values.name}`,
         plannedStart: toDate(values.planStartRaw),
         plannedEnd: toDate(values.planEndRaw),
         actualStart: toDate(values.actualStartRaw),
@@ -346,14 +376,31 @@ const PMGanttDemo: React.FC = () => {
         planEndRaw: updatedTask.plannedEnd,
         actualStartRaw: updatedTask.actualStart,
         actualEndRaw: updatedTask.actualEnd,
-        styles: {
-          ...(updatedTask.styles || {}),
-          backgroundColor: hasAnyTime ? "#FFF3E0" : "transparent",
-          progressColor: hasAnyTime ? "#FF9800" : "transparent",
-          backgroundSelectedColor: hasAnyTime ? "#FFE0B2" : "transparent",
-        },
+        styles: isProject
+          ? {
+              ...(updatedTask.styles || {}),
+              backgroundColor: "#E3F2FD",
+              progressColor: "#2196F3",
+              backgroundSelectedColor: "#BBDEFB",
+            }
+          : {
+              ...(updatedTask.styles || {}),
+              backgroundColor: hasAnyTime ? "#FFF3E0" : "transparent",
+              progressColor: hasAnyTime ? "#FF9800" : "transparent",
+              backgroundSelectedColor: hasAnyTime ? "#FFE0B2" : "transparent",
+            },
         progress: updatedTask.actualEnd ? 100 : 0,
       };
+
+      const ONE_DAY = 24 * 60 * 60 * 1000;
+      if (isProject) {
+        const ps = updatedTask.plannedStart;
+        const pe = updatedTask.plannedEnd;
+        const as = updatedTask.actualStart;
+        const ae = updatedTask.actualEnd;
+        newTaskAny.start = as || ps || updatedTask.start;
+        newTaskAny.end = ae || pe || new Date(newTaskAny.start.getTime() + ONE_DAY);
+      }
 
       // 模拟接口调用
       await new Promise(resolve => setTimeout(resolve, 800));
@@ -373,16 +420,6 @@ const PMGanttDemo: React.FC = () => {
     }
   };
 
-  // 🔍 调试：输出第一条任务的四个时间字段，确认是否为 undefined
-  console.log(
-    "[PMGanttDemo debug] first task times =",
-    tasks[0]?.name,
-    "plannedStart:", tasks[0]?.plannedStart,
-    "plannedEnd:", tasks[0]?.plannedEnd,
-    "actualStart:", tasks[0]?.actualStart,
-    "actualEnd:", tasks[0]?.actualEnd,
-  );
-
   const handleExpanderClick = (task: Task) => {
     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, hideChildren: !t.hideChildren } : t));
   };
@@ -398,7 +435,7 @@ const PMGanttDemo: React.FC = () => {
         ...col,
         render: (_v, task) => {
           const t = task as Task;
-          const isTask = t.type === "task";
+          const editable = isRowEditable(t);
           return (
             <span
               style={{
@@ -406,10 +443,10 @@ const PMGanttDemo: React.FC = () => {
                 width: "100%",
                 height: "100%",
                 fontSize: 13,
-                cursor: isTask ? "pointer" : "default",
+                cursor: editable ? "pointer" : "default",
               }}
               onDoubleClick={() => {
-                if (isTask) {
+                if (editable) {
                   handleRowDoubleClick(t);
                 }
               }}
@@ -425,7 +462,7 @@ const PMGanttDemo: React.FC = () => {
     return {
       ...col,
       render: (v: unknown, task: Task, colIndex: number) => {
-        const isTask = task.type === "task";
+        const editable = isRowEditable(task);
         const inner =
           typeof col.render === "function"
             ? col.render(v, task, colIndex)
@@ -437,10 +474,10 @@ const PMGanttDemo: React.FC = () => {
               display: "block",
               width: "100%",
               height: "100%",
-              cursor: isTask ? "pointer" : "default",
+              cursor: editable ? "pointer" : "default",
             }}
             onDoubleClick={() => {
-              if (isTask) {
+              if (editable) {
                 handleRowDoubleClick(task);
               }
             }}
@@ -538,12 +575,12 @@ const PMGanttDemo: React.FC = () => {
       />
 
       <Modal
-        title="编辑任务"
+        title={editingTask?.type === "project" ? "编辑站点" : "编辑任务"}
         open={editModalOpen}
         onOk={handleEditOk}
         onCancel={handleEditCancel}
         okButtonProps={{ loading: saving }}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form
           form={form}
