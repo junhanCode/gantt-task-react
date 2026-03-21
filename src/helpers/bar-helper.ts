@@ -168,6 +168,7 @@ const convertToBar = (
   delayColor: string,
   allTasks?: Task[] // 添加所有任务参数用于计算子项
 ): BarTask => {
+  const isDateDrivenDelayMode = !!task.delayByDateOnly;
   let plannedStart = task.plannedStart || task.start;
   let plannedEnd = task.plannedEnd || task.end;
   let actualStart = task.actualStart || task.start;
@@ -180,10 +181,10 @@ const convertToBar = (
     typeof task.status === "string"
       ? task.status
       : (task.status as any)?.description;
-  const isCompletionStatus = taskStatusDesc && COMPLETION_STATUSES.includes(taskStatusDesc);
+  const isCompletionStatus = !!(taskStatusDesc && COMPLETION_STATUSES.includes(taskStatusDesc));
 
   let actualEnd: Date;
-  if (task.actualEnd && isCompletionStatus) {
+  if (task.actualEnd && (isDateDrivenDelayMode || isCompletionStatus)) {
     actualEnd = task.actualEnd;
   } else {
     const now = new Date();
@@ -462,9 +463,11 @@ export const handleTaskBySVGMouseEvent = (
           typeof changedTask.status === "string"
             ? changedTask.status
             : (changedTask.status as any)?.description;
-        const isEndCompletionStatus =
-          endStatusDesc && ["待驗收", "已完成"].includes(endStatusDesc);
-        if (!isEndCompletionStatus || !changedTask.actualEnd) {
+        const isDateDrivenDelayMode = !!changedTask.delayByDateOnly;
+        const isEndCompletionStatus = !!(
+          endStatusDesc && ["待驗收", "已完成"].includes(endStatusDesc)
+        );
+        if (isDateDrivenDelayMode || !isEndCompletionStatus || !changedTask.actualEnd) {
           const now = new Date();
           const newActualEnd = now > newPlannedEnd ? now : newPlannedEnd;
           changedTask = {
@@ -530,9 +533,11 @@ export const handleTaskBySVGMouseEvent = (
           typeof changedTask.status === "string"
             ? changedTask.status
             : (changedTask.status as any)?.description;
-        const isMoveCompletionStatus =
-          moveStatusDesc && ["待驗收", "已完成"].includes(moveStatusDesc);
-        if (!isMoveCompletionStatus || !changedTask.actualEnd) {
+        const isDateDrivenDelayMode = !!changedTask.delayByDateOnly;
+        const isMoveCompletionStatus = !!(
+          moveStatusDesc && ["待驗收", "已完成"].includes(moveStatusDesc)
+        );
+        if (isDateDrivenDelayMode || !isMoveCompletionStatus || !changedTask.actualEnd) {
           const now = new Date();
           const newActualEnd = now > newMovePlannedEnd ? now : newMovePlannedEnd;
           changedTask = {

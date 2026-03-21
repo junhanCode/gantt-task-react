@@ -84,6 +84,12 @@ export interface Task {
   createdAt?: Date | string;
   /** 發起人（用於oaTask模式） */
   creator?: string;
+  /**
+   * 延期判定模式开关（向后兼容）：
+   * - 不传/false：沿用旧逻辑（与任务状态联动）
+   * - true：仅按日期判定延期（plannedEnd vs actualEnd/today），不依赖任务状态
+   */
+  delayByDateOnly?: boolean;
 }
 
 export interface EventOption {
