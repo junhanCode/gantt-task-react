@@ -168,7 +168,7 @@ const convertToBar = (
   delayColor: string,
   allTasks?: Task[] // 添加所有任务参数用于计算子项
 ): BarTask => {
-  const isDateDrivenDelayMode = !!task.delayByDateOnly;
+  const isDateDrivenDelayMode = !!task.timelineUsesDatesOnly;
   let plannedStart = task.plannedStart || task.start;
   let plannedEnd = task.plannedEnd || task.end;
   let actualStart = task.actualStart || task.start;
@@ -463,7 +463,7 @@ export const handleTaskBySVGMouseEvent = (
           typeof changedTask.status === "string"
             ? changedTask.status
             : (changedTask.status as any)?.description;
-        const isDateDrivenDelayMode = !!changedTask.delayByDateOnly;
+        const isDateDrivenDelayMode = !!changedTask.timelineUsesDatesOnly;
         const isEndCompletionStatus = !!(
           endStatusDesc && ["待驗收", "已完成"].includes(endStatusDesc)
         );
@@ -533,7 +533,7 @@ export const handleTaskBySVGMouseEvent = (
           typeof changedTask.status === "string"
             ? changedTask.status
             : (changedTask.status as any)?.description;
-        const isDateDrivenDelayMode = !!changedTask.delayByDateOnly;
+        const isDateDrivenDelayMode = !!changedTask.timelineUsesDatesOnly;
         const isMoveCompletionStatus = !!(
           moveStatusDesc && ["待驗收", "已完成"].includes(moveStatusDesc)
         );

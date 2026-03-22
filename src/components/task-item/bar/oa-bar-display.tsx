@@ -29,8 +29,8 @@ type OABarDisplayProps = {
   delayColor?: string;
   /** 自定义基色，优先级高于内置状态色表，传 null/undefined 时回退到默认逻辑 */
   customBarColor?: string | null;
-  /** true 时延期判定不依赖状态，仅按日期 */
-  delayByDateOnly?: boolean;
+  /** true：延期与条形仅由计划/实际起止与今日决定，不依赖任务状态 */
+  timelineUsesDatesOnly?: boolean;
 };
 
 const DEFAULT_DELAY_COLOR = "#fbc2d5";
@@ -77,7 +77,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   delayDaysFormat,
   delayColor = DEFAULT_DELAY_COLOR,
   customBarColor,
-  delayByDateOnly = false,
+  timelineUsesDatesOnly = false,
 }) => {
   const safeWidth = Math.max(0, width || 0);
 
@@ -116,13 +116,16 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
 
   // 旧逻辑下「掛起中」和「已撤销」不顯示延期段；纯日期模式下不受状态限制
   const canShowDelay =
-    delayByDateOnly || (statusDescription !== "掛起中" && statusDescription !== "已撤销");
+    timelineUsesDatesOnly ||
+    (statusDescription !== "掛起中" && statusDescription !== "已撤销");
 
   // 旧逻辑：finishDate 只在「待驗收」/「已完成」视为有效；
   // 纯日期模式：只要有 actualEnd 就视为有效完成时间。
   const COMPLETION_STATUSES: (TaskStatus | undefined)[] = ["待驗收", "已完成"];
   const isCompletionStatus = COMPLETION_STATUSES.includes(statusDescription);
-  const hasValidFinishDate = delayByDateOnly ? !!actualEnd : isCompletionStatus && !!actualEnd;
+  const hasValidFinishDate = timelineUsesDatesOnly
+    ? !!actualEnd
+    : isCompletionStatus && !!actualEnd;
 
   // actualEndX 由 bar-helper 按以下规则算出（与 isCompletionStatus 一致）：
   //   待驗收/已完成 且有 finishDate → x(finishDate)

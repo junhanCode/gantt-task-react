@@ -85,11 +85,11 @@ export interface Task {
   /** 發起人（用於oaTask模式） */
   creator?: string;
   /**
-   * 延期判定模式开关（向后兼容）：
-   * - 不传/false：沿用旧逻辑（与任务状态联动）
-   * - true：仅按日期判定延期（plannedEnd vs actualEnd/today），不依赖任务状态
+   * 时间轴纯日期模式：
+   * - 不传/false：OA 场景下延期与完成时间与任务状态联动（掛起/撤销/待驗收等）
+   * - true：延期与条形图仅由 plannedStart / plannedEnd / actualStart / actualEnd（及今日）决定，不依赖任务状态
    */
-  delayByDateOnly?: boolean;
+  timelineUsesDatesOnly?: boolean;
 }
 
 export interface EventOption {

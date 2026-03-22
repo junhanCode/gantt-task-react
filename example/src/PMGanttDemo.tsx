@@ -18,6 +18,12 @@ import dayjs, { type Dayjs } from "dayjs";
 import "gantt-task-react/dist/index.css";
 import planActualTooltipStyles from "./ConfigurableOATooltipContent.module.css";
 
+/**
+ * PM 演示用任务类型：包含时间轴纯日期开关。
+ * 与库内 `Task.timelineUsesDatesOnly` 一致；若本地 `node_modules` 里包的 d.ts 尚未重建，用交集可避免对象字面量多余属性报错。
+ */
+type PMTask = Task & { timelineUsesDatesOnly?: boolean };
+
 /** PM 演示任务条悬浮层：任务名、计划 / 实际 / 延期（内联于此文件，避免独立模块未同步导致编译失败） */
 const PM_DAY_MS = 1000 * 60 * 60 * 24;
 const pmToEndOfDay = (d: Date) =>
@@ -143,14 +149,14 @@ const parseDate = (s: string): Date | undefined => {
 //  • 父任务（stationInfo）仅做分组，start/end = 所有子任务最小开始 / 最大结束，
 //    如果子任务没有任何有效日期，父任务就不画条，只保留一行（用今天为 start/end）
 
-const buildTasks = (data: StationData[]): Task[] => {
-  const result: Task[] = [];
+const buildTasks = (data: StationData[]): PMTask[] => {
+  const result: PMTask[] = [];
   const ONE_DAY = 24 * 60 * 60 * 1000;
 
   data.forEach(station => {
     const parentId = `station-${station.stationInfo.stationId}`;
 
-    const children: Task[] = station.stationItems.map(item => {
+    const children: PMTask[] = station.stationItems.map(item => {
       // 原始时间字段（只做解析，不做推算），完全映射你的 plan/actual 字段
       const rawPlannedStart = parseDate(item.planStart);
       const rawPlannedEnd   = parseDate(item.planEnd);
@@ -172,7 +178,7 @@ const buildTasks = (data: StationData[]): Task[] => {
         rawPlannedEnd ||
         new Date(start.getTime() + ONE_DAY); // 至少 1 天
 
-      const child: Task = {
+      const child: PMTask = {
         id: `item-${item.stationItemId}`,
         name: `📍 ${item.stationItemName}`,
         type: "task",
@@ -183,6 +189,8 @@ const buildTasks = (data: StationData[]): Task[] => {
         plannedEnd: rawPlannedEnd,
         actualStart: rawActualStart,
         actualEnd: rawActualEnd,
+        // PM：条形与延期仅认计划/实际四个时间，与 OA 状态无关
+        timelineUsesDatesOnly: true,
         // 简单按是否有 actualEnd 给一个进度示意：有 actualEnd 认为 100%，否则 0%
         progress: rawActualEnd ? 100 : 0,
         project: parentId,
@@ -221,7 +229,7 @@ const buildTasks = (data: StationData[]): Task[] => {
     const parentRawPlannedEnd = parseDate(si.planEnd);
     const parentRawActualStart = parseDate(si.actualStart);
     const parentRawActualEnd = parseDate(si.actualEnd);
-    const parent: Task = {
+    const parent: PMTask = {
       id: parentId,
       name: `🏭 ${station.stationInfo.stationName}`,
       type: "project",
@@ -239,6 +247,7 @@ const buildTasks = (data: StationData[]): Task[] => {
       plannedEnd: parentRawPlannedEnd,
       actualStart: parentRawActualStart,
       actualEnd: parentRawActualEnd,
+      timelineUsesDatesOnly: true,
       progress: parentRawActualEnd ? 100 : 0,
       hideChildren: false,
       styles: {
@@ -352,16 +361,16 @@ const COLUMNS: GanttColumnConfig[] = [
 
 const PMGanttDemo: React.FC = () => {
   const ganttRef = useRef<any>(null);
-  const [tasks, setTasks]         = useState<Task[]>(() => buildTasks(MOCK_DATA));
+  const [tasks, setTasks]         = useState<PMTask[]>(() => buildTasks(MOCK_DATA));
   const [viewModeKey, setViewModeKey]   = useState<DemoViewKey>("日");
   const currentView = VIEW_MODES.find(v => v.key === viewModeKey) || VIEW_MODES[0];
   // 行编辑弹框相关状态
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<PMTask | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
-  const isRowEditable = (task: Task) =>
+  const isRowEditable = (task: PMTask) =>
     task.type === "task" || task.type === "project";
 
   /** Ant Design 5 DatePicker 需要 dayjs；存 Task 里可能是 Date/string，不能直接当 Dayjs 用 */
@@ -371,7 +380,7 @@ const PMGanttDemo: React.FC = () => {
     return d.isValid() ? d : undefined;
   };
 
-  const handleRowDoubleClick = (task: Task) => {
+  const handleRowDoubleClick = (task: PMTask) => {
     if (!isRowEditable(task)) return;
 
     setEditingTask(task);
@@ -421,7 +430,7 @@ const PMGanttDemo: React.FC = () => {
       const isProject = editingTask.type === "project";
       const namePrefix = isProject ? "🏭 " : "📍 ";
 
-      const updatedTask: Task = {
+      const updatedTask: PMTask = {
         ...editingTask,
         name: `${namePrefix}${values.name}`,
         plannedStart: toDate(values.planStartRaw),
@@ -474,7 +483,7 @@ const PMGanttDemo: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 800));
 
       setTasks(prev =>
-        prev.map(t => (t.id === updatedTask.id ? (newTaskAny as Task) : t)),
+        prev.map(t => (t.id === updatedTask.id ? (newTaskAny as PMTask) : t)),
       );
 
       message.success("已保存任务编辑");
@@ -488,11 +497,11 @@ const PMGanttDemo: React.FC = () => {
     }
   };
 
-  const handleExpanderClick = (task: Task) => {
+  const handleExpanderClick = (task: PMTask) => {
     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, hideChildren: !t.hideChildren } : t));
   };
 
-  const handleTaskChange = (task: Task) => {
+  const handleTaskChange = (task: PMTask) => {
     setTasks(prev => prev.map(t => t.id === task.id ? task : t));
   };
 
@@ -624,7 +633,7 @@ const PMGanttDemo: React.FC = () => {
         }}
         barActualColor="#4CAF50"
         barActualSelectedColor="#45a049"
-        barDelayColor="#FF9800"
+        barDelayColor="#fbc2d5"
         barBackgroundColor="#e0e0e0"
         barBackgroundSelectedColor="#d0d0d0"
         barProgressColor="#2196F3"
