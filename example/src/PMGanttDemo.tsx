@@ -667,10 +667,40 @@ const PMGanttDemo: React.FC = () => {
 
           <Form.Item label="计划时间">
             <div style={{ display: "flex", gap: 8 }}>
-              <Form.Item name="planStartRaw" style={{ flex: 1, marginBottom: 0 }}>
+              <Form.Item
+                name="planStartRaw"
+                style={{ flex: 1, marginBottom: 0 }}
+                dependencies={["planEndRaw"]}
+                rules={[
+                  ({ getFieldValue }) => ({
+                    validator(_: unknown, value?: Dayjs) {
+                      const end = getFieldValue("planEndRaw") as Dayjs | undefined;
+                      if (value && end && value.valueOf() > end.valueOf()) {
+                        return Promise.reject(new Error("计划开始时间不能晚于计划结束时间"));
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
                 <DatePicker style={{ width: "100%" }} placeholder="计划开始" />
               </Form.Item>
-              <Form.Item name="planEndRaw" style={{ flex: 1, marginBottom: 0 }}>
+              <Form.Item
+                name="planEndRaw"
+                style={{ flex: 1, marginBottom: 0 }}
+                dependencies={["planStartRaw"]}
+                rules={[
+                  ({ getFieldValue }) => ({
+                    validator(_: unknown, value?: Dayjs) {
+                      const start = getFieldValue("planStartRaw") as Dayjs | undefined;
+                      if (start && value && value.valueOf() < start.valueOf()) {
+                        return Promise.reject(new Error("计划结束时间不能早于计划开始时间"));
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
                 <DatePicker style={{ width: "100%" }} placeholder="计划结束" />
               </Form.Item>
             </div>
@@ -678,10 +708,40 @@ const PMGanttDemo: React.FC = () => {
 
           <Form.Item label="实际时间">
             <div style={{ display: "flex", gap: 8 }}>
-              <Form.Item name="actualStartRaw" style={{ flex: 1, marginBottom: 0 }}>
+              <Form.Item
+                name="actualStartRaw"
+                style={{ flex: 1, marginBottom: 0 }}
+                dependencies={["actualEndRaw"]}
+                rules={[
+                  ({ getFieldValue }) => ({
+                    validator(_: unknown, value?: Dayjs) {
+                      const end = getFieldValue("actualEndRaw") as Dayjs | undefined;
+                      if (value && end && value.valueOf() > end.valueOf()) {
+                        return Promise.reject(new Error("实际开始时间不能晚于实际结束时间"));
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
                 <DatePicker style={{ width: "100%" }} placeholder="实际开始" />
               </Form.Item>
-              <Form.Item name="actualEndRaw" style={{ flex: 1, marginBottom: 0 }}>
+              <Form.Item
+                name="actualEndRaw"
+                style={{ flex: 1, marginBottom: 0 }}
+                dependencies={["actualStartRaw"]}
+                rules={[
+                  ({ getFieldValue }) => ({
+                    validator(_: unknown, value?: Dayjs) {
+                      const start = getFieldValue("actualStartRaw") as Dayjs | undefined;
+                      if (start && value && value.valueOf() < start.valueOf()) {
+                        return Promise.reject(new Error("实际结束时间不能早于实际开始时间"));
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
+                ]}
+              >
                 <DatePicker style={{ width: "100%" }} placeholder="实际结束" />
               </Form.Item>
             </div>

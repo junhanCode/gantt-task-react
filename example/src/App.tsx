@@ -9,11 +9,20 @@ import { getStartEndDateForProject, initTasks } from "./helper";
 import "gantt-task-react/dist/index.css";
 import { Modal, Input, Select, Button, DatePicker, InputNumber, Form } from "antd";
 import { CaretRightOutlined, CaretDownOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import TitleCell from "./components/TitleCell";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
+
+/** 时间范围：开始不得晚于结束（计划、实际等共用） */
+const rangePickerStartNotAfterEnd = (_: unknown, value: [Dayjs, Dayjs] | null | undefined) => {
+  if (!value?.[0] || !value[1]) return Promise.resolve();
+  if (value[0].valueOf() > value[1].valueOf()) {
+    return Promise.reject(new Error("开始时间不能晚于结束时间"));
+  }
+  return Promise.resolve();
+};
 
 // 规范化时间：如果开始和结束为同一天，开始时间设为00:00:00，结束时间设为23:59:59 
 const normalizeTimeForSameDay = (start: Date, end: Date): [Date, Date] => {
@@ -147,7 +156,10 @@ const AddTaskModal: React.FC<{
         <Form.Item
           name="dateRange"
           label="基础时间范围"
-          rules={[{ required: true, message: "请选择时间范围" }]}
+          rules={[
+            { required: true, message: "请选择时间范围" },
+            { validator: rangePickerStartNotAfterEnd },
+          ]}
         >
           <RangePicker showTime style={{ width: "100%" }} />
         </Form.Item>
@@ -155,6 +167,7 @@ const AddTaskModal: React.FC<{
         <Form.Item
           name="plannedDateRange"
           label="计划时间范围（可选）"
+          rules={[{ validator: rangePickerStartNotAfterEnd }]}
         >
           <RangePicker 
             showTime 
@@ -180,6 +193,7 @@ const AddTaskModal: React.FC<{
         <Form.Item
           name="actualDateRange"
           label="实际时间范围（可选）"
+          rules={[{ validator: rangePickerStartNotAfterEnd }]}
         >
           <RangePicker showTime style={{ width: "100%" }} placeholder={["实际开始时间", "实际结束时间"]} />
         </Form.Item>
@@ -335,6 +349,7 @@ const EditTaskModal: React.FC<{
         <Form.Item
           name="plannedDateRange"
           label="计划时间范围"
+          rules={[{ validator: rangePickerStartNotAfterEnd }]}
         >
           <RangePicker 
             showTime 
@@ -358,6 +373,7 @@ const EditTaskModal: React.FC<{
         <Form.Item
           name="actualDateRange"
           label="实际时间范围"
+          rules={[{ validator: rangePickerStartNotAfterEnd }]}
         >
           <RangePicker showTime style={{ width: "100%" }} />
         </Form.Item>
