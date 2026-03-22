@@ -19,7 +19,6 @@ import {
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import styles from "./GanttChartDemo.module.css";
-
 dayjs.extend(weekOfYear);
 
 // 计算高度的 hook
@@ -255,6 +254,8 @@ const OAGanttDemo: React.FC = () => {
       task: Task,
       action?: "move" | "start" | "end" | "actualStart" | "actualEnd" | "progress"
     ) => {
+      if (action === "progress") return false;
+
       const taskAny = task as any;
 
       // 判断是否已完成

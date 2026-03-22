@@ -1,0 +1,89 @@
+/* 与库内 OA 悬浮层一致，供 example 内自定义 Tooltip 使用（不依赖包外路径导入 CSS） */
+.oaTooltipContainer {
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 12px 16px;
+  min-width: 240px;
+  max-width: 320px;
+}
+
+.oaTooltipTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.5;
+  word-break: break-word;
+  margin-bottom: 2px;
+}
+
+.oaTooltipDivider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 8px 0;
+}
+
+.oaTooltipRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.oaTooltipRow:last-of-type {
+  margin-bottom: 0;
+}
+
+.oaTooltipLabel {
+  font-size: 12px;
+  color: #8c8c8c;
+  flex-shrink: 0;
+  min-width: 60px;
+}
+
+.oaTooltipValue {
+  font-size: 12px;
+  color: #333333;
+  text-align: right;
+  flex: 1;
+  word-break: break-word;
+}
+
+.oaTooltipValueEllipsis {
+  font-size: 12px;
+  color: #333333;
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.oaTooltipBadge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  border: 1px solid;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.oaTooltipProgressTrack {
+  height: 6px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.oaTooltipProgressBar {
+  height: 100%;
+  background: linear-gradient(90deg, #879ffa, #6c8ef7);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}

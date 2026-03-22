@@ -14,6 +14,61 @@ import { Gantt, Task, ViewMode, GanttColumnConfig } from "gantt-task-react";
 import { Modal, Form, Input, DatePicker, message } from "antd";
 import dayjs, { type Dayjs } from "dayjs";
 import "gantt-task-react/dist/index.css";
+import planActualTooltipStyles from "./ConfigurableOATooltipContent.module.css";
+
+/** PM 演示任务条悬浮层：任务名、计划 / 实际 / 延期（内联于此文件，避免独立模块未同步导致编译失败） */
+const PM_DAY_MS = 1000 * 60 * 60 * 24;
+const pmToEndOfDay = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+function pmFmtDate(d: Date | undefined | null): string {
+  if (!d || isNaN(d.getTime())) return "-";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function pmDelayDescription(task: Task): string {
+  const plannedEnd = task.plannedEnd || task.end;
+  if (!plannedEnd || isNaN(plannedEnd.getTime())) return "-";
+  const deadlineEOD = pmToEndOfDay(plannedEnd);
+  const effectiveEnd = task.actualEnd ? pmToEndOfDay(task.actualEnd) : pmToEndOfDay(new Date());
+  const days = Math.ceil((effectiveEnd.getTime() - deadlineEOD.getTime()) / PM_DAY_MS);
+  if (days <= 0) return "未延期";
+  return `延期 ${days} 天`;
+}
+const PMGanttPlanActualTooltipContent: React.FC<{
+  task: Task;
+  fontSize: string;
+  fontFamily: string;
+}> = ({ task, fontSize, fontFamily }) => {
+  const plannedStart = task.plannedStart || task.start;
+  const plannedEnd = task.plannedEnd || task.end;
+  const actualStart = task.actualStart || task.start;
+  const actualEnd = task.actualEnd;
+  const planStr =
+    plannedStart && plannedEnd && !isNaN(plannedStart.getTime()) && !isNaN(plannedEnd.getTime())
+      ? `${pmFmtDate(plannedStart)} ~ ${pmFmtDate(plannedEnd)}`
+      : "-";
+  const actualStr = actualEnd
+    ? `${pmFmtDate(actualStart)} ~ ${pmFmtDate(actualEnd)}`
+    : `${pmFmtDate(actualStart)} ~ —`;
+  const s = planActualTooltipStyles;
+  return (
+    <div className={s.oaTooltipContainer} style={{ fontSize, fontFamily }}>
+      <div className={s.oaTooltipTitle}>{task.name}</div>
+      <div className={s.oaTooltipDivider} />
+      <div className={s.oaTooltipRow}>
+        <span className={s.oaTooltipLabel}>计划时间</span>
+        <span className={s.oaTooltipValue}>{planStr}</span>
+      </div>
+      <div className={s.oaTooltipRow}>
+        <span className={s.oaTooltipLabel}>实际时间</span>
+        <span className={s.oaTooltipValue}>{actualStr}</span>
+      </div>
+      <div className={s.oaTooltipRow}>
+        <span className={s.oaTooltipLabel}>延期时间</span>
+        <span className={s.oaTooltipValue}>{pmDelayDescription(task)}</span>
+      </div>
+    </div>
+  );
+};
 
 // ─── 原始数据结构（与后端接口字段一一对应）────────────────────
 
@@ -555,6 +610,7 @@ const PMGanttDemo: React.FC = () => {
         language="zh-TW"
         showArrows
         showTooltip
+        TooltipContent={PMGanttPlanActualTooltipContent}
         tableStyles={{
           borderColor: "#f0f0f0",
           headerBackgroundColor: "#fafafa",

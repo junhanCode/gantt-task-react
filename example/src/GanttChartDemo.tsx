@@ -18,7 +18,6 @@ import {
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import styles from "./GanttChartDemo.module.css";
-
 // 启用 dayjs 周插件
 dayjs.extend(weekOfYear);
 
