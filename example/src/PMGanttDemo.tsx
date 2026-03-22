@@ -8,10 +8,12 @@
  *  - 条形图区分计划色、实际色、延期色
  *  - 视图切换：日 / 周 / 月 / 年
  *  - 滚动到今天
+ *  - 展开列：antd CaretRightOutlined（折叠）/ CaretDownOutlined（展开）
  */
 import React, { useRef, useState } from "react";
 import { Gantt, Task, ViewMode, GanttColumnConfig } from "gantt-task-react";
 import { Modal, Form, Input, DatePicker, message } from "antd";
+import { CaretDownOutlined, CaretRightOutlined } from "@ant-design/icons";
 import dayjs, { type Dayjs } from "dayjs";
 import "gantt-task-react/dist/index.css";
 import planActualTooltipStyles from "./ConfigurableOATooltipContent.module.css";
@@ -634,6 +636,8 @@ const PMGanttDemo: React.FC = () => {
         arrowColor="#999"
         todayColor="rgba(255,0,0,0.1)"
         onExpanderClick={handleExpanderClick}
+        expandIcon={<CaretRightOutlined style={{ fontSize: 14 }} />}
+        collapseIcon={<CaretDownOutlined style={{ fontSize: 14 }} />}
         onDoubleClick={handleRowDoubleClick}
         onDateChange={handleTaskChange}
         onProgressChange={handleTaskChange}

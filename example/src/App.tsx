@@ -1602,9 +1602,9 @@ const App = () => {
         onRenderComplete={enableRenderCallback ? handleRenderComplete : undefined}
         // 自定义禁用规则：只有当proposer包含当前登录用户时才可以拖动
         isTaskDraggable={isTaskDraggable}
-        // 自定义展开/折叠图标：折叠用 expandIcon（向右▶），展开用 collapseIcon（向下▼）
-        expandIcon={<CaretRightOutlined style={{ fontSize: '14px' }} />}
-        collapseIcon={<CaretDownOutlined style={{ fontSize: '14px' }} />}
+        // 自定义展开/折叠图标：折叠状态显示向右▶，展开状态显示向下▼
+        expandIcon={<CaretDownOutlined style={{ fontSize: '14px' }} />}
+        collapseIcon={<CaretRightOutlined style={{ fontSize: '14px' }} />}
         // 演示自定义列渲染 + 溢出信息
         columnEllipsisMaxChars={{
           name: 12,
