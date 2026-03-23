@@ -368,6 +368,7 @@ const PMGanttDemo: React.FC = () => {
   const [editingTask, setEditingTask] = useState<PMTask | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [dragSaving, setDragSaving] = useState(false);
   const [form] = Form.useForm();
 
   const isRowEditable = (task: PMTask) =>
@@ -501,8 +502,66 @@ const PMGanttDemo: React.FC = () => {
     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, hideChildren: !t.hideChildren } : t));
   };
 
+  const mergeTaskAndSyncRawFields = (prevTask: PMTask, nextTask: Task): PMTask => {
+    const nextAny = nextTask as any;
+    return {
+      ...prevTask,
+      ...nextTask,
+      // 拖拽只更新 planned/actual 字段；左侧表格渲染用的是 *Raw 字段
+      planStartRaw: nextAny.plannedStart ?? undefined,
+      planEndRaw: nextAny.plannedEnd ?? undefined,
+      actualStartRaw: nextAny.actualStart ?? undefined,
+      actualEndRaw: nextAny.actualEnd ?? undefined,
+    } as PMTask;
+  };
+
   const handleTaskChange = (task: PMTask) => {
-    setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+    setTasks(prev =>
+      prev.map(t => (t.id === task.id ? mergeTaskAndSyncRawFields(t, task) : t)),
+    );
+  };
+
+  /**
+   * 拖拽结束：暴露事件并模拟接口调用。
+   * - 成功：保持乐观更新后的状态
+   * - 失败：返回 false，库会调用 onDateChange(originalSelectedTask) 回滚
+   */
+  const handleTaskDragEnd = async (task: PMTask, _children: PMTask[]) => {
+    setDragSaving(true);
+    console.log("🧩 onTaskDragEnd fired", {
+      id: task.id,
+      actionTask: {
+        plannedStart: task.plannedStart,
+        plannedEnd: task.plannedEnd,
+        actualStart: task.actualStart,
+        actualEnd: task.actualEnd,
+      },
+    });
+
+    // 先做“乐观更新”，保证拖拽结束瞬间左侧表格也能联动（符合你的“实时联动”诉求）
+    setTasks(prev =>
+      prev.map(t => (t.id === task.id ? mergeTaskAndSyncRawFields(t, task) : t)),
+    );
+
+    // 模拟接口延迟
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const success = Math.random() > 0.2;
+    if (success) {
+      message.success("拖拽保存成功（模拟）");
+      return true;
+    }
+
+    message.error("拖拽保存失败，已回滚（模拟）");
+    return false;
+  };
+
+  const handleTaskDragComplete = (
+    _task: PMTask,
+    _children: PMTask[],
+    _action: "move" | "start" | "end" | "actualStart" | "actualEnd" | "progress",
+  ) => {
+    setDragSaving(false);
   };
 
   const columns: GanttColumnConfig[] = COLUMNS.map((col, index) => {
@@ -607,6 +666,12 @@ const PMGanttDemo: React.FC = () => {
         </button>
       </div>
 
+        {dragSaving && (
+          <div style={{ marginBottom: 12, color: "#fa8c16", fontSize: 13 }}>
+            拖拽保存中（模拟接口）
+          </div>
+        )}
+
       {/* 甘特图 */}
       <Gantt
         ref={ganttRef}
@@ -649,6 +714,8 @@ const PMGanttDemo: React.FC = () => {
         collapseIcon={<CaretDownOutlined style={{ fontSize: 14 }} />}
         onDoubleClick={handleRowDoubleClick}
         onDateChange={handleTaskChange}
+        onTaskDragEnd={handleTaskDragEnd}
+        onTaskDragComplete={handleTaskDragComplete}
         onProgressChange={handleTaskChange}
         gridBorderWidth={1}
         gridBorderColor="#f0f0f0"
