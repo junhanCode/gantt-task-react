@@ -15,5 +15,6 @@ export type {
   GanttColumnConfig,
   ColumnConfig,
   Language,
+  TaskBarColorResult,
 } from "./types/public-types";
 export type { I18nTexts } from "./i18n";

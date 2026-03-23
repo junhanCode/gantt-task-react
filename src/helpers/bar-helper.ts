@@ -410,6 +410,157 @@ const coordinateToDate = (x: number, dates: Date[], columnWidth: number): Date =
   return new Date(startDate.getTime() + timeDiff * remainder);
 };
 
+const startOfDay = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+const endOfDay = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
+/** LTR：左=start / 右=end；RTL：与像素对调，左侧把手改的是计划结束 */
+const isDraggingPlannedEndHandle = (action: BarMoveAction, rtl: boolean) =>
+  action === "end" || (rtl && action === "start");
+const isDraggingPlannedStartHandle = (action: BarMoveAction, rtl: boolean) =>
+  action === "start" || (rtl && action === "end");
+
+const isDraggingActualEndHandle = (action: BarMoveAction, rtl: boolean) =>
+  action === "actualEnd" || (rtl && action === "actualStart");
+const isDraggingActualStartHandle = (action: BarMoveAction, rtl: boolean) =>
+  action === "actualStart" || (rtl && action === "actualEnd");
+
+function syncPlannedBarPosition(
+  t: BarTask,
+  dates: Date[],
+  columnWidth: number,
+  rtl: boolean
+): BarTask {
+  const ps = startOfDay(t.plannedStart ?? t.start);
+  const pe = endOfDay(t.plannedEnd ?? t.end);
+  let x1: number;
+  let x2: number;
+  if (rtl) {
+    x2 = taskXCoordinateRTL(ps, dates, columnWidth);
+    x1 = taskXCoordinateRTL(pe, dates, columnWidth);
+  } else {
+    x1 = taskXCoordinate(ps, dates, columnWidth);
+    x2 = taskXCoordinate(pe, dates, columnWidth);
+  }
+  return {
+    ...t,
+    plannedStart: ps,
+    plannedEnd: pe,
+    start: ps,
+    end: pe,
+    x1,
+    x2,
+  };
+}
+
+/** 计划结束不得早于计划开始：拖到交叉时「卡住」在合法边界（合法时不改坐标，避免拖拽中强行按整天对齐） */
+function clampPlannedStartBeforeEnd(
+  t: BarTask,
+  action: BarMoveAction,
+  rtl: boolean,
+  dates: Date[],
+  columnWidth: number
+): BarTask {
+  if (action !== "start" && action !== "end" && action !== "move") {
+    return t;
+  }
+  const psRaw = t.plannedStart ?? t.start;
+  const peRaw = t.plannedEnd ?? t.end;
+  if (psRaw.getTime() <= peRaw.getTime()) {
+    return t;
+  }
+  const psDay = startOfDay(psRaw);
+  const peDay = endOfDay(peRaw);
+  let ps = psDay;
+  let pe = peDay;
+  if (isDraggingPlannedEndHandle(action, rtl)) {
+    pe = endOfDay(psDay);
+  } else if (isDraggingPlannedStartHandle(action, rtl)) {
+    ps = startOfDay(peDay);
+  } else {
+    pe = endOfDay(psDay);
+  }
+  return syncPlannedBarPosition({ ...t, plannedStart: ps, plannedEnd: pe, start: ps, end: pe }, dates, columnWidth, rtl);
+}
+
+function maybeSyncInProgressActualEndX(
+  t: BarTask,
+  dates: Date[],
+  columnWidth: number,
+  rtl: boolean
+): BarTask {
+  const endStatusDesc =
+    typeof t.status === "string" ? t.status : (t.status as any)?.description;
+  const isDateDrivenDelayMode = !!t.timelineUsesDatesOnly;
+  const isEndCompletionStatus = !!(
+    endStatusDesc && ["待驗收", "已完成"].includes(endStatusDesc)
+  );
+  const newPlannedEnd = t.plannedEnd ?? t.end;
+  if (isDateDrivenDelayMode || !isEndCompletionStatus || !t.actualEnd) {
+    const now = new Date();
+    const newActualEnd = now > newPlannedEnd ? now : newPlannedEnd;
+    return {
+      ...t,
+      actualX2: rtl
+        ? taskXCoordinateRTL(newActualEnd, dates, columnWidth)
+        : taskXCoordinate(newActualEnd, dates, columnWidth),
+    };
+  }
+  return t;
+}
+
+function syncActualBarPosition(
+  t: BarTask,
+  dates: Date[],
+  columnWidth: number,
+  rtl: boolean
+): BarTask {
+  const asN = startOfDay(t.actualStart ?? t.start);
+  const aeN = endOfDay(t.actualEnd ?? t.plannedEnd ?? t.end);
+  let ax1: number;
+  let ax2: number;
+  if (rtl) {
+    ax2 = taskXCoordinateRTL(asN, dates, columnWidth);
+    ax1 = taskXCoordinateRTL(aeN, dates, columnWidth);
+  } else {
+    ax1 = taskXCoordinate(asN, dates, columnWidth);
+    ax2 = taskXCoordinate(aeN, dates, columnWidth);
+  }
+  return { ...t, actualStart: asN, actualEnd: aeN, actualX1: ax1, actualX2: ax2 };
+}
+
+/** 实际结束不得早于实际开始 */
+function clampActualStartBeforeEnd(
+  t: BarTask,
+  action: BarMoveAction,
+  rtl: boolean,
+  dates: Date[],
+  columnWidth: number
+): BarTask {
+  if (action !== "actualStart" && action !== "actualEnd") {
+    return t;
+  }
+  if (t.actualStart == null || t.actualEnd == null) {
+    return t;
+  }
+  if (t.actualStart.getTime() <= t.actualEnd.getTime()) {
+    return t;
+  }
+  const asDay = startOfDay(t.actualStart);
+  const aeDay = endOfDay(t.actualEnd);
+  let as = asDay;
+  let ae = aeDay;
+  if (isDraggingActualEndHandle(action, rtl)) {
+    ae = endOfDay(asDay);
+  } else if (isDraggingActualStartHandle(action, rtl)) {
+    as = startOfDay(aeDay);
+  } else {
+    ae = endOfDay(asDay);
+  }
+  return syncActualBarPosition({ ...t, actualStart: as, actualEnd: ae }, dates, columnWidth, rtl);
+}
+
 export const handleTaskBySVGMouseEvent = (
   x: number,
   action: BarMoveAction,
@@ -645,6 +796,35 @@ export const handleTaskBySVGMouseEvent = (
         };
         isChanged = changedTask.x2 !== selectedTask.x2;
       }
+    }
+  }
+
+  // 约束：结束时间不得早于开始时间（计划条 / 实际条），在 createdAt、minEnd 等之后再统一「卡住」边界
+  if (isChanged && (action === "start" || action === "end" || action === "move")) {
+    const snapshot = changedTask;
+    changedTask = clampPlannedStartBeforeEnd(changedTask, action, rtl, dates, columnWidth);
+    changedTask = maybeSyncInProgressActualEndX(changedTask, dates, columnWidth, rtl);
+    if (
+      changedTask.x1 !== snapshot.x1 ||
+      changedTask.x2 !== snapshot.x2 ||
+      changedTask.plannedStart?.getTime() !== snapshot.plannedStart?.getTime() ||
+      changedTask.plannedEnd?.getTime() !== snapshot.plannedEnd?.getTime() ||
+      changedTask.actualX2 !== snapshot.actualX2
+    ) {
+      isChanged = true;
+    }
+  }
+
+  if (isChanged && (action === "actualStart" || action === "actualEnd")) {
+    const snapshot = changedTask;
+    changedTask = clampActualStartBeforeEnd(changedTask, action, rtl, dates, columnWidth);
+    if (
+      changedTask.actualX1 !== snapshot.actualX1 ||
+      changedTask.actualX2 !== snapshot.actualX2 ||
+      changedTask.actualStart?.getTime() !== snapshot.actualStart?.getTime() ||
+      changedTask.actualEnd?.getTime() !== snapshot.actualEnd?.getTime()
+    ) {
+      isChanged = true;
     }
   }
 

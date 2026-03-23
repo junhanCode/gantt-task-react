@@ -90,7 +90,27 @@ export interface Task {
    * - true：延期与条形图仅由 plannedStart / plannedEnd / actualStart / actualEnd（及今日）决定，不依赖任务状态
    */
   timelineUsesDatesOnly?: boolean;
+  /**
+   * OA 时间轴条形主色（已完成/已过段等实色部分）。
+   * 优先级低于 Gantt 的 `getTaskBarColor`。
+   */
+  barColor?: string;
+  /**
+   * OA 时间轴条形浅色段（剩余时间、提前完成段等）。
+   * 未设置时：若有主色（含状态色/自定义），浅色段为主色半透明；否则使用内置默认浅绿。
+   */
+  barLightColor?: string;
 }
+
+/** `getTaskBarColor` 返回值：字符串仅表示主色；对象可同时指定主色与浅色段 */
+export type TaskBarColorResult =
+  | string
+  | null
+  | undefined
+  | {
+      color?: string | null;
+      lightColor?: string | null;
+    };
 
 export interface EventOption {
   /**
@@ -433,13 +453,13 @@ export interface GanttProps extends EventOption, DisplayOption, StylingOption {
    */
   isTaskDraggable?: (task: Task, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
   /**
-   * 自定义任务条形图基色回调。
-   * 优先级高于内置状态色映射表，返回 null/undefined 则回退到默认逻辑。
-   * 支持 hex / rgb / rgba 格式，例如 "#FF5733"、"rgb(255,87,51)"、"rgba(255,87,51,0.8)"。
-   * @param task 完整任务对象
-   * @returns 颜色字符串，或 null/undefined（使用默认色）
+   * 自定义任务条形图颜色。
+   * 优先级高于 `Task.barColor` / 内置状态色映射表；返回 null/undefined 则继续按任务字段与默认逻辑。
+   * - 传字符串：仅主色；浅色段为主色半透明（除非另有 `Task.barLightColor`）。
+   * - 传 `{ color, lightColor }`：可同时指定主色与浅色段（浅色段为实色，不再半透明）。
+   * 支持 hex / rgb / rgba，例如 "#52c41a"、"rgb(82,196,26)"。
    */
-  getTaskBarColor?: (task: Task) => string | null | undefined;
+  getTaskBarColor?: (task: Task) => TaskBarColorResult;
   /** 多选列配置 */
   rowSelection?: {
     /** 指定选中项的 key 数组，需要和 rowKey 配合使用 */

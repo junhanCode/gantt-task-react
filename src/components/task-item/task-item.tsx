@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BarTask } from "../../types/bar-task";
 import { GanttContentMoveAction } from "../../types/gantt-task-actions";
+import { TaskBarColorResult } from "../../types/public-types";
 import { Bar } from "./bar/bar";
 import style from "./task-list.module.css";
 
@@ -17,7 +18,7 @@ export type TaskItemProps = {
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
   isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
-  getTaskBarColor?: (task: BarTask) => string | null | undefined;
+  getTaskBarColor?: (task: BarTask) => TaskBarColorResult;
   onEventStart: (
     action: GanttContentMoveAction,
     selectedTask: BarTask,

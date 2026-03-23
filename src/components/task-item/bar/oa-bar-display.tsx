@@ -27,8 +27,10 @@ type OABarDisplayProps = {
   delayDaysFormat?: (days: number) => string;
   /** 延期段背景色，默认 #fbc2d5 */
   delayColor?: string;
-  /** 自定义基色，优先级高于内置状态色表，传 null/undefined 时回退到默认逻辑 */
+  /** 自定义主色，优先级高于内置状态色表，传 null/undefined 时回退到默认逻辑 */
   customBarColor?: string | null;
+  /** 自定义浅色段（剩余/提前）；未传时按主色半透明或默认浅绿 */
+  customBarLightColor?: string | null;
   /** true：延期与条形仅由计划/实际起止与今日决定，不依赖任务状态 */
   timelineUsesDatesOnly?: boolean;
 };
@@ -36,6 +38,10 @@ type OABarDisplayProps = {
 const DEFAULT_DELAY_COLOR = "#fbc2d5";
 const DELAY_TEXT_COLOR = "#C3314C";
 const DAY_MS = 1000 * 60 * 60 * 24;
+/** 无状态且无自定义主色时的默认主色（绿） */
+const DEFAULT_BAR_MAIN_GREEN = "#52c41a";
+/** 无状态且无自定义主色时的默认浅色段（浅绿） */
+const DEFAULT_BAR_LIGHT_GREEN = "#d9f7be";
 
 const toEndOfDay = (d: Date) =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
@@ -77,6 +83,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   delayDaysFormat,
   delayColor = DEFAULT_DELAY_COLOR,
   customBarColor,
+  customBarLightColor,
   timelineUsesDatesOnly = false,
 }) => {
   const safeWidth = Math.max(0, width || 0);
@@ -109,10 +116,30 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
     已撤销: "#CCCCCC",
   };
 
+  const statusBaseColor =
+    statusDescription && statusColors[statusDescription as TaskStatus];
+
   const baseColor =
-    customBarColor ||
-    (statusDescription && statusColors[statusDescription as TaskStatus]) ||
-    "#E6E6E6";
+    (customBarColor && String(customBarColor).trim() !== "" && customBarColor) ||
+    statusBaseColor ||
+    DEFAULT_BAR_MAIN_GREEN;
+
+  const hasCustomOrStatus = !!(
+    (customBarColor && String(customBarColor).trim() !== "") ||
+    statusBaseColor
+  );
+
+  const explicitLight =
+    customBarLightColor != null && String(customBarLightColor).trim() !== ""
+      ? String(customBarLightColor).trim()
+      : undefined;
+
+  /** 浅色段（剩余/提前）：显式浅色 > 主色半透明 > 默认浅绿 */
+  const lightSegmentProps: { fill: string; opacity?: number } = explicitLight
+    ? { fill: explicitLight, opacity: 1 }
+    : hasCustomOrStatus
+      ? { fill: baseColor, opacity: 0.35 }
+      : { fill: DEFAULT_BAR_LIGHT_GREEN, opacity: 1 };
 
   // 旧逻辑下「掛起中」和「已撤销」不顯示延期段；纯日期模式下不受状态限制
   const canShowDelay =
@@ -163,8 +190,8 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
               height={height}
               rx={barCornerRadius}
               ry={barCornerRadius}
-              fill={baseColor}
-              opacity={0.35}
+              fill={lightSegmentProps.fill}
+              opacity={lightSegmentProps.opacity}
             />
           )}
         </g>
@@ -205,8 +232,8 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
               height={height}
               rx={barCornerRadius}
               ry={barCornerRadius}
-              fill={baseColor}
-              opacity={0.35}
+              fill={lightSegmentProps.fill}
+              opacity={lightSegmentProps.opacity}
             />
           )}
         </g>

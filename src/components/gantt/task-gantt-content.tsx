@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { EventOption } from "../../types/public-types";
+import { EventOption, TaskBarColorResult } from "../../types/public-types";
 import { BarTask } from "../../types/bar-task";
 import { Arrow } from "../other/arrow";
 import { handleTaskBySVGMouseEvent } from "../../helpers/bar-helper";
@@ -33,7 +33,7 @@ export type TaskGanttContentProps = {
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
   isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
-  getTaskBarColor?: (task: BarTask) => string | null | undefined;
+  getTaskBarColor?: (task: BarTask) => TaskBarColorResult;
   setGanttEvent: (value: GanttEvent) => void;
   setFailedTask: (value: BarTask | null) => void;
   setSelectedTask: (taskId: string) => void;
