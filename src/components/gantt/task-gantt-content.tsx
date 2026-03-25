@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { EventOption, TaskBarColorResult } from "../../types/public-types";
+import { EventOption, TaskBarColorResult, TaskResizeEdges } from "../../types/public-types";
 import { BarTask } from "../../types/bar-task";
 import { Arrow } from "../other/arrow";
 import { handleTaskBySVGMouseEvent } from "../../helpers/bar-helper";
@@ -32,6 +32,7 @@ export type TaskGanttContentProps = {
   rtl: boolean;
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
+  taskResizeEdges?: TaskResizeEdges;
   isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
   getTaskBarColor?: (task: BarTask) => TaskBarColorResult;
   setGanttEvent: (value: GanttEvent) => void;
@@ -62,6 +63,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   rtl,
   enableTaskDrag = false,
   enableTaskResize = true,
+  taskResizeEdges,
   isTaskDraggable,
   getTaskBarColor,
   setGanttEvent,
@@ -403,6 +405,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               isDelete={!task.isDisabled}
               enableTaskDrag={enableTaskDrag}
               enableTaskResize={enableTaskResize}
+              taskResizeEdges={taskResizeEdges}
               hideTaskName={hideTaskName}
               onEventStart={handleBarEventStart}
               onBarMouseLeave={onBarMouseLeave}

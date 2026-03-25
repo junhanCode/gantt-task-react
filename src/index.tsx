@@ -16,5 +16,6 @@ export type {
   ColumnConfig,
   Language,
   TaskBarColorResult,
+  TaskResizeEdges,
 } from "./types/public-types";
 export type { I18nTexts } from "./i18n";

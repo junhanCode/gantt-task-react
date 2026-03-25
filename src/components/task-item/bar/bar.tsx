@@ -2,7 +2,7 @@ import React from "react";
 import { OABarDisplay } from "./oa-bar-display";
 import { BarDateHandle } from "./bar-date-handle";
 import { TaskItemProps } from "../task-item";
-import { TaskBarColorResult } from "../../../types/public-types";
+import { TaskBarColorResult, TaskResizeEdges } from "../../../types/public-types";
 import styles from "./bar.module.css";
 
 function parseTaskBarColorResult(
@@ -21,6 +21,14 @@ function parseTaskBarColorResult(
   return {};
 }
 
+function resizeEdgeEnabled(
+  enableTaskResize: boolean,
+  edges: TaskResizeEdges | undefined,
+  key: keyof TaskResizeEdges
+): boolean {
+  return enableTaskResize && (edges?.[key] ?? true);
+}
+
 export const Bar: React.FC<TaskItemProps> = ({
   task,
   isDateChangeable,
@@ -28,6 +36,7 @@ export const Bar: React.FC<TaskItemProps> = ({
   isSelected,
   enableTaskDrag = false,
   enableTaskResize = true,
+  taskResizeEdges,
   isTaskDraggable,
   getTaskBarColor,
 }) => {
@@ -52,8 +61,8 @@ export const Bar: React.FC<TaskItemProps> = ({
       ? String(task.barLightColor).trim()
       : undefined);
   const useDatesOnlyHandles = !!task.timelineUsesDatesOnly;
-  /** 纯日期四手柄：整条加少量上下外延，更好点中 */
-  const handleVPad = Math.max(3, Math.min(10, Math.round(task.height * 0.22)));
+  /** 与条形等高，上下各略伸出 1px，避免「手柄比条高太多」 */
+  const handleVPad = 1;
   const datesOnlyHandleY = task.y - handleVPad;
   const datesOnlyHandleHeight = task.height + 2 * handleVPad;
   const hw = task.handleWidth;
@@ -77,6 +86,20 @@ export const Bar: React.FC<TaskItemProps> = ({
   const canDragByAction = (
     action: "start" | "end" | "actualStart" | "actualEnd"
   ) => !isTaskDraggable || isTaskDraggable(task, action);
+
+  const canResizePlannedStart = resizeEdgeEnabled(enableTaskResize, taskResizeEdges, "plannedStart");
+  const canResizePlannedEnd = resizeEdgeEnabled(enableTaskResize, taskResizeEdges, "plannedEnd");
+  const canResizeActualStart = resizeEdgeEnabled(enableTaskResize, taskResizeEdges, "actualStart");
+  const canResizeActualEnd = resizeEdgeEnabled(enableTaskResize, taskResizeEdges, "actualEnd");
+  /** 非纯日期模式仅右侧计划结束手柄：需总开关 + plannedEnd */
+  const showLegacyEndHandle = canResizePlannedEnd;
+  const anyResizeHandle =
+    (!useDatesOnlyHandles && showLegacyEndHandle) ||
+    (useDatesOnlyHandles &&
+      (canResizePlannedStart ||
+        canResizePlannedEnd ||
+        canResizeActualStart ||
+        canResizeActualEnd));
 
   return (
     <g className={`${styles.barWrapper} ${isDraggable ? styles.draggable : ''}`} tabIndex={0}>
@@ -104,9 +127,9 @@ export const Bar: React.FC<TaskItemProps> = ({
         }}
       />
       <g className="handleGroup">
-        {isDateChangeable && enableTaskResize && (
+        {isDateChangeable && enableTaskResize && anyResizeHandle && (
           <g className={styles.handleGroup}>
-            {!useDatesOnlyHandles && canDragByAction("end") && (
+            {!useDatesOnlyHandles && showLegacyEndHandle && canDragByAction("end") && (
               <BarDateHandle
                 x={task.x2 - task.handleWidth / 2}
                 y={task.y}
@@ -120,7 +143,7 @@ export const Bar: React.FC<TaskItemProps> = ({
               />
             )}
 
-            {useDatesOnlyHandles && canDragByAction("start") && (
+            {useDatesOnlyHandles && canResizePlannedStart && canDragByAction("start") && (
               <BarDateHandle
                 x={task.x1 - task.handleWidth / 2}
                 y={datesOnlyHandleY}
@@ -133,7 +156,7 @@ export const Bar: React.FC<TaskItemProps> = ({
                 }}
               />
             )}
-            {useDatesOnlyHandles && canDragByAction("end") && (
+            {useDatesOnlyHandles && canResizePlannedEnd && canDragByAction("end") && (
               <BarDateHandle
                 x={task.x2 - task.handleWidth / 2}
                 y={datesOnlyHandleY}
@@ -146,7 +169,7 @@ export const Bar: React.FC<TaskItemProps> = ({
                 }}
               />
             )}
-            {useDatesOnlyHandles && canDragByAction("actualStart") && (
+            {useDatesOnlyHandles && canResizeActualStart && canDragByAction("actualStart") && (
               <BarDateHandle
                 x={actualStartHandleX - task.handleWidth / 2}
                 y={datesOnlyHandleY}
@@ -159,7 +182,7 @@ export const Bar: React.FC<TaskItemProps> = ({
                 }}
               />
             )}
-            {useDatesOnlyHandles && canDragByAction("actualEnd") && (
+            {useDatesOnlyHandles && canResizeActualEnd && canDragByAction("actualEnd") && (
               <BarDateHandle
                 x={actualEndHandleX - task.handleWidth / 2}
                 y={datesOnlyHandleY}

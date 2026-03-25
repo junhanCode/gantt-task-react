@@ -181,6 +181,17 @@ export interface EventOption {
   onRenderComplete?: () => void;
 }
 
+/**
+ * 任务条各边缩放手柄开关（在 `enableTaskResize === true` 时生效）。
+ * 未写的边默认为 `true`；可单独关闭例如「仅允许拖计划结束」等组合。
+ */
+export interface TaskResizeEdges {
+  plannedStart?: boolean;
+  plannedEnd?: boolean;
+  actualStart?: boolean;
+  actualEnd?: boolean;
+}
+
 export interface DisplayOption {
   viewMode?: ViewMode;
   /** ref.switchViewMode 等场景下通知外部更新受控的 viewMode */
@@ -202,6 +213,10 @@ export interface DisplayOption {
    * Enable task resize (change start/end time by dragging edges). Default: true
    */
   enableTaskResize?: boolean;
+  /**
+   * 细粒度控制各边是否可拖；不传则 `enableTaskResize` 为 true 时四边（或 OA 模式下手柄）均可拖。
+   */
+  taskResizeEdges?: TaskResizeEdges;
 }
 
 export interface StylingOption {
