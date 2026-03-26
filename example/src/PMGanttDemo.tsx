@@ -364,6 +364,8 @@ const PMGanttDemo: React.FC = () => {
   const [tasks, setTasks]         = useState<PMTask[]>(() => buildTasks(MOCK_DATA));
   const [viewModeKey, setViewModeKey]   = useState<DemoViewKey>("日");
   const currentView = VIEW_MODES.find(v => v.key === viewModeKey) || VIEW_MODES[0];
+  // 兼容本地包 d.ts 可能未同步到新属性的场景
+  const dualLaneDemoProps = { enableDatesOnlyDualLane: true } as any;
   // 行编辑弹框相关状态
   const [editingTask, setEditingTask] = useState<PMTask | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -675,6 +677,7 @@ const PMGanttDemo: React.FC = () => {
       {/* 甘特图 */}
       <Gantt
         ref={ganttRef}
+        {...dualLaneDemoProps}
         tasks={tasks}
         viewMode={currentView.viewMode}
         listCellWidth="155px"

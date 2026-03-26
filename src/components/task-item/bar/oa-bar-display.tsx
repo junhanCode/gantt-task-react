@@ -19,6 +19,8 @@ type OABarDisplayProps = {
   actualStart?: Date;
   /** finishDate，为空表示尚未完成 */
   actualEnd?: Date;
+  /** actualStart 的像素 x 坐标，由 bar-helper 计算 */
+  actualStartX: number;
   /** finishDate（或延期到今日）的像素 x 坐标，由 bar-helper 通过 taskXCoordinate 计算 */
   actualEndX: number;
   /** 今日在时间轴上的像素 x 坐标，用于绘制「剩余时间」浅色段 */
@@ -31,8 +33,14 @@ type OABarDisplayProps = {
   customBarColor?: string | null;
   /** 自定义浅色段（剩余/提前）；未传时按主色半透明或默认浅绿 */
   customBarLightColor?: string | null;
+  /** 纯日期双轨道：实际轨主色（默认蓝色） */
+  customActualBarColor?: string | null;
+  /** 纯日期双轨道：实际轨浅色（预留） */
+  customActualBarLightColor?: string | null;
   /** true：延期与条形仅由计划/实际起止与今日决定，不依赖任务状态 */
   timelineUsesDatesOnly?: boolean;
+  /** 开启纯日期模式的上下双轨道展示 */
+  enableDatesOnlyDualLane?: boolean;
 };
 
 const DEFAULT_DELAY_COLOR = "#fbc2d5";
@@ -42,6 +50,8 @@ const DAY_MS = 1000 * 60 * 60 * 24;
 const DEFAULT_BAR_MAIN_GREEN = "#52c41a";
 /** 无状态且无自定义主色时的默认浅色段（浅绿） */
 const DEFAULT_BAR_LIGHT_GREEN = "#d9f7be";
+/** 纯日期双轨道：实际轨默认主色（蓝） */
+const DEFAULT_BAR_MAIN_BLUE = "#1677ff";
 
 const toEndOfDay = (d: Date) =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
@@ -77,6 +87,7 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   // @ts-expect-error - actualStart reserved for future use
   actualStart,
   actualEnd,
+  actualStartX,
   actualEndX,
   todayX,
   onMouseDown,
@@ -84,7 +95,10 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   delayColor = DEFAULT_DELAY_COLOR,
   customBarColor,
   customBarLightColor,
+  customActualBarColor,
+  customActualBarLightColor,
   timelineUsesDatesOnly = false,
+  enableDatesOnlyDualLane = false,
 }) => {
   const safeWidth = Math.max(0, width || 0);
 
@@ -141,6 +155,12 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
       ? { fill: baseColor, opacity: 0.35 }
       : { fill: DEFAULT_BAR_LIGHT_GREEN, opacity: 1 };
 
+  const actualBaseColor =
+    (customActualBarColor &&
+      String(customActualBarColor).trim() !== "" &&
+      String(customActualBarColor).trim()) ||
+    DEFAULT_BAR_MAIN_BLUE;
+
   // 旧逻辑下「掛起中」和「已撤销」不顯示延期段；纯日期模式下不受状态限制
   const canShowDelay =
     timelineUsesDatesOnly ||
@@ -160,6 +180,226 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
   // 因此直接用像素比较判断延期：actualEndX > x + safeWidth（即 > x(deadLine)）
   const deadLineX = x + safeWidth;
   const isDelayed = canShowDelay && actualEndX > deadLineX;
+
+  // ── 纯日期模式：上下双轨道（由总开关控制） ───────────────────────────
+  if (timelineUsesDatesOnly && enableDatesOnlyDualLane) {
+    const laneGap = 2;
+    const laneHeight = Math.max(4, Math.floor((height - laneGap) / 2));
+    const plannedY = y;
+    const actualY = y + laneHeight + laneGap;
+    const plannedH = laneHeight;
+    const actualH = Math.max(4, height - laneHeight - laneGap);
+
+    // 计划轨：复用原逻辑（提前完成/剩余时间/延期），但只画在上半轨
+    const renderPlannedLane = () => {
+      // 未延期：完成态且有 finishDate（纯日期模式下只要有 actualEnd 即视为有效）
+      if (!isDelayed) {
+        if (hasValidFinishDate) {
+          const completedWidth = Math.max(0, Math.min(safeWidth, actualEndX - x));
+          const remainingWidth = safeWidth - completedWidth;
+          return (
+            <g>
+              {completedWidth > 0 && (
+                <rect
+                  x={x}
+                  y={plannedY}
+                  width={completedWidth}
+                  height={plannedH}
+                  rx={barCornerRadius}
+                  ry={barCornerRadius}
+                  fill={baseColor}
+                  className={style.barBackground}
+                />
+              )}
+              {remainingWidth > 0 && (
+                <rect
+                  x={x + completedWidth}
+                  y={plannedY}
+                  width={remainingWidth}
+                  height={plannedH}
+                  rx={barCornerRadius}
+                  ry={barCornerRadius}
+                  fill={lightSegmentProps.fill}
+                  opacity={lightSegmentProps.opacity}
+                />
+              )}
+            </g>
+          );
+        }
+
+        // 进行中：按 todayX 拆分（已过/剩余）
+        const canSplitByTodayLocal =
+          todayX !== undefined && todayX > x && todayX < x + safeWidth;
+        if (canSplitByTodayLocal) {
+          const activeWidth = Math.max(0, todayX! - x);
+          const remainingWidth = safeWidth - activeWidth;
+          return (
+            <g>
+              {activeWidth > 0 && (
+                <rect
+                  x={x}
+                  y={plannedY}
+                  width={activeWidth}
+                  height={plannedH}
+                  rx={barCornerRadius}
+                  ry={barCornerRadius}
+                  fill={baseColor}
+                  className={style.barBackground}
+                />
+              )}
+              {remainingWidth > 0 && (
+                <rect
+                  x={x + activeWidth}
+                  y={plannedY}
+                  width={remainingWidth}
+                  height={plannedH}
+                  rx={barCornerRadius}
+                  ry={barCornerRadius}
+                  fill={lightSegmentProps.fill}
+                  opacity={lightSegmentProps.opacity}
+                />
+              )}
+            </g>
+          );
+        }
+
+        return (
+          <rect
+            x={x}
+            y={plannedY}
+            width={safeWidth}
+            height={plannedH}
+            rx={barCornerRadius}
+            ry={barCornerRadius}
+            fill={baseColor}
+            className={style.barBackground}
+          />
+        );
+      }
+
+      // 延期：上轨右侧画延期段（粉色），保持原语义，并显示「延期xx天」
+      const delayWidth = Math.max(0, actualEndX - deadLineX);
+      const now = new Date();
+      const deadLineEOD = toEndOfDay(plannedEnd);
+      const effectiveEndEOD = hasValidFinishDate ? toEndOfDay(actualEnd!) : toEndOfDay(now);
+      const delayDays = Math.ceil(
+        (effectiveEndEOD.getTime() - deadLineEOD.getTime()) / DAY_MS
+      );
+      const delayLabel = delayDaysFormat ? delayDaysFormat(delayDays) : `延期${delayDays}天`;
+      return (
+        <g>
+          <rect
+            x={x}
+            y={plannedY}
+            width={safeWidth}
+            height={plannedH}
+            rx={barCornerRadius}
+            ry={barCornerRadius}
+            fill={baseColor}
+            className={style.barBackground}
+          />
+          {delayWidth > 0 && (
+            <g>
+              <rect
+                x={x + safeWidth}
+                y={plannedY}
+                width={delayWidth}
+                height={plannedH}
+                rx={barCornerRadius}
+                ry={barCornerRadius}
+                fill={delayColor}
+              />
+              {delayWidth > 30 && (
+                <text
+                  x={x + safeWidth + delayWidth / 2}
+                  y={plannedY + plannedH / 2}
+                  fill={DELAY_TEXT_COLOR}
+                  fontSize="12"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  style={{ pointerEvents: "none" }}
+                >
+                  {delayLabel}
+                </text>
+              )}
+            </g>
+          )}
+        </g>
+      );
+    };
+
+    // 实际轨：画 actualStartX → actualEndX（或今日/计划截止的视觉位置）
+    const renderActualLane = () => {
+      const startX = Math.min(actualStartX, actualEndX);
+      const endX = Math.max(actualStartX, actualEndX);
+      const w = Math.max(0, endX - startX);
+      if (w <= 0) return null;
+
+      const explicitActualLight =
+        customActualBarLightColor != null && String(customActualBarLightColor).trim() !== ""
+          ? String(customActualBarLightColor).trim()
+          : undefined;
+
+      if (
+        explicitActualLight &&
+        todayX !== undefined &&
+        todayX > startX &&
+        todayX < endX
+      ) {
+        const activeWidth = Math.max(0, todayX - startX);
+        const remainingWidth = Math.max(0, endX - todayX);
+        return (
+          <g>
+            {activeWidth > 0 && (
+              <rect
+                x={startX}
+                y={actualY}
+                width={activeWidth}
+                height={actualH}
+                rx={barCornerRadius}
+                ry={barCornerRadius}
+                fill={actualBaseColor}
+                className={style.barBackground}
+              />
+            )}
+            {remainingWidth > 0 && (
+              <rect
+                x={startX + activeWidth}
+                y={actualY}
+                width={remainingWidth}
+                height={actualH}
+                rx={barCornerRadius}
+                ry={barCornerRadius}
+                fill={explicitActualLight}
+                className={style.barBackground}
+              />
+            )}
+          </g>
+        );
+      }
+
+      return (
+        <rect
+          x={startX}
+          y={actualY}
+          width={w}
+          height={actualH}
+          rx={barCornerRadius}
+          ry={barCornerRadius}
+          fill={actualBaseColor}
+          opacity={1}
+          className={style.barBackground}
+        />
+      );
+    };
+
+    return (
+      <g onMouseDown={onMouseDown}>
+        {renderPlannedLane()}
+        {renderActualLane()}
+      </g>
+    );
+  }
 
   // ── 未延期 ──────────────────────────────────────────────────────────
   if (!isDelayed) {

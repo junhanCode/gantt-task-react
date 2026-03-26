@@ -32,6 +32,7 @@ export type TaskGanttContentProps = {
   rtl: boolean;
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
+  enableDatesOnlyDualLane?: boolean;
   taskResizeEdges?: TaskResizeEdges;
   isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
   getTaskBarColor?: (task: BarTask) => TaskBarColorResult;
@@ -63,6 +64,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
   rtl,
   enableTaskDrag = false,
   enableTaskResize = true,
+  enableDatesOnlyDualLane = false,
   taskResizeEdges,
   isTaskDraggable,
   getTaskBarColor,
@@ -405,6 +407,7 @@ export const TaskGanttContent: React.FC<TaskGanttContentProps> = ({
               isDelete={!task.isDisabled}
               enableTaskDrag={enableTaskDrag}
               enableTaskResize={enableTaskResize}
+              enableDatesOnlyDualLane={enableDatesOnlyDualLane}
               taskResizeEdges={taskResizeEdges}
               hideTaskName={hideTaskName}
               onEventStart={handleBarEventStart}

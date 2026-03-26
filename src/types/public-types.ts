@@ -100,6 +100,17 @@ export interface Task {
    * 未设置时：若有主色（含状态色/自定义），浅色段为主色半透明；否则使用内置默认浅绿。
    */
   barLightColor?: string;
+  /**
+   * 纯日期双轨道模式下「实际轨」条形主色。
+   * - 不传：默认蓝色
+   * - 优先级低于 `getTaskBarColor` 返回对象中的 `actualColor`
+   */
+  actualBarColor?: string;
+  /**
+   * 纯日期双轨道模式下「实际轨」条形浅色（预留，当前实际轨默认不拆分浅色段）。
+   * 优先级低于 `getTaskBarColor` 返回对象中的 `actualLightColor`
+   */
+  actualBarLightColor?: string;
 }
 
 /** `getTaskBarColor` 返回值：字符串仅表示主色；对象可同时指定主色与浅色段 */
@@ -108,8 +119,14 @@ export type TaskBarColorResult =
   | null
   | undefined
   | {
+      /** 计划轨主色（或单轨模式主色） */
       color?: string | null;
+      /** 计划轨浅色段 */
       lightColor?: string | null;
+      /** 纯日期双轨道：实际轨主色 */
+      actualColor?: string | null;
+      /** 纯日期双轨道：实际轨浅色（预留） */
+      actualLightColor?: string | null;
     };
 
 export interface EventOption {
@@ -213,6 +230,14 @@ export interface DisplayOption {
    * Enable task resize (change start/end time by dragging edges). Default: true
    */
   enableTaskResize?: boolean;
+  /**
+   * 纯日期模式（`Task.timelineUsesDatesOnly=true`）下启用「上下双轨道」展示：
+   * - 上轨：计划（plannedStart → plannedEnd）
+   * - 下轨：实际（actualStart → actualEnd/今日等视觉位置）
+   *
+   * 默认 false：保持单轨展示，仅提供四个时间点手柄。
+   */
+  enableDatesOnlyDualLane?: boolean;
   /**
    * 细粒度控制各边是否可拖；不传则 `enableTaskResize` 为 true 时四边（或 OA 模式下手柄）均可拖。
    */

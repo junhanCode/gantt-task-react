@@ -147,6 +147,13 @@ export const ganttDateRange = (
     newStartDate = addToDate(today, -10, "day");
   }
 
+  // 班次模式每个自然日有多个刻度（6H: D1/D2/N1/N2；D/N: D/N）。
+  // 右边界若停在当日 00:00，会导致最后一天仅显示首个班次（D1 或 D）。
+  // 这里统一补到“次日 00:00”，保证最后一个自然日刻度完整展示。
+  if (viewMode === ViewMode.DayShift || viewMode === ViewMode.DayShiftDN) {
+    newEndDate = addToDate(newEndDate, 1, "day");
+  }
+
   return [newStartDate, newEndDate];
 };
 

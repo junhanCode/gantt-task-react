@@ -161,7 +161,11 @@ export const Calendar: React.FC<CalendarProps> = ({
       const isSunday = date.getDay() === 0;
 
       if (isNewDay) {
-        const daySpan = 4;
+        // 边界天（首尾）可能不是完整 4 个班次，按实际可用刻度计算跨度，避免标签被裁切
+        let daySpan = 1;
+        while (i + daySpan < dates.length && dates[i + daySpan].getDate() === date.getDate()) {
+          daySpan++;
+        }
         const xStart = columnWidth * i;
         const xCenter = xStart + columnWidth * daySpan * 0.5;
         const topValue = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
@@ -298,7 +302,11 @@ export const Calendar: React.FC<CalendarProps> = ({
       const isSunday = date.getDay() === 0;
 
       if (isNewDay) {
-        const daySpan = 2; // D / N 两个班
+        // 边界天（首尾）可能不是完整 D/N 两个班，按实际可用刻度计算跨度，避免标签被裁切
+        let daySpan = 1;
+        while (i + daySpan < dates.length && dates[i + daySpan].getDate() === date.getDate()) {
+          daySpan++;
+        }
         const xStart = columnWidth * i;
         const xCenter = xStart + columnWidth * daySpan * 0.5;
         const topValue = `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;

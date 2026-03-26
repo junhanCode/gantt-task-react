@@ -17,6 +17,7 @@ export type TaskItemProps = {
   hideTaskName?: boolean;
   enableTaskDrag?: boolean;
   enableTaskResize?: boolean;
+  enableDatesOnlyDualLane?: boolean;
   taskResizeEdges?: TaskResizeEdges;
   isTaskDraggable?: (task: BarTask, action?: 'move' | 'start' | 'end' | 'actualStart' | 'actualEnd' | 'progress') => boolean;
   getTaskBarColor?: (task: BarTask) => TaskBarColorResult;

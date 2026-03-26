@@ -7,17 +7,31 @@ import styles from "./bar.module.css";
 
 function parseTaskBarColorResult(
   v: TaskBarColorResult | undefined
-): { color?: string; lightColor?: string } {
+): {
+  plannedColor?: string;
+  plannedLightColor?: string;
+  actualColor?: string;
+  actualLightColor?: string;
+} {
   if (v == null) return {};
   if (typeof v === "object") {
-    const c = v.color != null && String(v.color).trim() !== "" ? String(v.color).trim() : undefined;
-    const l =
+    const plannedColor =
+      v.color != null && String(v.color).trim() !== "" ? String(v.color).trim() : undefined;
+    const plannedLightColor =
       v.lightColor != null && String(v.lightColor).trim() !== ""
         ? String(v.lightColor).trim()
         : undefined;
-    return { color: c, lightColor: l };
+    const actualColor =
+      v.actualColor != null && String(v.actualColor).trim() !== ""
+        ? String(v.actualColor).trim()
+        : undefined;
+    const actualLightColor =
+      v.actualLightColor != null && String(v.actualLightColor).trim() !== ""
+        ? String(v.actualLightColor).trim()
+        : undefined;
+    return { plannedColor, plannedLightColor, actualColor, actualLightColor };
   }
-  if (typeof v === "string" && v.trim() !== "") return { color: v.trim() };
+  if (typeof v === "string" && v.trim() !== "") return { plannedColor: v.trim() };
   return {};
 }
 
@@ -36,6 +50,7 @@ export const Bar: React.FC<TaskItemProps> = ({
   isSelected,
   enableTaskDrag = false,
   enableTaskResize = true,
+  enableDatesOnlyDualLane = false,
   taskResizeEdges,
   isTaskDraggable,
   getTaskBarColor,
@@ -51,20 +66,41 @@ export const Bar: React.FC<TaskItemProps> = ({
   const isDraggable = isDateChangeable && enableTaskDrag;
   const fromCallback = getTaskBarColor ? parseTaskBarColorResult(getTaskBarColor(task)) : {};
   const customBarColor =
-    fromCallback.color ??
+    fromCallback.plannedColor ??
     (task.barColor != null && String(task.barColor).trim() !== ""
       ? String(task.barColor).trim()
       : undefined);
   const customBarLightColor =
-    fromCallback.lightColor ??
+    fromCallback.plannedLightColor ??
     (task.barLightColor != null && String(task.barLightColor).trim() !== ""
       ? String(task.barLightColor).trim()
       : undefined);
+  const customActualBarColor =
+    fromCallback.actualColor ??
+    (task.actualBarColor != null && String(task.actualBarColor).trim() !== ""
+      ? String(task.actualBarColor).trim()
+      : undefined);
+  const customActualBarLightColor =
+    fromCallback.actualLightColor ??
+    (task.actualBarLightColor != null && String(task.actualBarLightColor).trim() !== ""
+      ? String(task.actualBarLightColor).trim()
+      : undefined);
   const useDatesOnlyHandles = !!task.timelineUsesDatesOnly;
+  const useDualLane = useDatesOnlyHandles && enableDatesOnlyDualLane;
   /** 与条形等高，上下各略伸出 1px，避免「手柄比条高太多」 */
   const handleVPad = 1;
-  const datesOnlyHandleY = task.y - handleVPad;
-  const datesOnlyHandleHeight = task.height + 2 * handleVPad;
+  const laneGap = 2;
+  const laneHeight = Math.max(4, Math.floor((task.height - laneGap) / 2));
+  const plannedLaneY = task.y;
+  const actualLaneY = task.y + laneHeight + laneGap;
+  const fullHandleY = task.y - handleVPad;
+  const fullHandleHeight = task.height + 2 * handleVPad;
+  const plannedHandleY = useDualLane ? plannedLaneY - handleVPad : fullHandleY;
+  const actualHandleY = useDualLane ? actualLaneY - handleVPad : fullHandleY;
+  const plannedHandleHeight = useDualLane ? laneHeight + 2 * handleVPad : fullHandleHeight;
+  const actualHandleHeight = useDualLane
+    ? Math.max(4, task.height - laneHeight - laneGap) + 2 * handleVPad
+    : fullHandleHeight;
   const hw = task.handleWidth;
   /** 实际边与计划边太近时水平错开，避免两条「半高手柄」叠在一起难拖 */
   const edgeSep = Math.max(hw, 14);
@@ -115,13 +151,17 @@ export const Bar: React.FC<TaskItemProps> = ({
         plannedEnd={plannedEnd}
         actualStart={actualStart}
         actualEnd={task.actualEnd}
+        actualStartX={task.actualX1}
         actualEndX={task.actualX2}
         todayX={task.todayX}
         isSelected={isSelected}
         delayColor={task.styles?.delayColor}
         customBarColor={customBarColor}
         customBarLightColor={customBarLightColor}
+        customActualBarColor={customActualBarColor}
+        customActualBarLightColor={customActualBarLightColor}
         timelineUsesDatesOnly={task.timelineUsesDatesOnly}
+        enableDatesOnlyDualLane={enableDatesOnlyDualLane}
         onMouseDown={e => {
           isDateChangeable && enableTaskDrag && onEventStart("move", task, e);
         }}
@@ -146,9 +186,9 @@ export const Bar: React.FC<TaskItemProps> = ({
             {useDatesOnlyHandles && canResizePlannedStart && canDragByAction("start") && (
               <BarDateHandle
                 x={task.x1 - task.handleWidth / 2}
-                y={datesOnlyHandleY}
+                y={plannedHandleY}
                 width={task.handleWidth}
-                height={datesOnlyHandleHeight}
+                height={plannedHandleHeight}
                 barCornerRadius={task.barCornerRadius}
                 onMouseDown={e => {
                   e.stopPropagation();
@@ -159,9 +199,9 @@ export const Bar: React.FC<TaskItemProps> = ({
             {useDatesOnlyHandles && canResizePlannedEnd && canDragByAction("end") && (
               <BarDateHandle
                 x={task.x2 - task.handleWidth / 2}
-                y={datesOnlyHandleY}
+                y={plannedHandleY}
                 width={task.handleWidth}
-                height={datesOnlyHandleHeight}
+                height={plannedHandleHeight}
                 barCornerRadius={task.barCornerRadius}
                 onMouseDown={e => {
                   e.stopPropagation();
@@ -172,9 +212,9 @@ export const Bar: React.FC<TaskItemProps> = ({
             {useDatesOnlyHandles && canResizeActualStart && canDragByAction("actualStart") && (
               <BarDateHandle
                 x={actualStartHandleX - task.handleWidth / 2}
-                y={datesOnlyHandleY}
+                y={actualHandleY}
                 width={task.handleWidth}
-                height={datesOnlyHandleHeight}
+                height={actualHandleHeight}
                 barCornerRadius={task.barCornerRadius}
                 onMouseDown={e => {
                   e.stopPropagation();
@@ -185,9 +225,9 @@ export const Bar: React.FC<TaskItemProps> = ({
             {useDatesOnlyHandles && canResizeActualEnd && canDragByAction("actualEnd") && (
               <BarDateHandle
                 x={actualEndHandleX - task.handleWidth / 2}
-                y={datesOnlyHandleY}
+                y={actualHandleY}
                 width={task.handleWidth}
-                height={datesOnlyHandleHeight}
+                height={actualHandleHeight}
                 barCornerRadius={task.barCornerRadius}
                 onMouseDown={e => {
                   e.stopPropagation();
