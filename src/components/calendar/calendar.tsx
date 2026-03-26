@@ -145,7 +145,9 @@ export const Calendar: React.FC<CalendarProps> = ({
     const textValues: ReactChild[] = [];
     const dates = dateSetup.dates;
     const topDefaultHeight = headerHeight / 3;
-    const totalWidth = columnWidth * dates.length;
+    // 班次模式的最后一个刻度是右边界哨兵点，不应显示为独立班次（否则会出现最右侧只剩 D1 的半天）
+    const visibleCount = Math.max(0, dates.length - 1);
+    const totalWidth = columnWidth * visibleCount;
 
     const shiftName = (date: Date) => {
       const hour = date.getHours();
@@ -155,7 +157,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       return "N2";
     };
 
-    for (let i = 0; i < dates.length; i++) {
+    for (let i = 0; i < visibleCount; i++) {
       const date = dates[i];
       const isNewDay = i === 0 || date.getDate() !== dates[i - 1].getDate();
       const isSunday = date.getDay() === 0;
@@ -163,7 +165,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       if (isNewDay) {
         // 边界天（首尾）可能不是完整 4 个班次，按实际可用刻度计算跨度，避免标签被裁切
         let daySpan = 1;
-        while (i + daySpan < dates.length && dates[i + daySpan].getDate() === date.getDate()) {
+        while (i + daySpan < visibleCount && dates[i + daySpan].getDate() === date.getDate()) {
           daySpan++;
         }
         const xStart = columnWidth * i;
@@ -288,7 +290,9 @@ export const Calendar: React.FC<CalendarProps> = ({
     const textValues: ReactChild[] = [];
     const dates = dateSetup.dates;
     const topDefaultHeight = headerHeight / 3;
-    const totalWidth = columnWidth * dates.length;
+    // 班次模式的最后一个刻度是右边界哨兵点，不应显示为独立班次（否则会出现最右侧只剩 D 的半天）
+    const visibleCount = Math.max(0, dates.length - 1);
+    const totalWidth = columnWidth * visibleCount;
 
     const shiftName = (date: Date) => {
       const hour = date.getHours();
@@ -296,7 +300,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       return (hour % 24) < 12 ? "D" : "N";
     };
 
-    for (let i = 0; i < dates.length; i++) {
+    for (let i = 0; i < visibleCount; i++) {
       const date = dates[i];
       const isNewDay = i === 0 || date.getDate() !== dates[i - 1].getDate();
       const isSunday = date.getDay() === 0;
@@ -304,7 +308,7 @@ export const Calendar: React.FC<CalendarProps> = ({
       if (isNewDay) {
         // 边界天（首尾）可能不是完整 D/N 两个班，按实际可用刻度计算跨度，避免标签被裁切
         let daySpan = 1;
-        while (i + daySpan < dates.length && dates[i + daySpan].getDate() === date.getDate()) {
+        while (i + daySpan < visibleCount && dates[i + daySpan].getDate() === date.getDate()) {
           daySpan++;
         }
         const xStart = columnWidth * i;
