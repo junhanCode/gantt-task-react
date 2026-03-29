@@ -98,31 +98,124 @@ interface StationData {
   stationItems: StationItem[];
 }
 
-// ─── 写死的 Mock 数据（与原始业务数据完全一致，日期为空字符串）──
+// ─── 写死的 Mock 数据（与原始业务字段一致；含计划/实际/延期/进行中 等场景便于调试）──
 
 const MOCK_DATA: StationData[] = [
   {
-    stationInfo: { stationId: 19, stationName: "1", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+    stationInfo: {
+      stationId: 19,
+      stationName: "产线 A",
+      planStart: "2026-03-01",
+      planEnd: "2026-03-18",
+      actualStart: "2026-03-02",
+      actualEnd: "",
+    },
     stationItems: [
-      { stationId: 19, stationItemId: 55, stationItemName: "1",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
-      { stationId: 19, stationItemId: 56, stationItemName: "2",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
-      { stationId: 19, stationItemId: 57, stationItemName: "33", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+      {
+        stationId: 19,
+        stationItemId: 55,
+        stationItemName: "上料",
+        planStart: "2026-03-01",
+        planEnd: "2026-03-05",
+        actualStart: "2026-03-02",
+        actualEnd: "2026-03-04",
+      },
+      {
+        stationId: 19,
+        stationItemId: 56,
+        stationItemName: "组装",
+        planStart: "2026-03-06",
+        planEnd: "2026-03-12",
+        actualStart: "2026-03-06",
+        actualEnd: "2026-03-15",
+      },
+      {
+        stationId: 19,
+        stationItemId: 57,
+        stationItemName: "质检",
+        planStart: "2026-03-13",
+        planEnd: "2026-03-18",
+        actualStart: "2026-03-14",
+        actualEnd: "",
+      },
     ],
   },
   {
-    stationInfo: { stationId: 20, stationName: "2", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+    stationInfo: {
+      stationId: 20,
+      stationName: "产线 B",
+      planStart: "2026-03-10",
+      planEnd: "2026-04-05",
+      actualStart: "",
+      actualEnd: "",
+    },
     stationItems: [
-      { stationId: 20, stationItemId: 58, stationItemName: "1",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
-      { stationId: 20, stationItemId: 59, stationItemName: "2",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
-      { stationId: 20, stationItemId: 60, stationItemName: "33", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+      {
+        stationId: 20,
+        stationItemId: 58,
+        stationItemName: "备料（仅计划）",
+        planStart: "2026-03-10",
+        planEnd: "2026-03-14",
+        actualStart: "",
+        actualEnd: "",
+      },
+      {
+        stationId: 20,
+        stationItemId: 59,
+        stationItemName: "加工",
+        planStart: "2026-03-15",
+        planEnd: "2026-03-22",
+        actualStart: "2026-03-16",
+        actualEnd: "2026-03-20",
+      },
+      {
+        stationId: 20,
+        stationItemId: 60,
+        stationItemName: "包装",
+        planStart: "2026-03-23",
+        planEnd: "2026-03-28",
+        actualStart: "2026-03-24",
+        actualEnd: "2026-04-02",
+      },
     ],
   },
   {
-    stationInfo: { stationId: 21, stationName: "11", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+    stationInfo: {
+      stationId: 21,
+      stationName: "仓储",
+      planStart: "2026-03-20",
+      planEnd: "2026-03-31",
+      actualStart: "2026-03-21",
+      actualEnd: "",
+    },
     stationItems: [
-      { stationId: 21, stationItemId: 61, stationItemName: "1",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
-      { stationId: 21, stationItemId: 62, stationItemName: "2",  planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
-      { stationId: 21, stationItemId: 63, stationItemName: "33", planStart: "", planEnd: "", actualStart: "", actualEnd: "" },
+      {
+        stationId: 21,
+        stationItemId: 61,
+        stationItemName: "入库",
+        planStart: "2026-03-20",
+        planEnd: "2026-03-23",
+        actualStart: "2026-03-21",
+        actualEnd: "2026-03-22",
+      },
+      {
+        stationId: 21,
+        stationItemId: 62,
+        stationItemName: "盘点",
+        planStart: "2026-03-24",
+        planEnd: "2026-03-26",
+        actualStart: "2026-03-25",
+        actualEnd: "2026-03-29",
+      },
+      {
+        stationId: 21,
+        stationItemId: 63,
+        stationItemName: "出库",
+        planStart: "2026-03-27",
+        planEnd: "2026-03-31",
+        actualStart: "2026-03-28",
+        actualEnd: "",
+      },
     ],
   },
 ];
