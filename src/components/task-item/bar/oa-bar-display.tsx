@@ -190,6 +190,18 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
     const plannedH = laneHeight;
     const actualH = Math.max(4, height - laneHeight - laneGap);
 
+    /** 双轨延期：延期量与文案画在实际轨的延期段上，计划轨不向右延伸 */
+    let dualLaneDelayLabel: string | undefined;
+    if (isDelayed && canShowDelay) {
+      const now = new Date();
+      const deadLineEOD = toEndOfDay(plannedEnd);
+      const effectiveEndEOD = hasValidFinishDate ? toEndOfDay(actualEnd!) : toEndOfDay(now);
+      const delayDays = Math.ceil(
+        (effectiveEndEOD.getTime() - deadLineEOD.getTime()) / DAY_MS
+      );
+      dualLaneDelayLabel = delayDaysFormat ? delayDaysFormat(delayDays) : `延期${delayDays}天`;
+    }
+
     // 计划轨：复用原逻辑（提前完成/剩余时间/延期），但只画在上半轨
     const renderPlannedLane = () => {
       // 未延期：完成态且有 finishDate（纯日期模式下只要有 actualEnd 即视为有效）
@@ -277,58 +289,22 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
         );
       }
 
-      // 延期：上轨右侧画延期段（粉色），保持原语义，并显示「延期xx天」
-      const delayWidth = Math.max(0, actualEndX - deadLineX);
-      const now = new Date();
-      const deadLineEOD = toEndOfDay(plannedEnd);
-      const effectiveEndEOD = hasValidFinishDate ? toEndOfDay(actualEnd!) : toEndOfDay(now);
-      const delayDays = Math.ceil(
-        (effectiveEndEOD.getTime() - deadLineEOD.getTime()) / DAY_MS
-      );
-      const delayLabel = delayDaysFormat ? delayDaysFormat(delayDays) : `延期${delayDays}天`;
+      // 延期：计划轨仅保留计划区间 [x, deadLine]，与下轨对比，不向右延伸延期段
       return (
-        <g>
-          <rect
-            x={x}
-            y={plannedY}
-            width={safeWidth}
-            height={plannedH}
-            rx={barCornerRadius}
-            ry={barCornerRadius}
-            fill={baseColor}
-            className={style.barBackground}
-          />
-          {delayWidth > 0 && (
-            <g>
-              <rect
-                x={x + safeWidth}
-                y={plannedY}
-                width={delayWidth}
-                height={plannedH}
-                rx={barCornerRadius}
-                ry={barCornerRadius}
-                fill={delayColor}
-              />
-              {delayWidth > 30 && (
-                <text
-                  x={x + safeWidth + delayWidth / 2}
-                  y={plannedY + plannedH / 2}
-                  fill={DELAY_TEXT_COLOR}
-                  fontSize="12"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  style={{ pointerEvents: "none" }}
-                >
-                  {delayLabel}
-                </text>
-              )}
-            </g>
-          )}
-        </g>
+        <rect
+          x={x}
+          y={plannedY}
+          width={safeWidth}
+          height={plannedH}
+          rx={barCornerRadius}
+          ry={barCornerRadius}
+          fill={baseColor}
+          className={style.barBackground}
+        />
       );
     };
 
-    // 实际轨：画 actualStartX → actualEndX（或今日/计划截止的视觉位置）
+    // 实际轨：画 actualStartX → actualEndX；延期时仅 deadline 之后用延期色
     const renderActualLane = () => {
       const startX = Math.min(actualStartX, actualEndX);
       const endX = Math.max(actualStartX, actualEndX);
@@ -339,6 +315,100 @@ export const OABarDisplay: React.FC<OABarDisplayProps> = ({
         customActualBarLightColor != null && String(customActualBarLightColor).trim() !== ""
           ? String(customActualBarLightColor).trim()
           : undefined;
+
+      /** 延期：按时完成段 [startX, min(endX, deadLineX)] + 延期段 [max(startX, deadLineX), endX] */
+      if (isDelayed && canShowDelay && endX > deadLineX) {
+        const onTimeRight = Math.min(endX, deadLineX);
+        const onTimeLeft = startX;
+        const onTimeW = Math.max(0, onTimeRight - onTimeLeft);
+        const delayLeft = Math.max(startX, deadLineX);
+        const delayW = Math.max(0, endX - delayLeft);
+
+        const renderOnTimeRects = () => {
+          if (onTimeW <= 0) return null;
+          if (
+            explicitActualLight &&
+            todayX !== undefined &&
+            todayX > onTimeLeft &&
+            todayX < onTimeRight
+          ) {
+            const activeWidth = Math.max(0, todayX - onTimeLeft);
+            const remainingWidth = Math.max(0, onTimeRight - todayX);
+            return (
+              <g>
+                {activeWidth > 0 && (
+                  <rect
+                    x={onTimeLeft}
+                    y={actualY}
+                    width={activeWidth}
+                    height={actualH}
+                    rx={barCornerRadius}
+                    ry={barCornerRadius}
+                    fill={actualBaseColor}
+                    className={style.barBackground}
+                  />
+                )}
+                {remainingWidth > 0 && (
+                  <rect
+                    x={onTimeLeft + activeWidth}
+                    y={actualY}
+                    width={remainingWidth}
+                    height={actualH}
+                    rx={barCornerRadius}
+                    ry={barCornerRadius}
+                    fill={explicitActualLight}
+                    className={style.barBackground}
+                  />
+                )}
+              </g>
+            );
+          }
+          return (
+            <rect
+              x={onTimeLeft}
+              y={actualY}
+              width={onTimeW}
+              height={actualH}
+              rx={barCornerRadius}
+              ry={barCornerRadius}
+              fill={actualBaseColor}
+              className={style.barBackground}
+            />
+          );
+        };
+
+        return (
+          <g>
+            {renderOnTimeRects()}
+            {delayW > 0 && (
+              <g>
+                <rect
+                  x={delayLeft}
+                  y={actualY}
+                  width={delayW}
+                  height={actualH}
+                  rx={barCornerRadius}
+                  ry={barCornerRadius}
+                  fill={delayColor}
+                />
+                {dualLaneDelayLabel && delayW > 30 && (
+                  <text
+                    x={delayLeft + delayW / 2}
+                    y={actualY + actualH / 2}
+                    fill={DELAY_TEXT_COLOR}
+                    fontSize="12"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    style={{ pointerEvents: "none" }}
+                  >
+                    {dualLaneDelayLabel}
+                  </text>
+                )}
+              </g>
+            )}
+          </g>
+        );
+      }
 
       if (
         explicitActualLight &&
